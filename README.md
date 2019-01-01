@@ -1,3 +1,8 @@
+MOD 1-1 Monika
+see also:
+- MOD 1-2: OrBit
+- MOD 1-3: Wallhack
+
 # Summary
 
 force yourself to the Gym every day!
@@ -17,3 +22,5 @@ indulge but not binge in games
 - systemctl service: starts monika automatically with root
 - mon: communicates with monika to request commands
 - monika.jar: contains the monika program
+
+these are all the components required for monika, 

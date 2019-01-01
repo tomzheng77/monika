@@ -12,10 +12,14 @@ allow yourself to enjoy for a while, then come back to work with full dedication
 
 # Potential
 
-exercise every day at the Gym
-wake up at 7:00
-work on anything on the computer
-indulge but not binge in games
+- exercise every day at the Gym
+- wake up at 7:00
+- work on anything on the computer
+    - game development
+    - study
+- indulge but not binge in games
+    - Team Fortress
+    - YouTube
 
 # Components
 

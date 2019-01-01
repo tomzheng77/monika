@@ -23,4 +23,6 @@ indulge but not binge in games
 - mon: communicates with monika to request commands
 - monika.jar: contains the monika program
 
-these are all the components required for monika, 
+these are all the components required for monika, it does not require editing the PATH
+monika can reload configuration without restarting, restart is only necessary when the jarfile
+has been updated

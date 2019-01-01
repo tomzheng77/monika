@@ -48,3 +48,6 @@ monika assumes these external components have been set up correctly
 - /home/shared/
     - projects/: an empty folder with read/write permission
     - proxy/: containing proxy certificates
+
+WARNING: while developing monika, do not remove the original lockon
+otherwise you may accidentally lock yourself out

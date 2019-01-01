@@ -26,3 +26,21 @@ indulge but not binge in games
 these are all the components required for monika, it does not require editing the PATH
 monika can reload configuration without restarting, restart is only necessary when the jarfile
 has been updated
+
+it does not depend on the following (compared to lockon):
+- /etc/profile
+- crontab
+- at and atq
+- individual shell scripts
+
+# Environment
+
+monika assumes these external components have been set up correctly
+
+- 'profile' user
+- 'unlocker' user
+- /etc/sudoers granting su without password for 'unlocker'
+- /etc/environment with http_proxy and https_proxy
+- /home/shared/
+    - projects/: an empty folder with read/write permission
+    - proxy/: containing proxy certificates

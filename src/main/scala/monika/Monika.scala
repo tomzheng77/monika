@@ -9,9 +9,13 @@ object Monika {
   }
 
   def main(args: Array[String]): Unit = {
-    val timer = new Timer()
-    timer.schedule(new TimerTask {
-      override def run(): Unit = onSecondTick()
-    }, 0, 1000)
+    def scheduleOnSecondTick(): Unit = {
+      val timer = new Timer()
+      timer.schedule(new TimerTask {
+        override def run(): Unit = onSecondTick()
+      }, 0, 1000)
+    }
+    scheduleOnSecondTick()
   }
+
 }

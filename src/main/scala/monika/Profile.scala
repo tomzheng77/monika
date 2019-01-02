@@ -58,14 +58,12 @@ object Profile {
   /**
     * constructs a profile from a .json definition file
     * this is not a deserialization process, it is fault tolerant and provides
-    * default values for all fields except name
-    *
-    * @return None if a "name" is not provided, otherwise Some(ProfileMode)
+    * default values for all fields
     */
-  def constructProfile(definition: JValue): Option[ProfileMode] = {
+  def constructProfile(definition: JValue, defaultName: String): ProfileMode = {
     implicit val formats: Formats = DefaultFormats
-    Some(ProfileMode(
-      (definition \ "name").extractOpt[String].getOrElse(return None),
+    ProfileMode(
+      (definition \ "name").extractOpt[String].getOrElse(defaultName),
       (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Program),
       (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Project),
       (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
@@ -79,7 +77,7 @@ object Profile {
         (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
         (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
       )
-    ))
+    )
   }
 
 }

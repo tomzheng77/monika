@@ -1,10 +1,30 @@
 package monika
 
+import java.time.LocalDateTime
+
 object Profile {
 
-  case class Proxy(allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
+  case class Program(name: String) extends AnyVal
+  case class Project(name: String) extends AnyVal
+
+  /**
+    * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
+    * @param transparent whether the proxy should not perform filtering at all
+    *                    if this is set to true, allow/reject properties will be ignored
+    *                    in addition, no certificate will be required
+    * @param allowHtmlPrefix which text/html responses should be allowed through if the url starts with a prefix
+    * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
+    */
+  case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
+
   case class Bookmark(name: String, url: String)
-  case class Configuration(name: String, programs: Vector[String], bookmarks: String, projects: Vector[String], proxy: Proxy)
-  case class QueueItem(configuration: Configuration, time: Int)
+  case class Configuration(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
+
+  /**
+    * @param startTime the start time of this profile
+    * @param endTime the end time of this profile
+    * @param configuration which profile should be used throughout the duration
+    */
+  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, configuration: Configuration)
 
 }

@@ -55,9 +55,31 @@ object Profile {
     */
   case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: ProfileMode)
 
-  def profileFromJson(json: JValue): Option[ProfileMode] = {
+  /**
+    * constructs a profile from a .json definition file
+    * this is not a deserialization process, it is fault tolerant and provides
+    * default values for all fields except name
+    *
+    * @return None if a "name" is not provided, otherwise Some(ProfileMode)
+    */
+  def constructProfile(definition: JValue): Option[ProfileMode] = {
     implicit val formats: Formats = DefaultFormats
-    json.extractOpt[ProfileMode]
+    Some(ProfileMode(
+      (definition \ "name").extractOpt[String].getOrElse(return None),
+      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Program),
+      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Project),
+      (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
+        val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
+        val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
+        val name = (v \ "name").extractOpt[String].orElse(re.findFirstIn(url)).getOrElse("Unknown")
+        Bookmark(name, url)
+      }),
+      ProxySettings(
+        (definition \ "proxy" \ "transparent").extractOpt[Boolean].getOrElse(false),
+        (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
+        (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
+      )
+    ))
   }
 
 }

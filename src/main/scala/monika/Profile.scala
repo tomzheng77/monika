@@ -2,6 +2,9 @@ package monika
 
 import java.time.LocalDateTime
 
+import org.json4s.JsonAST.JValue
+import org.json4s.{DefaultFormats, Formats}
+
 object Profile {
 
   /**
@@ -13,17 +16,22 @@ object Profile {
     * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
     */
   case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
-  
+
   case class Program(name: String) extends AnyVal
   case class Project(name: String) extends AnyVal
   case class Bookmark(name: String, url: String)
-  case class Configuration(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
+  case class ProfileSettings(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
 
   /**
     * @param startTime the start time of this profile
     * @param endTime the end time of this profile
-    * @param configuration which profile should be used throughout the duration
+    * @param profile which profile should be used throughout the duration
     */
-  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, configuration: Configuration)
+  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: ProfileSettings)
+
+  def profileFromJson(json: JValue): Option[ProfileSettings] = {
+    implicit val formats: Formats = DefaultFormats
+    json.extractOpt[ProfileSettings]
+  }
 
 }

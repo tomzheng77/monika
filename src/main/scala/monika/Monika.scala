@@ -17,6 +17,14 @@ object Monika {
 
   }
 
+  def startCommandListener(): Unit = {
+
+  }
+
+  def startHttpProxyServer(): Unit = {
+
+  }
+
   def main(args: Array[String]): Unit = {
     def scheduleOnSecondTick(): Unit = {
       val timer = new Timer()
@@ -26,6 +34,8 @@ object Monika {
     }
     scheduleOnSecondTick()
     enableFirewallForProfile()
+    startCommandListener()
+    startHttpProxyServer()
   }
 
 }

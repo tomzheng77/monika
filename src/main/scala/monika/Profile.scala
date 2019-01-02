@@ -80,4 +80,11 @@ object Profile {
     )
   }
 
+  /**
+    * the full runtime state of the Monika program
+    * since it has very limited amounts of state (< 10KB), it is completely feasible
+    * to represent it with an immutable data structure
+    */
+  case class MonikaState(queue: Vector[ProfileInQueue], at: ProfileInQueue)
+
 }

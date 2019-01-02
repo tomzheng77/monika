@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
+import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 
 object Profile {
 

@@ -2,8 +2,6 @@ package monika
 
 import java.util.{Timer, TimerTask}
 
-import monika.Profile.getClass
-
 object Monika {
 
   def onSecondTick(): Unit = {

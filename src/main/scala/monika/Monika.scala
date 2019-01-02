@@ -1,38 +1,8 @@
 package monika
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.util.{Timer, TimerTask}
 
-import net.openhft.chronicle.hash.ChronicleHashCorruption
-import net.openhft.chronicle.map.{ChronicleMap, ChronicleMapBuilder}
-import net.openhft.chronicle.set.ChronicleSetBuilder
-import org.apache.commons.exec.DefaultExecutor
-import org.apache.commons.exec.PumpStreamHandler
-import org.apache.commons.exec.CommandLine
-
 object Monika {
-
-  case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
-
-  def call(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty): CommandOutput = {
-    val cmd = new CommandLine(program)
-    cmd.addArguments(args)
-
-    val executor = new DefaultExecutor()
-    val stdin = new ByteArrayInputStream(input)
-    val stdout = new ByteArrayOutputStream()
-    val stderr = new ByteArrayOutputStream()
-    val psh = new PumpStreamHandler(stdout, stderr, stdin)
-    executor.setStreamHandler(psh)
-
-    val exitValue = executor.execute(cmd)
-    CommandOutput(exitValue, stdout.toByteArray, stderr.toByteArray)
-  }
-
-  def enableFirewallForProfile(): Unit = {
-//    call("iptables", "-w 10 -A OUTPUT -p tcp -m owner --uid-owner profile --dport 80 -j REJECT".split(' '))
-//    call("iptables", "-w 10 -A OUTPUT -p tcp -m owner --uid-owner profile --dport 443 -j REJECT".split(' '))
-  }
 
   def onSecondTick(): Unit = {
   }
@@ -53,7 +23,7 @@ object Monika {
       }, 0, 1000)
     }
     scheduleOnSecondTick()
-    enableFirewallForProfile()
+    Firewall.rejectHttpFromProfile()
     startCommandListener()
     startHttpProxyServer()
   }

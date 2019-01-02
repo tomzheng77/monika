@@ -4,9 +4,6 @@ import java.time.LocalDateTime
 
 object Profile {
 
-  case class Program(name: String) extends AnyVal
-  case class Project(name: String) extends AnyVal
-
   /**
     * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
     * @param transparent whether the proxy should not perform filtering at all
@@ -16,7 +13,9 @@ object Profile {
     * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
     */
   case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
-
+  
+  case class Program(name: String) extends AnyVal
+  case class Project(name: String) extends AnyVal
   case class Bookmark(name: String, url: String)
   case class Configuration(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
 

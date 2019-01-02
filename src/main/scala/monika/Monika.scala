@@ -15,15 +15,16 @@ object Monika {
 
   }
 
+  def scheduleOnSecondTick(): Unit = {
+    val timer = new Timer()
+    timer.schedule(new TimerTask {
+      override def run(): Unit = onSecondTick()
+    }, 0, 1000)
+  }
+
   def main(args: Array[String]): Unit = {
-    def scheduleOnSecondTick(): Unit = {
-      val timer = new Timer()
-      timer.schedule(new TimerTask {
-        override def run(): Unit = onSecondTick()
-      }, 0, 1000)
-    }
     scheduleOnSecondTick()
-    Firewall.rejectHttpFromProfile()
+    Firewall.rejectOutgoingHttp(forUser = Constants.ProfileUser)
     startCommandListener()
     startHttpProxyServer()
   }

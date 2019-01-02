@@ -9,5 +9,6 @@ object Constants {
   )
 
   val ProfileUser = "profile"
+  val MonikaDBPath = "/home/shared/monika.db"
 
 }

@@ -1,8 +1,11 @@
 package monika
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.util.{Timer, TimerTask}
 
+import net.openhft.chronicle.hash.ChronicleHashCorruption
+import net.openhft.chronicle.map.{ChronicleMap, ChronicleMapBuilder}
+import net.openhft.chronicle.set.ChronicleSetBuilder
 import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.PumpStreamHandler
 import org.apache.commons.exec.CommandLine
@@ -32,8 +35,6 @@ object Monika {
   }
 
   def onSecondTick(): Unit = {
-    val out = call("ls", Array("-la"))
-    println(new String(out.stdout, "UTF-8"))
   }
 
   def startCommandListener(): Unit = {

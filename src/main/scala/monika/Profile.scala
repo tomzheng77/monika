@@ -17,21 +17,47 @@ object Profile {
     */
   case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
 
+  /**
+    * represents a linux/unix program which the profile user can run
+    * when the corresponding mode is active
+    */
   case class Program(name: String) extends AnyVal
+
+  /**
+    * represents a folder inside project home which the profile user can
+    * edit (including all sub-contents) when the corresponding mode is active
+    */
   case class Project(name: String) extends AnyVal
+
+  /**
+    * a bookmark to display on the browser's toolbar
+    * @param name name to display, if not provided should be a shortened url
+    * @param url url it should lead to
+    */
   case class Bookmark(name: String, url: String)
-  case class ProfileSettings(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
+
+  /**
+    * defines which programs, projects and websites the profile user can use
+    * when this mode is active
+    *
+    * @param name name of this mode
+    * @param programs programs allowed when this mode is active
+    * @param projects projects allowed when this mode is active
+    * @param bookmarks bookmarks to display inside the browser for convenience
+    * @param proxy restricts which websites can be accessed
+    */
+  case class ProfileMode(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
 
   /**
     * @param startTime the start time of this profile
     * @param endTime the end time of this profile
     * @param profile which profile should be used throughout the duration
     */
-  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: ProfileSettings)
+  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: ProfileMode)
 
-  def profileFromJson(json: JValue): Option[ProfileSettings] = {
+  def profileFromJson(json: JValue): Option[ProfileMode] = {
     implicit val formats: Formats = DefaultFormats
-    json.extractOpt[ProfileSettings]
+    json.extractOpt[ProfileMode]
   }
 
 }

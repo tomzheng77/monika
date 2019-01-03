@@ -5,20 +5,27 @@ import java.time.LocalDateTime
 import monika.Profile.{MonikaState, ProfileInQueue, ProfileMode, ProxySettings}
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats}
-import scalaz.ReaderWriterState
+import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 import spark.Spark
 
 import scala.util.Try
 
 object Interpreter {
 
+  sealed trait FilePath
+  def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
+
   sealed trait Effect
   case class RunCommand(program: String, args: Vector[String]) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
+  case class WriteStringToFile(path: String @@ FilePath) extends Effect
+
+  val in: WriteStringToFile = null
+  in.path.charAt(0)
 
   type ST[T] = scalaz.ReaderWriterState[Unit, List[Effect], MonikaState, T]
   type STR[T] = (List[RunCommand], T, MonikaState)
-  def RWS[T] = ReaderWriterState.apply[Unit, List[Effect], MonikaState, T]
+  def RWS[T](f: (Unit, MonikaState) => (List[Effect], T, MonikaState)) = ReaderWriterState.apply[Unit, List[Effect], MonikaState, T](f)
 
   def statusReport(): ST[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
@@ -26,26 +33,49 @@ object Interpreter {
     (Nil, response, state)
   })
 
+  /**
+    * ensures: any items past the given time inside the queue are dropped
+    */
   def dropOverdueItems(time: LocalDateTime): ST[Unit] = RWS((_, state) => {
     (Nil, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
   })
 
+  /**
+    * requires: the queue is not empty
+    * ensures: the first item of the queue is returned
+    * ensures: the first item is removed from the queue
+    */
   def popQueue(): ST[ProfileInQueue] = RWS((_, state) => {
     (Nil, state.queue.head, state.copy(queue = state.queue.tail))
   })
 
+  /**
+    * ensures: the state is returned
+    */
   def readState(): ST[MonikaState] = RWS((_, state) => {
     (Nil, state, state)
   })
 
+  /**
+    * ensures: a command is generated to unlock each user
+    */
   def unlockAllUsers(): ST[String] = RWS((_, state) => {
     (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))).toList, "all users unlocked", state)
   })
 
+  /**
+    * ensures: commands are generated to ensure the new profile mode
+    *          is put into effect for the profile user
+    */
   def applyProfile(profile: ProfileMode): ST[String] = RWS((_, state) => {
+    RestartProxy(profile.proxy)
     profile.name
-    (null, "", null)
+    (null, "", state)
   })
+
+  implicit val semi: Semigroup[List[Effect]] = new Semigroup[List[Effect]] {
+    override def append(f1: List[Effect], f2: => List[Effect]): List[Effect] = f1 ++ f2
+  }
 
   def applyNextProfileInQueue(): ST[String] = for {
     item <- popQueue()

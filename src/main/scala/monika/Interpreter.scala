@@ -13,9 +13,6 @@ import scala.util.Try
 
 object Interpreter {
 
-  sealed trait FilePath
-  def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
-
   sealed trait Effect
   case class RunCommand(program: String, args: Vector[String] = NIL) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
@@ -23,10 +20,13 @@ object Interpreter {
 
   /**
     * represents the external view
-    * @param programs
-    * @param projects
+    * @param programs known programs mapped from name to path
+    * @param projects known projects mapped from name to path
     */
-  case class External(programs: Vector[Program], projects: Vector[Project])
+  case class External(
+    programs: Map[String @@ FileName, String @@ FilePath],
+    projects: Map[String @@ FileName, String @@ FilePath]
+  )
 
   type ST[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
   type STR[T] = (Vector[Effect], T, MonikaState)
@@ -40,40 +40,18 @@ object Interpreter {
   })
 
   /**
-    * ensures: any items past the given time inside the queue are dropped
-    */
-  def dropOverdueItems(time: LocalDateTime): ST[Unit] = RWS((_, state) => {
-    (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
-  })
-
-  /**
-    * requires: the queue is not empty
-    * ensures: the first item of the queue is returned
-    * ensures: the first item is removed from the queue
-    */
-  def popQueue(): ST[ProfileInQueue] = RWS((_, state) => {
-    (NIL, state.queue.head, state.copy(queue = state.queue.tail))
-  })
-
-  /**
-    * ensures: the state is returned
-    */
-  def readState(): ST[MonikaState] = RWS((_, state) => {
-    (NIL, state, state)
-  })
-
-  /**
     * ensures: a command is generated to unlock each user
     */
   def unlockAllUsers(): ST[String] = RWS((_, state) => {
     (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))), "all users unlocked", state)
   })
 
-  def makeBookmarks(bookmarks: Vector[Profile.Bookmark]): String = {
+  def makeBookmarks(bookmarks: Vector[Bookmark]): String = {
     ""
   }
 
   /**
+    * updates the proxy
     * ensures: commands are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
@@ -81,6 +59,7 @@ object Interpreter {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
+    val outMessage = new mutable.StringBuilder()
 
     // commands required to setup proxy access for the profile mode
     def setupWebsites(): Vector[Effect] = Vector(
@@ -92,24 +71,48 @@ object Interpreter {
     // commands required to setup project access for the profile mode
     def setupProjects(): Vector[Effect] = {
       val effects = mutable.Buffer[Effect]()
-      effects += RunCommand("chmod", Vector("755", Constants.paths.ProjectRoot))
-      effects += RunCommand("chown", Vector(mainUserGroup, Constants.paths.ProjectRoot))
-      effects ++= ext.projects.flatMap(proj => Vector(
-        RunCommand("chmod", Vector("-R", "770", proj.path)),
-        RunCommand("chown", Vector("-R", profileUserGroup, proj.path)),
-        RunCommand("chown", Vector(mainUserGroup, proj.path))
-      ))
-      effects ++= profile.projects.map(proj => RunCommand("chown", Vector(profileUserGroup, proj.path)))
+
+      // owns the project root with main user, sets permission to 755
+      def lockProjectRootFolder(): Unit = {
+        effects += RunCommand("chmod", Vector("755", Constants.paths.ProjectRoot))
+        effects += RunCommand("chown", Vector(mainUserGroup, Constants.paths.ProjectRoot))
+      }
+
+      // sets each project recursively to 770
+      // owns each project recursively to profile user
+      // owns each project root to main user
+      def lockEachProjectFolder(): Unit = {
+        effects ++= ext.projects.values.flatMap(projPath => Vector(
+          RunCommand("chmod", Vector("-R", "770", Tag.unwrap(projPath))),
+          RunCommand("chown", Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
+          RunCommand("chown", Vector(mainUserGroup, Tag.unwrap(projPath)))
+        ))
+      }
+
+      def findAndUnlockProjectFolder(): Unit = {
+        val (found, notFound) = profile.projects.partition(ext.projects.contains)
+        val projects: Vector[String @@ FilePath] = found.map(ext.projects)
+        effects ++= projects.map(projPath => {
+          RunCommand("chown", Vector(profileUserGroup, Tag.unwrap(projPath)))
+        })
+        outMessage append notFound.map(projName => s"project not found: $projName\n").mkString
+      }
+
+      lockProjectRootFolder()
+      lockEachProjectFolder()
+      findAndUnlockProjectFolder()
       effects.toVector
     }
 
     // commands required to setup program access for the profile mode
     def setupPrograms(): Vector[Effect] = {
       RunCommand("usermod", Vector("-G", "", Constants.ProfileUser)) +:
-      profile.programs.map(prog => RunCommand("usermod", Vector("-a", "-G", s"use-${prog.name}", Constants.ProfileUser)))
+      profile.programs.map(prog => {
+        RunCommand("usermod", Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
+      })
     }
 
-    (setupWebsites() ++ setupProjects() ++ setupPrograms(), "new profile applied", state)
+    (setupWebsites() ++ setupProjects() ++ setupPrograms(), outMessage.toString(), state)
   })
 
   implicit val semi: Semigroup[Vector[Effect]] = new Semigroup[Vector[Effect]] {
@@ -127,6 +130,7 @@ object Interpreter {
     response <- {
       if (state.at.isEmpty && state.queue.isEmpty) unlockAllUsers()
       else if (state.at.isEmpty && state.queue.head.startTime.isBefore(nowTime)) applyNextProfileInQueue()
+      else if (state.at.nonEmpty) applyNextProfileInQueue()
       else unlockAllUsers()
     }
   } yield response

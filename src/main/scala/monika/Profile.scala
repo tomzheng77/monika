@@ -2,8 +2,10 @@ package monika
 
 import java.time.{LocalDateTime, ZoneOffset}
 
+import monika.Interpreter.{NIL, RWS, ST}
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
+import scalaz.{@@, Tag}
 
 object Profile {
 
@@ -21,7 +23,7 @@ object Profile {
     * represents a linux/unix program which the profile user can run
     * when the corresponding mode is active
     */
-  case class Program(name: String)
+  case class Program(path: String)
 
   /**
     * represents a folder inside project home which the profile user can
@@ -46,7 +48,8 @@ object Profile {
     * @param bookmarks bookmarks to display inside the browser for convenience
     * @param proxy restricts which websites can be accessed
     */
-  case class ProfileMode(name: String, programs: Vector[Program], projects: Vector[Project], bookmarks: Vector[Bookmark], proxy: ProxySettings)
+  case class ProfileMode(name: String, programs: Vector[String @@ FileName], projects: Vector[String @@ FileName],
+                         bookmarks: Vector[Bookmark], proxy: ProxySettings)
 
   /**
     * @param startTime the start time of this profile
@@ -64,8 +67,8 @@ object Profile {
     implicit val formats: Formats = DefaultFormats
     ProfileMode(
       (definition \ "name").extractOpt[String].getOrElse(defaultName),
-      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Program),
-      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Project),
+      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Name),
+      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Name),
       (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
         val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
         val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
@@ -101,5 +104,34 @@ object Profile {
     assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
     assert(profiles.forall(pair => pair._1 == pair._2.name))
   }
+
+  /**
+    * ensures: any items past the given time inside the queue are dropped
+    */
+  def dropOverdueItems(time: LocalDateTime): ST[Unit] = RWS((_, state) => {
+    (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
+  })
+
+  /**
+    * requires: the queue is not empty
+    * ensures: the first item of the queue is returned
+    * ensures: the first item is removed from the queue
+    */
+  def popQueue(): ST[ProfileInQueue] = RWS((_, state) => {
+    (NIL, state.queue.head, state.copy(queue = state.queue.tail))
+  })
+
+  /**
+    * ensures: the state is returned
+    */
+  def readState(): ST[MonikaState] = RWS((_, state) => {
+    (NIL, state, state)
+  })
+
+  sealed trait FilePath
+  def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
+
+  sealed trait FileName
+  def Name[A](a: A): A @@ FileName = Tag[A, FileName](a)
 
 }

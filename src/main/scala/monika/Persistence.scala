@@ -17,6 +17,8 @@ object Persistence {
       println(corruption.message())
     })
 
+  Runtime.getRuntime.addShutdownHook(new Thread(() => set.close()))
+
   def queryState(): MonikaState = {
     val iter = set.iterator()
     if (iter.hasNext) iter.next() else MonikaState(Vector(), None)

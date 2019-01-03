@@ -132,6 +132,6 @@ object Profile {
   def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
 
   sealed trait FileName
-  def Name[A](a: A): A @@ FileName = Tag[A, FileName](a)
+  def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
 
 }

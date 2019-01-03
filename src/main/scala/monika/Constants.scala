@@ -1,5 +1,8 @@
 package monika
 
+import Profile._
+import scalaz.@@
+
 object Constants {
 
   val Users = Vector(
@@ -14,12 +17,27 @@ object Constants {
   val InterpreterPort = 9001
   val MaxQueueSize = 3
 
+  val ManagedPrograms: Vector[String @@ FileName] = Vector(
+    "studio",
+    "subl",
+    "idea",
+    "firefox",
+    "google-chrome",
+    "steam",
+    "virtualbox",
+    "jetbrains-toolbox",
+    "wine",
+    "libreoffice",
+    "ssh",
+    "assistant.jar"
+  ).map(FileName)
+
   object paths {
-    val MonikaHome: String = "/home/shared"
+    val MonikaHome: String = "/home/monika"
     val StateDB: String = MonikaHome + "/state.db"
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"
-    val ChromeBookmark: String = ""
+    val ChromeBookmark: String = "/home/profile/.config/google-chrome/Default/Bookmarks"
   }
 
 }

@@ -1,11 +1,13 @@
 package monika
 
+import java.io.File
 import java.time.LocalDateTime
 
 import monika.Profile._
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats}
 import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
+import scalaz.syntax.id._
 import spark.Spark
 
 import scala.collection.mutable
@@ -20,11 +22,10 @@ object Interpreter {
 
   /**
     * represents the external view
-    * @param programs known programs mapped from name to path
     * @param projects known projects mapped from name to path
     */
   case class External(
-    programs: Map[String @@ FileName, String @@ FilePath],
+    nowTime: LocalDateTime,
     projects: Map[String @@ FileName, String @@ FilePath]
   )
 
@@ -61,14 +62,14 @@ object Interpreter {
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
     val outMessage = new mutable.StringBuilder()
 
-    // commands required to setup proxy access for the profile mode
+    // creates effects required to setup proxy access for the profile mode
     def setupProxyAndBrowser(): Vector[Effect] = Vector(
       RestartProxy(profile.proxy),
       WriteStringToFile(FilePath(Constants.paths.ChromeBookmark), makeBookmarks(profile.bookmarks)),
       RunCommand("chown", Vector(profileUserGroup, Constants.paths.ChromeBookmark))
     )
 
-    // commands required to setup project access for the profile mode
+    // creates effects required to setup project access for the profile mode
     def setupProjectFolderPermissions(): Vector[Effect] = {
       val effects = mutable.Buffer[Effect]()
 
@@ -89,6 +90,9 @@ object Interpreter {
         ))
       }
 
+      // attempts to locate each profile project in the external environment
+      // if found, the folder becomes owned by the profile use
+      // if not, a message is included to indicate it was not found
       def findAndUnlockProjectFolder(): Unit = {
         val (found, notFound) = profile.projects.partition(ext.projects.contains)
         val projects: Vector[String @@ FilePath] = found.map(ext.projects)
@@ -104,7 +108,7 @@ object Interpreter {
       effects.toVector
     }
 
-    // commands required to setup program access for the profile mode
+    // creates effects required to setup program access
     def associateGroupsForPrograms(): Vector[Effect] = {
       RunCommand("usermod", Vector("-G", "", Constants.ProfileUser)) +:
       profile.programs.map(prog => {
@@ -161,18 +165,29 @@ object Interpreter {
     }
   })
 
+  def listEnvironment(): External = {
+    val projectRoot = new File(Constants.paths.ProjectRoot)
+    val projects = (projectRoot.listFiles() ?? Array())
+      .filter(f => f.isDirectory)
+      .map(f => (FileName(f.getName), FilePath(f.getCanonicalPath))).toMap
+
+    External(LocalDateTime.now(), projects)
+  }
+
   object Commands {
     def chkqueue(): String = ""
     def addqueue(args: List[String]): String = {
       val nowTime = LocalDateTime.now()
       Storage.transaction(state => {
-        val (_, response, newState) = addItemToQueue(args, nowTime).run((), state)
+        val ext = listEnvironment()
+        val (_, response, newState) = addItemToQueue(args, nowTime).run(ext, state)
         (newState, response)
       })
     }
     def status(): String = {
       Storage.transaction(state => {
-        val (_, response, newState) = statusReport().run((), state)
+        val ext = listEnvironment()
+        val (_, response, newState) = statusReport().run(ext, state)
         (newState, response)
       })
     }

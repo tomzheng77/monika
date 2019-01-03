@@ -92,10 +92,14 @@ object Profile {
   }
 
   /**
-    * ensures: any items past the given time inside the queue are dropped
+    * ensures: any items passed the current time inside the queue are dropped
+    * ensures: the active item is set to None if it has passed
     */
-  def dropOverdueItems(): RWS[Unit] = RWS((ext, state) => {
-    (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime))))
+  def dropFromQueueAndActive(): RWS[Unit] = RWS((ext, state) => {
+    (NIL, Unit, {
+      state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime)),
+        active = state.active.filterNot(item => item.endTime.isBefore(ext.nowTime)))
+    })
   })
 
   /**

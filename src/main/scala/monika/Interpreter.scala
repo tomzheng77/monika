@@ -119,13 +119,13 @@ object Interpreter {
     })
   } yield response
 
-  def clearAtOrApplyNext(): RWS[String] = for {
-    _ <- dropOverdueItems()
+  def clearActiveOrApplyNext(): RWS[String] = for {
+    _ <- dropFromQueueAndActive()
     (ext, state) <- readExtAndState()
     response <- {
       if (state.active.isEmpty && state.queue.isEmpty) unlockAllUsers()
       else if (state.active.isEmpty && state.queue.head.startTime.isBefore(ext.nowTime)) applyNextProfileInQueue()
-      else if (state.active.nonEmpty) applyNextProfileInQueue()
+      else if (state.active.nonEmpty) respond("profile still active")
       else unlockAllUsers()
     }
   } yield response
@@ -185,7 +185,7 @@ object Interpreter {
 
   def handleRequestCommand(name: String, args: List[String]): String = {
     name match {
-      case "chkqueue" => runTransaction(clearAtOrApplyNext())
+      case "chkqueue" => runTransaction(clearActiveOrApplyNext())
       case "addqueue" => runTransaction(enqueueNextProfile(args))
       case "status" => runTransaction(statusReport())
       case "resetprofile" => runTransaction(resetProfile())

@@ -8,29 +8,31 @@ import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 
 object Storage {
 
-  private val set: ChronicleSet[MonikaState] = ChronicleSetBuilder
+  private val stateDBFile = new File(Constants.Paths.StateDB)
+  private val stateDB: ChronicleSet[MonikaState] = ChronicleSetBuilder
     .of(classOf[MonikaState])
     .name("state-set")
     .entries(1)
     .averageKeySize(1024 * 10)
-    .createOrRecoverPersistedTo(new File("state.db"), true, (corruption: ChronicleHashCorruption) => {
-      println(corruption.message())
-    })
+    .createOrRecoverPersistedTo(stateDBFile, true, onCorruption _)
 
-  Runtime.getRuntime.addShutdownHook(new Thread(() => set.close()))
+  Runtime.getRuntime.addShutdownHook(new Thread(() => stateDB.close()))
+
+  private def onCorruption(ex: ChronicleHashCorruption): Unit = {
+  }
 
   private def queryState(): MonikaState = {
-    val iter = set.iterator()
-    if (iter.hasNext) iter.next() else MonikaState(Vector(), None)
+    val iter = stateDB.iterator()
+    if (iter.hasNext) iter.next() else MonikaState(Vector(), None, Map.empty)
   }
 
   private def saveState(state: MonikaState): Unit = {
-    set.clear()
-    set.add(state)
+    stateDB.clear()
+    stateDB.add(state)
   }
 
   def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
-    set.synchronized {
+    stateDB.synchronized {
       val state = queryState()
       val (newState, returnValue) = fn(state)
       saveState(newState); returnValue

@@ -7,12 +7,8 @@ object Monika {
   def onSecondTick(): Unit = {
   }
 
-  def startCommandListener(): Unit = {
-
-  }
-
-  def interpretFirstState(): Unit = {
-    val at = Persistence.transaction(state => (state, state.at))
+  def initFirstState(): Unit = {
+    val at = Storage.transaction(state => (state, state.at))
     at match {
       case None =>
       case Some(item) => {
@@ -32,12 +28,9 @@ object Monika {
 
   def main(args: Array[String]): Unit = {
     Firewall.rejectOutgoingHttp(forUser = Constants.ProfileUser)
-    startCommandListener()
-    interpretFirstState()
+    initFirstState()
     scheduleOnSecondTick()
-
-    val file = getClass.getResource("/default_profiles").getFile
-    println(file)
+    Interpreter.startHttpServer()
   }
 
 }

@@ -1,0 +1,47 @@
+{
+  "name": "server365",
+  "proxy": {
+    "allowHtmlPrefix": [
+      "web2.qq.com",
+      "xui.ptlogin2.qq.com",
+      "isdspeed.qq.com",
+      "huatuospeed.weiyun.com",
+      "pingtas.qq.com",
+
+      "repo.typesafe.com",
+      "repo.scala-sbt.org",
+      "repo1.maven.org",
+      "dl.bintray.com",
+
+      "365en-my.sharepoint.com",
+      "login.microsoftonline.com",
+      "login.windows.net",
+      "excel.officeapps.live.com",
+      "hk2-excel.officeapps.live.com",
+      "outlook.office365.com"
+    ]
+  },
+  "programs": [
+    "idea",
+    "subl",
+    "google-chrome",
+    "libreoffice",
+    "ssh",
+    "assistant.jar",
+    "virtualbox"
+  ],
+  "projects": [
+    "server365",
+    "keys365",
+    "Public",
+    "windows-qq",
+    ".IntelliJIdea2018.2",
+    ".sbt",
+    ".ivy2",
+    ".gradle"
+  ],
+  "bookmarks": [
+    { "name": "Web QQ", "url": "https://web2.qq.com/" },
+    { "name": "Excel", "url": "https://365en-my.sharepoint.com/:x:/r/personal/job_365en_onmicrosoft_com/_layouts/15/Doc.aspx?sourcedoc=%7B9367f104-d7c8-47e3-86f3-8c56e3429405%7D&action=default" }
+  ]
+}

@@ -1,10 +1,7 @@
 package monika
 
-import java.io.File
 import java.time.{LocalDateTime, ZoneOffset}
 
-import net.openhft.chronicle.hash.ChronicleHashCorruption
-import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
 
@@ -93,14 +90,16 @@ object Profile {
     *
     * invariant: the queue is sorted by start time
     * invariant: no two queue items overlap in time
+    * invariant: profiles are mapped by their name
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], at: Option[ProfileInQueue]) {
+  case class MonikaState(queue: Vector[ProfileInQueue], at: Option[ProfileInQueue], profiles: Map[String, ProfileMode]) {
     assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
     private val intervals = queue.map(i => {
       (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))
     })
     assert(intervals.forall(pair => pair._2 > pair._1))
     assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
+    assert(profiles.forall(pair => pair._1 == pair._2.name))
   }
 
 }

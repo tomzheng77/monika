@@ -31,7 +31,7 @@ object Environment {
     val psh = new PumpStreamHandler(stdout, stderr, stdin)
     executor.setStreamHandler(psh)
 
-    val exitValue = Try(executor.execute(cmd)) {
+    val exitValue = Try(executor.execute(cmd)) match {
       case Success(value) => value
       case Failure(ex: ExecuteException) => ex.getExitValue
       case Failure(ex) => throw new RuntimeException(ex)

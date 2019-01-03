@@ -13,3 +13,4 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.2"
 libraryDependencies += "com.sparkjava" % "spark-core" % "2.8.0"
 libraryDependencies += "org.apache.commons" % "commons-exec" % "1.3"
 libraryDependencies += "net.openhft" % "chronicle-map" % "3.17.0" exclude("xpp3", "xpp3_min")
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.0-M26"

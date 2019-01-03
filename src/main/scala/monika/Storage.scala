@@ -6,7 +6,7 @@ import monika.Profile.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 
-object Persistence {
+object Storage {
 
   private val set: ChronicleSet[MonikaState] = ChronicleSetBuilder
     .of(classOf[MonikaState])

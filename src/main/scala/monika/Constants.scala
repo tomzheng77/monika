@@ -10,5 +10,8 @@ object Constants {
 
   val ProfileUser = "profile"
   val MonikaDBPath = "/home/shared/monika.db"
+  val ProxyPort = 9000
+  val InterpreterPort = 9001
+  val MaxQueueSize = 3
 
 }

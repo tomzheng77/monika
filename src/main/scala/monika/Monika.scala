@@ -5,18 +5,7 @@ import java.util.{Timer, TimerTask}
 object Monika {
 
   def onSecondTick(): Unit = {
-  }
-
-  def initFirstState(): Unit = {
-    val at = Storage.transaction(state => (state, state.active))
-    at match {
-      case None =>
-      case Some(item) => {
-        item.startTime
-        item.endTime
-        item.profile
-      }
-    }
+    Interpreter.runTransaction(Interpreter.clearActiveOrApplyNext())
   }
 
   def scheduleOnSecondTick(): Unit = {
@@ -28,7 +17,6 @@ object Monika {
 
   def main(args: Array[String]): Unit = {
     Firewall.rejectOutgoingHttp(forUser = Constants.ProfileUser)
-    initFirstState()
     scheduleOnSecondTick()
     Interpreter.startHttpServer()
   }

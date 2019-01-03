@@ -101,10 +101,6 @@ object Interpreter {
     (allEffects, outMessage.toString(), state)
   })
 
-  implicit val semi: Semigroup[Vector[Effect]] = new Semigroup[Vector[Effect]] {
-    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
-  }
-
   def applyNextProfileInQueue(): ST[String] = for {
     item <- popQueue()
     response <- applyProfile(item.profile)

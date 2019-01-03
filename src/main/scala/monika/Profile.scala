@@ -1,11 +1,9 @@
 package monika
 
 import java.time.{LocalDateTime, ZoneOffset}
-
-import monika.Interpreter.{NIL, RWS, ST}
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
-import scalaz.{@@, ReaderWriterState, Tag}
+import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 
 object Profile {
 
@@ -126,6 +124,13 @@ object Profile {
   })
 
   /**
+    * ensures: the state is returned
+    */
+  def readState(): ST[MonikaState] = RWS((ext, state) => {
+    (NIL, state, state)
+  })
+
+  /**
     * an absolute or canonical path pointing to a file or folder
     */
   sealed trait FilePath
@@ -146,5 +151,9 @@ object Profile {
   type STR[T] = (Vector[Effect], T, MonikaState)
   def RWS[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
   val NIL = Vector.empty
+
+  implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {
+    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
+  }
 
 }

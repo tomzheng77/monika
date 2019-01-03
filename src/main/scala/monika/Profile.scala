@@ -1,6 +1,6 @@
 package monika
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
@@ -84,7 +84,20 @@ object Profile {
     * the full runtime state of the Monika program
     * since it has very limited amounts of state (< 10KB), it is completely feasible
     * to represent it with an immutable data structure
+    *
+    * the profile modes are fully stored within the state, hence prevents them
+    * from being modified even if the .json files are changed
+    *
+    * invariant: the queue is sorted by start time
+    * invariant: no two queue items overlap in time
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], at: ProfileInQueue)
+  case class MonikaState(queue: Vector[ProfileInQueue], at: Option[ProfileInQueue]) {
+    assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
+    private val intervals = queue.map(i => {
+      (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))
+    })
+    assert(intervals.forall(pair => pair._2 > pair._1))
+    assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
+  }
 
 }

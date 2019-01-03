@@ -2,7 +2,9 @@ package monika
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
-import org.apache.commons.exec.{CommandLine, DefaultExecutor, PumpStreamHandler}
+import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
+
+import scala.util.{Failure, Success, Try}
 
 object Environment {
 
@@ -29,7 +31,11 @@ object Environment {
     val psh = new PumpStreamHandler(stdout, stderr, stdin)
     executor.setStreamHandler(psh)
 
-    val exitValue = executor.execute(cmd)
+    val exitValue = Try(executor.execute(cmd)) {
+      case Success(value) => value
+      case Failure(ex: ExecuteException) => ex.getExitValue
+      case Failure(ex) => throw new RuntimeException(ex)
+    }
     CommandOutput(exitValue, stdout.toByteArray, stderr.toByteArray)
   }
 

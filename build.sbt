@@ -12,6 +12,4 @@ libraryDependencies += "commons-io" % "commons-io" % "2.6"
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.2"
 libraryDependencies += "com.sparkjava" % "spark-core" % "2.8.0"
 libraryDependencies += "org.apache.commons" % "commons-exec" % "1.3"
-libraryDependencies += "io.swaydb" %% "core" % "0.6"
-libraryDependencies += "net.openhft" % "chronicle-map" % "3.17.0"
-libraryDependencies += "org.mapdb" % "mapdb" % "3.0.7"
+libraryDependencies += "net.openhft" % "chronicle-map" % "3.17.0" exclude("xpp3", "xpp3_min")

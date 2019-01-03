@@ -11,8 +11,16 @@ object Monika {
 
   }
 
-  def startHttpProxyServer(): Unit = {
-
+  def interpretFirstState(): Unit = {
+    val at = Persistence.transaction(state => (state, state.at))
+    at match {
+      case None =>
+      case Some(item) => {
+        item.startTime
+        item.endTime
+        item.profile
+      }
+    }
   }
 
   def scheduleOnSecondTick(): Unit = {
@@ -23,10 +31,10 @@ object Monika {
   }
 
   def main(args: Array[String]): Unit = {
-    scheduleOnSecondTick()
     Firewall.rejectOutgoingHttp(forUser = Constants.ProfileUser)
     startCommandListener()
-    startHttpProxyServer()
+    interpretFirstState()
+    scheduleOnSecondTick()
 
     val file = getClass.getResource("/default_profiles").getFile
     println(file)

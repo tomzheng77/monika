@@ -17,24 +17,27 @@ object Interpreter {
   type STR[T] = (List[RunCommand], T, MonikaState)
   def RWS = ReaderWriterState
 
-  def addqueue_0(args: List[String], nowTime: LocalDateTime): ST[String] = RWS((_, state) => {
-    val profileName = args.head
-    val minutes = args(1)
-    if (state.queue.size >= Constants.MaxQueueSize) (Nil, "queue is already full", state)
-    else if (!state.profiles.contains(profileName)) (Nil, s"profile not found: $profileName", state)
-    else Try(minutes.toInt).toOption match {
-      case None => (Nil, s"time is invalid", state)
-      case Some(t) if t <= 0 => (Nil, s"time must be positive, provided $t", state)
-      case Some(t) => {
-        def addToQueueStartingAt(start: LocalDateTime): STR[String] = {
-          val profile = state.profiles(profileName)
-          (Nil, "successfully added", state.copy(queue = Vector(
-            ProfileInQueue(start, start.plusMinutes(t), profile)
-          )))
+  def addqueue_transaction(args: List[String], nowTime: LocalDateTime): ST[String] = RWS((_, state) => {
+    if (args.length != 2) (Nil, "usage: addqueue <profile> <time>", state)
+    else {
+      val profileName = args.head
+      val minutes = args(1)
+      if (state.queue.size >= Constants.MaxQueueSize) (Nil, "queue is already full", state)
+      else if (!state.profiles.contains(profileName)) (Nil, s"profile not found: $profileName", state)
+      else Try(minutes.toInt).toOption match {
+        case None => (Nil, s"time is invalid", state)
+        case Some(t) if t <= 0 => (Nil, s"time must be positive, provided $t", state)
+        case Some(t) => {
+          def addToQueueStartingAt(start: LocalDateTime): STR[String] = {
+            val profile = state.profiles(profileName)
+            (Nil, "successfully added", state.copy(queue = Vector(
+              ProfileInQueue(start, start.plusMinutes(t), profile)
+            )))
+          }
+          if (state.queue.isEmpty && state.at.isEmpty) addToQueueStartingAt(nowTime)
+          else if (state.queue.isEmpty) addToQueueStartingAt(state.at.get.endTime)
+          else addToQueueStartingAt(state.queue.last.endTime)
         }
-        if (state.queue.isEmpty && state.at.isEmpty) addToQueueStartingAt(nowTime)
-        else if (state.queue.isEmpty) addToQueueStartingAt(state.at.get.endTime)
-        else addToQueueStartingAt(state.queue.last.endTime)
       }
     }
   })
@@ -43,9 +46,8 @@ object Interpreter {
     def chkqueue(): String = ""
     def addqueue(args: List[String]): String = {
       val nowTime = LocalDateTime.now()
-      if (args.length != 2) "usage: addqueue <profile> <time>"
-      else Storage.transaction(state => {
-        val (_, response, newState) = addqueue_0(args, nowTime).run(null, state)
+      Storage.transaction(state => {
+        val (_, response, newState) = addqueue_transaction(args, nowTime).run(null, state)
         (newState, response)
       })
     }

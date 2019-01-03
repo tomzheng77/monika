@@ -18,26 +18,24 @@ object Interpreter {
   sealed trait Effect
   case class RunCommand(program: String, args: Vector[String]) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
-  case class WriteStringToFile(path: String @@ FilePath) extends Effect
+  case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
 
-  val in: WriteStringToFile = null
-  in.path.charAt(0)
-
-  type ST[T] = scalaz.ReaderWriterState[Unit, List[Effect], MonikaState, T]
-  type STR[T] = (List[RunCommand], T, MonikaState)
-  def RWS[T](f: (Unit, MonikaState) => (List[Effect], T, MonikaState)) = ReaderWriterState.apply[Unit, List[Effect], MonikaState, T](f)
-
+  type ST[T] = scalaz.ReaderWriterState[Unit, Vector[Effect], MonikaState, T]
+  type STR[T] = (Vector[Effect], T, MonikaState)
+  def RWS[T](f: (Unit, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[Unit, Vector[Effect], MonikaState, T](f)
+  val NIL = Vector.empty
+  
   def statusReport(): ST[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
     val response = JsonMethods.pretty(JsonMethods.render(Extraction.decompose(state)))
-    (Nil, response, state)
+    (Vector.empty, response, state)
   })
 
   /**
     * ensures: any items past the given time inside the queue are dropped
     */
   def dropOverdueItems(time: LocalDateTime): ST[Unit] = RWS((_, state) => {
-    (Nil, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
+    (Vector.empty, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
   })
 
   /**
@@ -46,21 +44,21 @@ object Interpreter {
     * ensures: the first item is removed from the queue
     */
   def popQueue(): ST[ProfileInQueue] = RWS((_, state) => {
-    (Nil, state.queue.head, state.copy(queue = state.queue.tail))
+    (Vector.empty, state.queue.head, state.copy(queue = state.queue.tail))
   })
 
   /**
     * ensures: the state is returned
     */
   def readState(): ST[MonikaState] = RWS((_, state) => {
-    (Nil, state, state)
+    (Vector.empty, state, state)
   })
 
   /**
     * ensures: a command is generated to unlock each user
     */
   def unlockAllUsers(): ST[String] = RWS((_, state) => {
-    (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))).toList, "all users unlocked", state)
+    (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))), "all users unlocked", state)
   })
 
   /**
@@ -68,13 +66,14 @@ object Interpreter {
     *          is put into effect for the profile user
     */
   def applyProfile(profile: ProfileMode): ST[String] = RWS((_, state) => {
+    // websites, projects, programs
     RestartProxy(profile.proxy)
     profile.name
     (null, "", state)
   })
 
-  implicit val semi: Semigroup[List[Effect]] = new Semigroup[List[Effect]] {
-    override def append(f1: List[Effect], f2: => List[Effect]): List[Effect] = f1 ++ f2
+  implicit val semi: Semigroup[Vector[Effect]] = new Semigroup[Vector[Effect]] {
+    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
   }
 
   def applyNextProfileInQueue(): ST[String] = for {
@@ -93,19 +92,19 @@ object Interpreter {
   } yield response
 
   def addItemToQueue(args: List[String], nowTime: LocalDateTime): ST[String] = RWS((_, state) => {
-    if (args.length != 2) (Nil, "usage: addqueue <profile> <time>", state)
+    if (args.length != 2) (Vector.empty, "usage: addqueue <profile> <time>", state)
     else {
       val profileName = args.head
       val minutes = args(1)
-      if (state.queue.size >= Constants.MaxQueueSize) (Nil, "queue is already full", state)
-      else if (!state.profiles.contains(profileName)) (Nil, s"profile not found: $profileName", state)
+      if (state.queue.size >= Constants.MaxQueueSize) (Vector.empty, "queue is already full", state)
+      else if (!state.profiles.contains(profileName)) (Vector.empty, s"profile not found: $profileName", state)
       else Try(minutes.toInt).toOption match {
-        case None => (Nil, s"time is invalid", state)
-        case Some(t) if t <= 0 => (Nil, s"time must be positive, provided $t", state)
+        case None => (Vector.empty, s"time is invalid", state)
+        case Some(t) if t <= 0 => (Vector.empty, s"time must be positive, provided $t", state)
         case Some(t) => {
           val profile = state.profiles(profileName)
           def addToQueueAfter(start: LocalDateTime): STR[String] = {
-            (Nil, "successfully added", state.copy(queue = Vector(
+            (Vector.empty, "successfully added", state.copy(queue = Vector(
               ProfileInQueue(start, start.plusMinutes(t), profile)
             )))
           }

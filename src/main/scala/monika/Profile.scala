@@ -94,7 +94,7 @@ object Profile {
   /**
     * ensures: any items past the given time inside the queue are dropped
     */
-  def dropOverdueItems(): ST[Unit] = RWS((ext, state) => {
+  def dropOverdueItems(): RWS[Unit] = RWS((ext, state) => {
     (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime))))
   })
 
@@ -103,12 +103,13 @@ object Profile {
     * ensures: the first item of the queue is returned
     * ensures: the first item is removed from the queue
     */
-  def popQueue(): ST[ProfileInQueue] = RWS((_, state) => {
+  def popQueue(): RWS[ProfileInQueue] = RWS((_, state) => {
     (NIL, state.queue.head, state.copy(queue = state.queue.tail))
   })
 
   /**
     * represents the external view
+    * @param nowTime the current date and time
     * @param projects known projects mapped from name to path
     */
   case class External(
@@ -119,14 +120,14 @@ object Profile {
   /**
     * ensures: the state is returned
     */
-  def readExtAndState(): ST[(External, MonikaState)] = RWS((ext, state) => {
+  def readExtAndState(): RWS[(External, MonikaState)] = RWS((ext, state) => {
     (NIL, (ext, state), state)
   })
 
   /**
     * ensures: the state is returned
     */
-  def readState(): ST[MonikaState] = RWS((ext, state) => {
+  def readState(): RWS[MonikaState] = RWS((ext, state) => {
     (NIL, state, state)
   })
 
@@ -147,7 +148,7 @@ object Profile {
   case class RestartProxy(settings: ProxySettings) extends Effect
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
 
-  type ST[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
+  type RWS[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
   type STR[T] = (Vector[Effect], T, MonikaState)
   def RWS[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
   val NIL = Vector.empty

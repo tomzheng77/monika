@@ -7,7 +7,7 @@ import monika.Profile._
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats}
 import scalaz.syntax.id._
-import scalaz.{@@, Semigroup, Tag}
+import scalaz.{@@, Tag}
 import spark.Spark
 
 import scala.collection.mutable
@@ -15,16 +15,21 @@ import scala.util.Try
 
 object Interpreter {
   
-  def statusReport(): ST[String] = RWS((_, state) => {
+  def statusReport(): RWS[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
     val response = JsonMethods.pretty(JsonMethods.render(Extraction.decompose(state)))
     (NIL, response, state)
   })
 
+  def resetProfile(): RWS[String] = for {
+    state <- readState()
+    response <- applyProfile(state.at.get.profile)
+  } yield ""
+
   /**
     * ensures: a command is generated to unlock each user
     */
-  def unlockAllUsers(): ST[String] = RWS((_, state) => {
+  def unlockAllUsers(): RWS[String] = RWS((_, state) => {
     (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))), "all users unlocked", state)
   })
 
@@ -37,7 +42,7 @@ object Interpreter {
     * ensures: commands are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def applyProfile(profile: ProfileMode): ST[String] = RWS((ext, state) => {
+  def applyProfile(profile: ProfileMode): RWS[String] = RWS((ext, state) => {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
@@ -101,12 +106,12 @@ object Interpreter {
     (allEffects, outMessage.toString(), state)
   })
 
-  def applyNextProfileInQueue(): ST[String] = for {
+  def applyNextProfileInQueue(): RWS[String] = for {
     item <- popQueue()
     response <- applyProfile(item.profile)
   } yield response
 
-  def checkQueue(): ST[String] = for {
+  def clearAtOrApplyNext(): RWS[String] = for {
     _ <- dropOverdueItems()
     (ext, state) <- readExtAndState()
     response <- {
@@ -117,7 +122,7 @@ object Interpreter {
     }
   } yield response
 
-  def addItemToQueue(args: List[String], nowTime: LocalDateTime): ST[String] = RWS((_, state) => {
+  def enqueueNextItem(args: List[String]): RWS[String] = RWS((ext, state) => {
     if (args.length != 2) (NIL, "usage: addqueue <profile> <time>", state)
     else {
       val profileName = args.head
@@ -134,7 +139,7 @@ object Interpreter {
               ProfileInQueue(start, start.plusMinutes(t), profile)
             )))
           }
-          if (state.queue.isEmpty && state.at.isEmpty) addToQueueAfter(nowTime)
+          if (state.queue.isEmpty && state.at.isEmpty) addToQueueAfter(ext.nowTime)
           else if (state.queue.isEmpty) addToQueueAfter(state.at.get.endTime)
           else addToQueueAfter(state.queue.last.endTime)
         }
@@ -151,33 +156,27 @@ object Interpreter {
     External(LocalDateTime.now(), projects)
   }
 
-  object Commands {
-    def chkqueue(): String = ""
-    def addqueue(args: List[String]): String = {
-      val nowTime = LocalDateTime.now()
-      Storage.transaction(state => {
-        val ext = listEnvironment()
-        val (_, response, newState) = addItemToQueue(args, nowTime).run(ext, state)
-        (newState, response)
-      })
+  def applyEffects(effects: Vector[Effect]): Unit = {
+    for (effect <- effects) {
+      println(effect)
     }
-    def status(): String = {
-      Storage.transaction(state => {
-        val ext = listEnvironment()
-        val (_, response, newState) = statusReport().run(ext, state)
-        (newState, response)
-      })
-    }
-    def resetprofile(): String = ""
+  }
+
+  def runTransaction(rws: RWS[String]): String = {
+    Storage.transaction(state => {
+      val ext = listEnvironment()
+      val (effects, response, newState) = rws.run(ext, state)
+      applyEffects(effects)
+      (newState, response)
+    })
   }
 
   def handleRequestCommand(name: String, args: List[String]): String = {
-    import Commands._
     name match {
-      case "chkqueue" => chkqueue()
-      case "addqueue" => addqueue(args)
-      case "status" => status()
-      case "resetprofile" => resetprofile()
+      case "chkqueue" => runTransaction(clearAtOrApplyNext())
+      case "addqueue" => runTransaction(enqueueNextItem(args))
+      case "status" => runTransaction(statusReport())
+      case "resetprofile" => runTransaction(resetProfile())
       case _ => s"unknown command $name"
     }
   }

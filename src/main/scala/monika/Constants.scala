@@ -33,7 +33,7 @@ object Constants {
   ).map(FileName)
 
   object paths {
-    val MonikaHome: String = "/home/monika"
+    val MonikaHome: String = "/home/tomzheng/monika"
     val StateDB: String = MonikaHome + "/state.db"
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"

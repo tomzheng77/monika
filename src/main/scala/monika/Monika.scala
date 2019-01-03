@@ -8,7 +8,7 @@ object Monika {
   }
 
   def initFirstState(): Unit = {
-    val at = Storage.transaction(state => (state, state.at))
+    val at = Storage.transaction(state => (state, state.active))
     at match {
       case None =>
       case Some(item) => {

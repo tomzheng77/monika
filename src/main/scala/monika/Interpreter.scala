@@ -21,10 +21,15 @@ object Interpreter {
     (NIL, response, state)
   })
 
+  def respond(response: String): RWS[String] = RWS((_, s) => (NIL, response, s))
+
   def resetProfile(): RWS[String] = for {
     state <- readState()
-    response <- applyProfile(state.at.get.profile)
-  } yield ""
+    response <- state.active match {
+      case None => respond("no currently active profile")
+      case Some(piq) => applyProfile(piq.profile)
+    }
+  } yield response
 
   /**
     * ensures: a command is generated to unlock each user
@@ -115,9 +120,9 @@ object Interpreter {
     _ <- dropOverdueItems()
     (ext, state) <- readExtAndState()
     response <- {
-      if (state.at.isEmpty && state.queue.isEmpty) unlockAllUsers()
-      else if (state.at.isEmpty && state.queue.head.startTime.isBefore(ext.nowTime)) applyNextProfileInQueue()
-      else if (state.at.nonEmpty) applyNextProfileInQueue()
+      if (state.active.isEmpty && state.queue.isEmpty) unlockAllUsers()
+      else if (state.active.isEmpty && state.queue.head.startTime.isBefore(ext.nowTime)) applyNextProfileInQueue()
+      else if (state.active.nonEmpty) applyNextProfileInQueue()
       else unlockAllUsers()
     }
   } yield response
@@ -139,8 +144,8 @@ object Interpreter {
               ProfileInQueue(start, start.plusMinutes(t), profile)
             )))
           }
-          if (state.queue.isEmpty && state.at.isEmpty) addToQueueAfter(ext.nowTime)
-          else if (state.queue.isEmpty) addToQueueAfter(state.at.get.endTime)
+          if (state.queue.isEmpty && state.active.isEmpty) addToQueueAfter(ext.nowTime)
+          else if (state.queue.isEmpty) addToQueueAfter(state.active.get.endTime)
           else addToQueueAfter(state.queue.last.endTime)
         }
       }

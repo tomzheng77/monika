@@ -81,7 +81,7 @@ object Profile {
     * invariant: no two queue items overlap in time
     * invariant: profiles are mapped by their name
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], at: Option[ProfileInQueue], profiles: Map[String, ProfileMode]) {
+  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, ProfileMode]) {
     assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
     private val intervals = queue.map(i => {
       (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))

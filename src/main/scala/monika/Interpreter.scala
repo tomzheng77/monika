@@ -6,8 +6,8 @@ import java.time.LocalDateTime
 import monika.Profile._
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats}
-import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 import scalaz.syntax.id._
+import scalaz.{@@, Semigroup, Tag}
 import spark.Spark
 
 import scala.collection.mutable

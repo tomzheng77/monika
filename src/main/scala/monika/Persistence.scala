@@ -19,19 +19,22 @@ object Persistence {
 
   Runtime.getRuntime.addShutdownHook(new Thread(() => set.close()))
 
-  def queryState(): MonikaState = {
+  private def queryState(): MonikaState = {
     val iter = set.iterator()
     if (iter.hasNext) iter.next() else MonikaState(Vector(), None)
   }
 
-  def saveState(state: MonikaState): Unit = {
+  private def saveState(state: MonikaState): Unit = {
     set.clear()
     set.add(state)
   }
 
-  def modifyState(fn: MonikaState => MonikaState): Unit = {
-    val state = queryState()
-    saveState(fn(state))
+  def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
+    set.synchronized {
+      val state = queryState()
+      val (newState, returnValue) = fn(state)
+      saveState(newState); returnValue
+    }
   }
 
 }

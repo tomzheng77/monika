@@ -62,14 +62,14 @@ object Interpreter {
     val outMessage = new mutable.StringBuilder()
 
     // commands required to setup proxy access for the profile mode
-    def setupWebsites(): Vector[Effect] = Vector(
+    def setupProxyAndBrowser(): Vector[Effect] = Vector(
       RestartProxy(profile.proxy),
       WriteStringToFile(FilePath(Constants.paths.ChromeBookmark), makeBookmarks(profile.bookmarks)),
       RunCommand("chown", Vector(profileUserGroup, Constants.paths.ChromeBookmark))
     )
 
     // commands required to setup project access for the profile mode
-    def setupProjects(): Vector[Effect] = {
+    def setupProjectFolderPermissions(): Vector[Effect] = {
       val effects = mutable.Buffer[Effect]()
 
       // owns the project root with main user, sets permission to 755
@@ -105,14 +105,15 @@ object Interpreter {
     }
 
     // commands required to setup program access for the profile mode
-    def setupPrograms(): Vector[Effect] = {
+    def associateGroupsForPrograms(): Vector[Effect] = {
       RunCommand("usermod", Vector("-G", "", Constants.ProfileUser)) +:
       profile.programs.map(prog => {
         RunCommand("usermod", Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
       })
     }
 
-    (setupWebsites() ++ setupProjects() ++ setupPrograms(), outMessage.toString(), state)
+    val allEffects = setupProxyAndBrowser() ++ setupProjectFolderPermissions() ++ associateGroupsForPrograms()
+    (allEffects, outMessage.toString(), state)
   })
 
   implicit val semi: Semigroup[Vector[Effect]] = new Semigroup[Vector[Effect]] {

@@ -5,7 +5,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import monika.Interpreter.{NIL, RWS, ST}
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
-import scalaz.{@@, Tag}
+import scalaz.{@@, ReaderWriterState, Tag}
 
 object Profile {
 
@@ -20,18 +20,6 @@ object Profile {
   case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
 
   /**
-    * represents a linux/unix program which the profile user can run
-    * when the corresponding mode is active
-    */
-  case class Program(path: String)
-
-  /**
-    * represents a folder inside project home which the profile user can
-    * edit (including all sub-contents) when the corresponding mode is active
-    */
-  case class Project(path: String)
-
-  /**
     * a bookmark to display on the browser's toolbar
     * @param name name to display, if not provided should be a shortened url
     * @param url url it should lead to
@@ -43,8 +31,8 @@ object Profile {
     * when this mode is active
     *
     * @param name name of this mode
-    * @param programs programs allowed when this mode is active
-    * @param projects projects allowed when this mode is active
+    * @param programs names of programs allowed when this mode is active
+    * @param projects names of projects allowed when this mode is active
     * @param bookmarks bookmarks to display inside the browser for convenience
     * @param proxy restricts which websites can be accessed
     */
@@ -67,8 +55,8 @@ object Profile {
     implicit val formats: Formats = DefaultFormats
     ProfileMode(
       (definition \ "name").extractOpt[String].getOrElse(defaultName),
-      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Name),
-      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(Name),
+      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
+      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
       (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
         val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
         val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
@@ -108,8 +96,8 @@ object Profile {
   /**
     * ensures: any items past the given time inside the queue are dropped
     */
-  def dropOverdueItems(time: LocalDateTime): ST[Unit] = RWS((_, state) => {
-    (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(time))))
+  def dropOverdueItems(): ST[Unit] = RWS((ext, state) => {
+    (NIL, Unit, state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime))))
   })
 
   /**
@@ -122,16 +110,41 @@ object Profile {
   })
 
   /**
+    * represents the external view
+    * @param projects known projects mapped from name to path
+    */
+  case class External(
+    nowTime: LocalDateTime,
+    projects: Map[String @@ FileName, String @@ FilePath]
+  )
+
+  /**
     * ensures: the state is returned
     */
-  def readState(): ST[MonikaState] = RWS((_, state) => {
-    (NIL, state, state)
+  def readExtAndState(): ST[(External, MonikaState)] = RWS((ext, state) => {
+    (NIL, (ext, state), state)
   })
 
+  /**
+    * an absolute or canonical path pointing to a file or folder
+    */
   sealed trait FilePath
   def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
 
+  /**
+    * the name of a file or folder
+    */
   sealed trait FileName
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
+
+  sealed trait Effect
+  case class RunCommand(program: String, args: Vector[String] = NIL) extends Effect
+  case class RestartProxy(settings: ProxySettings) extends Effect
+  case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
+
+  type ST[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
+  type STR[T] = (Vector[Effect], T, MonikaState)
+  def RWS[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
+  val NIL = Vector.empty
 
 }

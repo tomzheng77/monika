@@ -14,25 +14,6 @@ import scala.collection.mutable
 import scala.util.Try
 
 object Interpreter {
-
-  sealed trait Effect
-  case class RunCommand(program: String, args: Vector[String] = NIL) extends Effect
-  case class RestartProxy(settings: ProxySettings) extends Effect
-  case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
-
-  /**
-    * represents the external view
-    * @param projects known projects mapped from name to path
-    */
-  case class External(
-    nowTime: LocalDateTime,
-    projects: Map[String @@ FileName, String @@ FilePath]
-  )
-
-  type ST[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
-  type STR[T] = (Vector[Effect], T, MonikaState)
-  def RWS[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
-  val NIL = Vector.empty
   
   def statusReport(): ST[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
@@ -129,12 +110,12 @@ object Interpreter {
     response <- applyProfile(item.profile)
   } yield response
 
-  def checkQueue(nowTime: LocalDateTime): ST[String] = for {
-    _ <- dropOverdueItems(nowTime)
-    state <- readState()
+  def checkQueue(): ST[String] = for {
+    _ <- dropOverdueItems()
+    (ext, state) <- readExtAndState()
     response <- {
       if (state.at.isEmpty && state.queue.isEmpty) unlockAllUsers()
-      else if (state.at.isEmpty && state.queue.head.startTime.isBefore(nowTime)) applyNextProfileInQueue()
+      else if (state.at.isEmpty && state.queue.head.startTime.isBefore(ext.nowTime)) applyNextProfileInQueue()
       else if (state.at.nonEmpty) applyNextProfileInQueue()
       else unlockAllUsers()
     }

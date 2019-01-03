@@ -2,44 +2,39 @@ package monika
 
 import java.time.LocalDateTime
 
-import monika.Profile.{MonikaState, ProfileInQueue}
+import monika.Profile.{MonikaState, ProfileInQueue, ProfileMode}
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Formats}
-import scalaz.State
+import scalaz.ReaderWriterState
 import spark.Spark
 
 import scala.util.Try
 
 object Interpreter {
 
-  type ST[T] = scalaz.State[MonikaState, T]
+  case class RunCommand(program: String, args: Vector[String])
+  type ST[T] = scalaz.ReaderWriterState[Unit, List[RunCommand], MonikaState, T]
+  type STR[T] = (List[RunCommand], T, MonikaState)
+  def RWS = ReaderWriterState
 
-  def addqueue_0(args: List[String], nowTime: LocalDateTime): ST[String] = State(state => {
+  def addqueue_0(args: List[String], nowTime: LocalDateTime): ST[String] = RWS((_, state) => {
     val profileName = args.head
     val minutes = args(1)
-    if (state.queue.size >= Constants.MaxQueueSize) (state, "queue is already full")
-    else if (!state.profiles.contains(profileName)) (state, s"profile not found: $profileName")
+    if (state.queue.size >= Constants.MaxQueueSize) (Nil, "queue is already full", state)
+    else if (!state.profiles.contains(profileName)) (Nil, s"profile not found: $profileName", state)
     else Try(minutes.toInt).toOption match {
-      case None => (state, s"time is invalid")
-      case Some(t) if t <= 0 => (state, s"time must be positive, provided $t")
+      case None => (Nil, s"time is invalid", state)
+      case Some(t) if t <= 0 => (Nil, s"time must be positive, provided $t", state)
       case Some(t) => {
-        val profile = state.profiles(profileName)
-        if (state.queue.isEmpty && state.at.isEmpty) {
-          (state.copy(queue = Vector(
-            ProfileInQueue(nowTime, nowTime.plusMinutes(t), profile)
-          )), "successfully added")
-        } else if (state.queue.isEmpty) {
-          val at = state.at.get
-          (state.copy(queue = Vector(
-            ProfileInQueue(at.endTime, at.endTime.plusMinutes(t), profile)
-          )), "successfully added")
-        } else {
-          val at = state.at.get
-          (state.copy(queue = state.queue :+ {
-            ProfileInQueue(at.endTime, at.endTime.plusMinutes(t), profile)
-          }), "successfully added")
+        def addToQueueStartingAt(start: LocalDateTime): STR[String] = {
+          val profile = state.profiles(profileName)
+          (Nil, "successfully added", state.copy(queue = Vector(
+            ProfileInQueue(start, start.plusMinutes(t), profile)
+          )))
         }
-        (state, s"time is invalid")
+        if (state.queue.isEmpty && state.at.isEmpty) addToQueueStartingAt(nowTime)
+        else if (state.queue.isEmpty) addToQueueStartingAt(state.at.get.endTime)
+        else addToQueueStartingAt(state.queue.last.endTime)
       }
     }
   })
@@ -49,7 +44,10 @@ object Interpreter {
     def addqueue(args: List[String]): String = {
       val nowTime = LocalDateTime.now()
       if (args.length != 2) "usage: addqueue <profile> <time>"
-      else Storage.transaction(state => addqueue_0(args, nowTime)(state))
+      else Storage.transaction(state => {
+        val (_, response, newState) = addqueue_0(args, nowTime).run(null, state)
+        (newState, response)
+      })
     }
     def status(): String = ""
     def resetprofile(): String = ""

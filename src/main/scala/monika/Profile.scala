@@ -21,13 +21,13 @@ object Profile {
     * represents a linux/unix program which the profile user can run
     * when the corresponding mode is active
     */
-  case class Program(name: String, path: String)
+  case class Program(name: String)
 
   /**
     * represents a folder inside project home which the profile user can
     * edit (including all sub-contents) when the corresponding mode is active
     */
-  case class Project(name: String, path: String)
+  case class Project(path: String)
 
   /**
     * a bookmark to display on the browser's toolbar

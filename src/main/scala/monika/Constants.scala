@@ -15,10 +15,11 @@ object Constants {
   val MaxQueueSize = 3
 
   object paths {
-    val Root: String = "/home/shared"
-    val StateDB: String = Root + "/state.db"
-    val Profiles: String = Root + "/profiles"
-    val Projects: String = Root + "/projects"
+    val MonikaHome: String = "/home/shared"
+    val StateDB: String = MonikaHome + "/state.db"
+    val ProfileRoot: String = MonikaHome + "/profiles"
+    val ProjectRoot: String = MonikaHome + "/projects"
+    val ChromeBookmark: String = ""
   }
 
 }

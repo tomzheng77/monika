@@ -8,6 +8,7 @@ import org.json4s.{DefaultFormats, Extraction, Formats}
 import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 import spark.Spark
 
+import scala.collection.mutable
 import scala.util.Try
 
 object Interpreter {
@@ -68,17 +69,47 @@ object Interpreter {
     (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))), "all users unlocked", state)
   })
 
+  def makeBookmarks(bookmarks: Vector[Profile.Bookmark]): String = {
+    ""
+  }
+
   /**
     * ensures: commands are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def applyProfile(profile: ProfileMode): ST[String] = RWS((_, state) => {
+  def applyProfile(profile: ProfileMode): ST[String] = RWS((ext, state) => {
     // websites, projects, programs
-    RestartProxy(profile.proxy)
-    RunCommand("chmod", Vector("755", Constants.paths.Profiles))
-    RunCommand("chown", Vector(s"${Constants.MainUser}:${Constants.MainUser}", Constants.paths.Profiles))
-    RunCommand("chmod", Vector("-R", "770", Constants.paths.Profiles))
-    (null, "", state)
+    val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
+    val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
+
+    // commands required to setup proxy access for the profile mode
+    def setupWebsites(): Vector[Effect] = Vector(
+      RestartProxy(profile.proxy),
+      WriteStringToFile(FilePath(Constants.paths.ChromeBookmark), makeBookmarks(profile.bookmarks)),
+      RunCommand("chown", Vector(profileUserGroup, Constants.paths.ChromeBookmark))
+    )
+
+    // commands required to setup project access for the profile mode
+    def setupProjects(): Vector[Effect] = {
+      val effects = mutable.Buffer[Effect]()
+      effects += RunCommand("chmod", Vector("755", Constants.paths.ProjectRoot))
+      effects += RunCommand("chown", Vector(mainUserGroup, Constants.paths.ProjectRoot))
+      effects ++= ext.projects.flatMap(proj => Vector(
+        RunCommand("chmod", Vector("-R", "770", proj.path)),
+        RunCommand("chown", Vector("-R", profileUserGroup, proj.path)),
+        RunCommand("chown", Vector(mainUserGroup, proj.path))
+      ))
+      effects ++= profile.projects.map(proj => RunCommand("chown", Vector(profileUserGroup, proj.path)))
+      effects.toVector
+    }
+
+    // commands required to setup program access for the profile mode
+    def setupPrograms(): Vector[Effect] = {
+      RunCommand("usermod", Vector("-G", "", Constants.ProfileUser)) +:
+      profile.programs.map(prog => RunCommand("usermod", Vector("-a", "-G", s"use-${prog.name}", Constants.ProfileUser)))
+    }
+
+    (setupWebsites() ++ setupProjects() ++ setupPrograms(), "new profile applied", state)
   })
 
   implicit val semi: Semigroup[Vector[Effect]] = new Semigroup[Vector[Effect]] {

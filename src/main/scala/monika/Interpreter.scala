@@ -27,7 +27,7 @@ object Interpreter {
     state <- readState()
     response <- state.active match {
       case None => respond("no currently active profile")
-      case Some(piq) => applyProfile(piq.profile)
+      case Some(piq) => addEffectsForProfile(piq.profile)
     }
   } yield response
 
@@ -44,10 +44,10 @@ object Interpreter {
 
   /**
     * updates the proxy
-    * ensures: commands are generated to ensure the new profile mode
+    * ensures: effects are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def applyProfile(profile: ProfileMode): RWS[String] = RWS((ext, state) => {
+  def addEffectsForProfile(profile: ProfileMode): RWS[String] = RWS((ext, state) => {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
@@ -113,7 +113,10 @@ object Interpreter {
 
   def applyNextProfileInQueue(): RWS[String] = for {
     item <- popQueue()
-    response <- applyProfile(item.profile)
+    response <- addEffectsForProfile(item.profile)
+    _ <- RWS((_, state) => {
+      (NIL, null, state.copy(active = Some(item)))
+    })
   } yield response
 
   def clearAtOrApplyNext(): RWS[String] = for {
@@ -127,7 +130,11 @@ object Interpreter {
     }
   } yield response
 
-  def enqueueNextItem(args: List[String]): RWS[String] = RWS((ext, state) => {
+  /**
+    * requires: a profile name and time passed via the arguments
+    * ensures: a profile is added to the queue at the earliest feasible time
+    */
+  def enqueueNextProfile(args: List[String]): RWS[String] = RWS((ext, state) => {
     if (args.length != 2) (NIL, "usage: addqueue <profile> <time>", state)
     else {
       val profileName = args.head
@@ -179,7 +186,7 @@ object Interpreter {
   def handleRequestCommand(name: String, args: List[String]): String = {
     name match {
       case "chkqueue" => runTransaction(clearAtOrApplyNext())
-      case "addqueue" => runTransaction(enqueueNextItem(args))
+      case "addqueue" => runTransaction(enqueueNextProfile(args))
       case "status" => runTransaction(statusReport())
       case "resetprofile" => runTransaction(resetProfile())
       case _ => s"unknown command $name"

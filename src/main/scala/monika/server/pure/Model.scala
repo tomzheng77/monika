@@ -75,6 +75,7 @@ object Model {
     * invariant: profiles are mapped by their name
     * invariant: the passwords contain only characters and numbers
     */
+  val MonikaStateVersion: String = "2019-01-05"
   case class MonikaState(
     nextProfiles: Vector[ProfileRequest],
     activeProfile: Option[ProfileRequest],

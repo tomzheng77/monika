@@ -10,7 +10,7 @@ import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGen
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 import org.littleshoot.proxy.{HttpFilters, HttpFiltersAdapter, HttpFiltersSourceAdapter, HttpProxyServer}
 
-object Proxy {
+object ProxyServer {
 
   /**
     * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
@@ -24,20 +24,20 @@ object Proxy {
 
   private var server: HttpProxyServer = _
 
-  def stop(): Unit = {
+  def startOrRestart(settings: ProxySettings): Unit = {
+    server.synchronized {
+      stop()
+      if (settings.transparent) startTransparent()
+      else startWithFilter(settings)
+    }
+  }
+
+  private def stop(): Unit = {
     server.synchronized {
       if (server != null) {
         server.stop()
         server = null
       }
-    }
-  }
-
-  def start(settings: ProxySettings): Unit = {
-    server.synchronized {
-      stop()
-      if (settings.transparent) startTransparent()
-      else startWithFilter(settings)
     }
   }
 

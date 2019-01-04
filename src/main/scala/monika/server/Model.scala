@@ -2,7 +2,7 @@ package monika.server
 
 import java.time.{LocalDateTime, ZoneOffset}
 
-import monika.proxy.Proxy.ProxySettings
+import monika.proxy.ProxyServer.ProxySettings
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
 import scalaz.{@@, ReaderWriterState, Semigroup, Tag}

@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
 import monika.server.Model.FileName
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.LoggerFactory
 import scalaz.{@@, Tag}
 
 import scala.collection.JavaConverters._
@@ -12,7 +12,7 @@ import scala.util.{Failure, Success, Try}
 
 object Environment {
 
-  private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+  private val LOGGER = LoggerFactory.getLogger(getClass)
 
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
@@ -27,8 +27,10 @@ object Environment {
     * @return an object containing exit value, stdout and stderr
     */
   def call(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty): CommandOutput = {
+    LOGGER.debug(s"run: $program ${args.mkString(" ")}")
     val cmd = new CommandLine(program)
     cmd.addArguments(args)
+    cmd.toString
 
     val executor = new DefaultExecutor()
     val stdin = new ByteArrayInputStream(input)

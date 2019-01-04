@@ -3,11 +3,14 @@ package monika.server
 import java.io.File
 import java.time.LocalDateTime
 
+import monika.proxy.ProxyServer
 import monika.server.Constants.CallablePrograms
 import monika.server.Model._
+import monika.server.Monika.getClass
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
+import org.slf4j.LoggerFactory
 import scalaz.{@@, Tag}
 import scalaz.syntax.id._
 import spark.Spark
@@ -17,6 +20,8 @@ import scala.util.Try
 import scala.collection.JavaConverters._
 
 object Interpreter {
+
+  private val LOGGER = LoggerFactory.getLogger(getClass)
 
   def statusReport(): RWS[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
@@ -181,8 +186,12 @@ object Interpreter {
   }
 
   def applyEffects(effects: Vector[Effect]): Unit = {
-    for (effect <- effects) {
-      println(effect)
+    for (effect <- effects) effect match {
+      case RunCommand(program, args) => Environment.call(Tag.unwrap(program), args.toArray)
+      case RestartProxy(settings) => ProxyServer.startOrRestart(settings)
+      case WriteStringToFile(path, content) =>
+        val pathString = Tag.unwrap(path)
+        FileUtils.writeStringToFile(new File(pathString), content, Constants.GlobalEncoding)
     }
   }
 
@@ -202,6 +211,7 @@ object Interpreter {
   }
 
   def handleRequestCommand(name: String, args: List[String]): String = {
+    LOGGER.debug(s"received command request: $name $args")
     name match {
       case "chkqueue" => runTransaction(clearActiveOrApplyNext())
       case "addqueue" => runTransaction(enqueueNextProfile(args))

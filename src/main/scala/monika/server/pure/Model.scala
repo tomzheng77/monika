@@ -117,7 +117,7 @@ object Model {
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
 
   sealed trait Effect
-  case class RunCommand(program: String @@ FileName, args: Vector[String] = NIL) extends Effect
+  case class RunCommand(program: String @@ FileName, args: Vector[String] = Vector.empty) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
   case class WriteLog(level: Level, message: String) extends Effect

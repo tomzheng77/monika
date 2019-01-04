@@ -63,6 +63,12 @@ object Model {
   case class ProfileRequest(start: LocalDateTime, end: LocalDateTime, profile: Profile)
 
   /**
+    * IMPORTANT: every time MonikaState and it's sub-components are changed
+    * this version number MUST be bumped
+    */
+  val MonikaStateVersion: String = "2019-01-05"
+
+  /**
     * the full runtime state of the Monika program
     * since it has very limited amounts of state (< 10KB), it is completely feasible
     * to represent it with an immutable data structure
@@ -75,7 +81,6 @@ object Model {
     * invariant: profiles are mapped by their name
     * invariant: the passwords contain only characters and numbers
     */
-  val MonikaStateVersion: String = "2019-01-05"
   case class MonikaState(
     nextProfiles: Vector[ProfileRequest],
     activeProfile: Option[ProfileRequest],

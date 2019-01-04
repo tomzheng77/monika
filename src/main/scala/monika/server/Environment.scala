@@ -39,4 +39,9 @@ object Environment {
     CommandOutput(exitValue, stdout.toByteArray, stderr.toByteArray)
   }
 
+  def rejectOutgoingHttp(forUser: String): Unit = {
+    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
+    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
+  }
+
 }

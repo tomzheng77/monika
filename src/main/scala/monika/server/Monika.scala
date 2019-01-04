@@ -2,6 +2,8 @@ package monika.server
 
 import java.util.{Timer, TimerTask}
 
+import monika.server.Environment.rejectOutgoingHttp
+
 object Monika {
 
   def scheduleTimer(): Unit = {
@@ -14,7 +16,7 @@ object Monika {
   }
 
   def main(args: Array[String]): Unit = {
-    Firewall.rejectOutgoingHttp(forUser = Constants.ProfileUser)
+    rejectOutgoingHttp(forUser = Constants.ProfileUser)
     scheduleTimer()
     Interpreter.startHttpServer()
   }

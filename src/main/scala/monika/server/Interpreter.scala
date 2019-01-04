@@ -195,7 +195,7 @@ object Interpreter {
     })
   }
 
-  def readProfiles(): Map[String @@ FileName, String] = {
+  def readProfilesAsString(): Map[String @@ FileName, String] = {
     val profileRoot = new File(Constants.paths.ProfileRoot)
     val files = FileUtils.listFiles(profileRoot, Array("json"), true).asScala
     files.map(f => FileName(f.getName) -> FileUtils.readFileToString(f, Constants.GlobalEncoding)).toMap
@@ -207,7 +207,7 @@ object Interpreter {
       case "addqueue" => runTransaction(enqueueNextProfile(args))
       case "status" => runTransaction(statusReport())
       case "reload" => {
-        val profiles = readProfiles()
+        val profiles = readProfilesAsString()
         runTransaction(reloadProfiles(profiles))
       }
       case "resetprofile" => runTransaction(resetProfile())

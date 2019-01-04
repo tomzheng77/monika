@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import monika.server.Constants
 import monika.server.Constants.CallablePrograms._
-import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, External, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteLog, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import monika.server.pure.Model._
 import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
@@ -20,8 +20,6 @@ object Actions {
     val response = JsonMethods.pretty(JsonMethods.render(Extraction.decompose(state)))
     (NIL, response, state)
   })
-
-  def respond(response: String): Action[String] = Action((_, s) => (NIL, response, s))
 
   def resetProfile(): Action[String] = for {
     state <- readState()

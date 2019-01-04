@@ -130,6 +130,7 @@ object Model {
   def readState(): Action[MonikaState] = Action((ext, state) => {
     (NIL, state, state)
   })
+  def respond[T](response: T): Action[T] = Action((_, s) => (NIL, response, s))
 
   /**
     * - the canonical path of a file or folder
@@ -154,7 +155,7 @@ object Model {
   type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
   type ActionReturn[T] = (Vector[Effect], T, MonikaState)
   def Action[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)): Action[T] = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
-  val NIL = Vector.empty
+  val NIL: Vector[Nothing] = Vector.empty
 
   implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {
     override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2

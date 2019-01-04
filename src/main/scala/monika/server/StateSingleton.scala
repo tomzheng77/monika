@@ -2,7 +2,6 @@ package monika.server
 
 import java.io.File
 
-import monika.server.Environment.getClass
 import monika.server.Model.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
@@ -13,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object Storage {
+object StateSingleton {
 
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 

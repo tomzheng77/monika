@@ -11,7 +11,7 @@ object Monika {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 
-  def setupLog(): Unit = {
+  def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
     // https://stackoverflow.com/questions/8965946/configuring-log4j-loggers-programmatically
     val console = new ConsoleAppender()
@@ -42,7 +42,7 @@ object Monika {
   }
 
   def main(args: Array[String]): Unit = {
-    setupLog()
+    setupLogger()
     LOGGER.info("M.O.N.I.K.A starting...")
     checkIfProgramsAreExecutable()
     rejectOutgoingHttp(forUser = Constants.ProfileUser)

@@ -6,18 +6,17 @@ import java.time.LocalDateTime
 import monika.proxy.ProxyServer
 import monika.server.Constants.CallablePrograms
 import monika.server.Model._
-import monika.server.Monika.getClass
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import org.slf4j.LoggerFactory
-import scalaz.{@@, Tag}
 import scalaz.syntax.id._
+import scalaz.{@@, Tag}
 import spark.Spark
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
-import scala.collection.JavaConverters._
 
 object Interpreter {
 
@@ -196,7 +195,7 @@ object Interpreter {
   }
 
   def runTransaction(rws: RWS[String]): String = {
-    Storage.transaction(state => {
+    StateSingleton.transaction(state => {
       val ext = listEnvironment()
       val (effects, response, newState) = rws.run(ext, state)
       applyEffects(effects)

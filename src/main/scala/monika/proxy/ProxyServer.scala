@@ -27,8 +27,8 @@ object ProxyServer {
   def startOrRestart(settings: ProxySettings): Unit = {
     server.synchronized {
       stop()
-      if (settings.transparent) startTransparent()
-      else startWithFilter(settings)
+      if (settings.transparent) serveTransparently()
+      else serveWithFilter(settings)
     }
   }
 
@@ -54,7 +54,7 @@ object ProxyServer {
       "private-key", "123456")
   }
 
-  private def startTransparent(): Unit = {
+  private def serveTransparently(): Unit = {
     server.synchronized {
       assert(server == null)
       server = DefaultHttpProxyServer.bootstrap()
@@ -65,7 +65,7 @@ object ProxyServer {
     }
   }
 
-  private def startWithFilter(settings: ProxySettings): Unit = {
+  private def serveWithFilter(settings: ProxySettings): Unit = {
     def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
       def mkHeaders(msg: HttpMessage): Map[String, String] = {
         import scala.collection.JavaConverters._
@@ -109,7 +109,7 @@ object ProxyServer {
       // https://github.com/ganskef/LittleProxy-mitm
       val source = new KeyStoreFileCertificateSource("PKCS12", new File(Constants.Locations.KeyStore), "private-key", "123456")
       val mitmManager = ImpersonatingMitmManager.builder.rootCertificateSource(source).build
-      DefaultHttpProxyServer.bootstrap()
+      server = DefaultHttpProxyServer.bootstrap()
         .withPort(8085)
         .withAllowLocalOnly(true)
         .withManInTheMiddle(mitmManager)

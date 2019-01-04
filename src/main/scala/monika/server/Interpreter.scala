@@ -3,7 +3,7 @@ package monika.server
 import java.io.File
 import java.time.LocalDateTime
 
-import monika.server.Constants.programs
+import monika.server.Constants.CallablePrograms
 import monika.server.Model._
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
@@ -38,7 +38,7 @@ object Interpreter {
     * ensures: a command is generated to unlock each user
     */
   def unlockAllUsers(): RWS[String] = RWS((_, state) => {
-    (Constants.Users.map(user => RunCommand(programs.passwd, Vector("-u", user))), "all users unlocked", state)
+    (Constants.Users.map(user => RunCommand(CallablePrograms.passwd, Vector("-u", user))), "all users unlocked", state)
   })
 
   def makeBookmarks(bookmarks: Vector[Bookmark]): String = {
@@ -50,7 +50,7 @@ object Interpreter {
     * ensures: effects are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def addEffectsForProfile(profile: ProfileMode): RWS[String] = RWS((ext, state) => {
+  def addEffectsForProfile(profile: Profile): RWS[String] = RWS((ext, state) => {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
@@ -59,8 +59,8 @@ object Interpreter {
     // creates effects required to setup proxy access for the profile mode
     def setupProxyAndBrowser(): Vector[Effect] = Vector(
       RestartProxy(profile.proxy),
-      WriteStringToFile(FilePath(Constants.paths.ChromeBookmark), makeBookmarks(profile.bookmarks)),
-      RunCommand(programs.chown, Vector(profileUserGroup, Constants.paths.ChromeBookmark))
+      WriteStringToFile(FilePath(Constants.Locations.ChromeBookmark), makeBookmarks(profile.bookmarks)),
+      RunCommand(CallablePrograms.chown, Vector(profileUserGroup, Constants.Locations.ChromeBookmark))
     )
 
     // creates effects required to setup project access for the profile mode
@@ -69,8 +69,8 @@ object Interpreter {
 
       // owns the project root with main user, sets permission to 755
       def lockProjectRootFolder(): Unit = {
-        effects += RunCommand(programs.chmod, Vector("755", Constants.paths.ProjectRoot))
-        effects += RunCommand(programs.chown, Vector(mainUserGroup, Constants.paths.ProjectRoot))
+        effects += RunCommand(CallablePrograms.chmod, Vector("755", Constants.Locations.ProjectRoot))
+        effects += RunCommand(CallablePrograms.chown, Vector(mainUserGroup, Constants.Locations.ProjectRoot))
       }
 
       // sets each project recursively to 770
@@ -78,9 +78,9 @@ object Interpreter {
       // owns each project root to main user
       def lockEachProjectFolder(): Unit = {
         effects ++= ext.projects.values.flatMap(projPath => Vector(
-          RunCommand(programs.chmod, Vector("-R", "770", Tag.unwrap(projPath))),
-          RunCommand(programs.chown, Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
-          RunCommand(programs.chown, Vector(mainUserGroup, Tag.unwrap(projPath)))
+          RunCommand(CallablePrograms.chmod, Vector("-R", "770", Tag.unwrap(projPath))),
+          RunCommand(CallablePrograms.chown, Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
+          RunCommand(CallablePrograms.chown, Vector(mainUserGroup, Tag.unwrap(projPath)))
         ))
       }
 
@@ -91,7 +91,7 @@ object Interpreter {
         val (found, notFound) = profile.projects.partition(ext.projects.contains)
         val projects: Vector[String @@ FilePath] = found.map(ext.projects)
         effects ++= projects.map(projPath => {
-          RunCommand(programs.chown, Vector(profileUserGroup, Tag.unwrap(projPath)))
+          RunCommand(CallablePrograms.chown, Vector(profileUserGroup, Tag.unwrap(projPath)))
         })
         outMessage append notFound.map(projName => s"project not found: $projName\n").mkString
       }
@@ -104,9 +104,9 @@ object Interpreter {
 
     // creates effects required to setup program access
     def associateGroupsForPrograms(): Vector[Effect] = {
-      RunCommand(programs.usermod, Vector("-G", "", Constants.ProfileUser)) +:
+      RunCommand(CallablePrograms.usermod, Vector("-G", "", Constants.ProfileUser)) +:
       profile.programs.map(prog => {
-        RunCommand(programs.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
+        RunCommand(CallablePrograms.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
       })
     }
 
@@ -172,7 +172,7 @@ object Interpreter {
   })
 
   def listEnvironment(): External = {
-    val projectRoot = new File(Constants.paths.ProjectRoot)
+    val projectRoot = new File(Constants.Locations.ProjectRoot)
     val projects = (projectRoot.listFiles() ?? Array())
       .filter(f => f.isDirectory)
       .map(f => (FileName(f.getName), FilePath(f.getCanonicalPath))).toMap
@@ -196,7 +196,7 @@ object Interpreter {
   }
 
   def readProfilesAsString(): Map[String @@ FileName, String] = {
-    val profileRoot = new File(Constants.paths.ProfileRoot)
+    val profileRoot = new File(Constants.Locations.ProfileRoot)
     val files = FileUtils.listFiles(profileRoot, Array("json"), true).asScala
     files.map(f => FileName(f.getName) -> FileUtils.readFileToString(f, Constants.GlobalEncoding)).toMap
   }

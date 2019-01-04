@@ -26,24 +26,24 @@ object Model {
     * @param bookmarks bookmarks to display inside the browser for convenience
     * @param proxy restricts which websites can be accessed
     */
-  case class ProfileMode(name: String, programs: Vector[String @@ FileName], projects: Vector[String @@ FileName],
-                         bookmarks: Vector[Bookmark], proxy: ProxySettings)
+  case class Profile(name: String, programs: Vector[String @@ FileName], projects: Vector[String @@ FileName],
+                     bookmarks: Vector[Bookmark], proxy: ProxySettings)
 
   /**
     * @param startTime the start time of this profile
     * @param endTime the end time of this profile
     * @param profile which profile should be used throughout the duration
     */
-  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: ProfileMode)
+  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: Profile)
 
   /**
     * constructs a profile from a .json definition file
     * this is not a deserialization process, it is fault tolerant and provides
     * default values for all fields
     */
-  def constructProfile(definition: JValue, defaultName: String): ProfileMode = {
+  def constructProfile(definition: JValue, defaultName: String): Profile = {
     implicit val formats: Formats = DefaultFormats
-    ProfileMode(
+    Profile(
       (definition \ "name").extractOpt[String].getOrElse(defaultName),
       (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
       (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
@@ -73,7 +73,7 @@ object Model {
     * invariant: no two queue items overlap in time
     * invariant: profiles are mapped by their name
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, ProfileMode]) {
+  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, Profile]) {
     assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
     private val intervals = queue.map(i => {
       (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))

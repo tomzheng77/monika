@@ -46,11 +46,11 @@ object Proxy {
 
     // save the newly-generated Root Certificate and Private Key -- the .cer file can be imported
     // directly into a browser
-    rootCertificateGenerator.saveRootCertificateAsPemFile(new File(Constants.paths.Certificate))
-    rootCertificateGenerator.savePrivateKeyAsPemFile(new File(Constants.paths.PrivateKey), "123456")
+    rootCertificateGenerator.saveRootCertificateAsPemFile(new File(Constants.Locations.Certificate))
+    rootCertificateGenerator.savePrivateKeyAsPemFile(new File(Constants.Locations.PrivateKey), "123456")
 
     // or save the certificate and private key as a PKCS12 keystore, for later use
-    rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Constants.paths.KeyStore),
+    rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Constants.Locations.KeyStore),
       "private-key", "123456")
   }
 
@@ -107,7 +107,7 @@ object Proxy {
       assert(server == null)
       // https://github.com/lightbody/browsermob-proxy/tree/master/mitm
       // https://github.com/ganskef/LittleProxy-mitm
-      val source = new KeyStoreFileCertificateSource("PKCS12", new File(Constants.paths.KeyStore), "private-key", "123456")
+      val source = new KeyStoreFileCertificateSource("PKCS12", new File(Constants.Locations.KeyStore), "private-key", "123456")
       val mitmManager = ImpersonatingMitmManager.builder.rootCertificateSource(source).build
       DefaultHttpProxyServer.bootstrap()
         .withPort(8085)

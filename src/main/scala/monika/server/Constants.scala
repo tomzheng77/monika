@@ -1,6 +1,8 @@
 package monika.server
 
-import monika.server.Model.FileName
+import java.io.File
+
+import monika.server.Model.{FileName, FilePath}
 import scalaz.@@
 
 object Constants {
@@ -9,6 +11,19 @@ object Constants {
   if (MonikaHome == null) {
     throw new RuntimeException("MONIKA_HOME not found, please check /etc/environment")
   }
+
+  /**
+    * additional paths to prepend to the PATH variable
+    * in order to locate programs required by the profile
+    * and monika itself
+    */
+  val PathAdd: Vector[String @@ FilePath] = Vector(
+    "/usr/sbin"
+  ).map(FilePath)
+
+  val PathOriginal: String = System.getenv("PATH")
+  val Path: String = PathAdd.mkString(File.pathSeparator) + File.pathSeparator + PathOriginal
+  val PathList: Vector[String] = Path.split(File.pathSeparatorChar).toVector
 
   val Users = Vector(
     "tomzheng",
@@ -23,7 +38,11 @@ object Constants {
   val InterpreterPort = 9001
   val MaxQueueSize = 3
 
-  val UserPrograms: Vector[String @@ FileName] = Vector(
+  /**
+    * programs which may be requested by the Profile
+    * a group should be created for each of the programs e.g. use-studio
+    */
+  val ProfilePrograms: Vector[String @@ FileName] = Vector(
     "studio",
     "subl",
     "idea",
@@ -38,7 +57,12 @@ object Constants {
     "assistant.jar"
   ).map(FileName)
 
-  object programs {
+  /**
+    * programs which may be called by monika
+    * these constants should be referenced instead of
+    * hardcoding the name of each program
+    */
+  object CallablePrograms {
     val passwd: String @@ FileName = FileName("passwd")
     val chmod: String @@ FileName = FileName("chmod")
     val chown: String @@ FileName = FileName("chown")
@@ -48,9 +72,10 @@ object Constants {
     val asList = List(passwd, chmod, chown, iptables, usermod, groupadd)
   }
 
-  object paths {
+  object Locations {
 
-    val StateDB: String = MonikaHome + "/state.db"
+    val LastState: String = MonikaHome + "/state.db"
+
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"
     val ChromeBookmark: String = "/home/profile/.config/google-chrome/Default/Bookmarks"

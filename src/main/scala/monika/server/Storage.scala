@@ -8,7 +8,7 @@ import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 
 object Storage {
 
-  private val stateDBFile = new File(Constants.paths.StateDB)
+  private val stateDBFile = new File(Constants.Locations.LastState)
   private val stateDB: ChronicleSet[MonikaState] = ChronicleSetBuilder
     .of(classOf[MonikaState])
     .name("state-set")

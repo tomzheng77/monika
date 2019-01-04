@@ -102,9 +102,9 @@ object Actions {
     // creates effects required to setup program access
     def associateGroupsForPrograms(): Vector[Effect] = {
       RunCommand(CallablePrograms.usermod, Vector("-G", "", Constants.ProfileUser)) +:
-        profile.programs.map(prog => {
-          RunCommand(CallablePrograms.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
-        })
+      profile.programs.map(prog => {
+        RunCommand(CallablePrograms.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
+      })
     }
 
     val allEffects = setupProxyAndBrowser() ++ setupProjectFolderPermissions() ++ associateGroupsForPrograms()
@@ -160,7 +160,7 @@ object Actions {
   })
 
   def reloadProfiles(profiles: Map[String @@ FileName, String]): Action[String] = Action((ext, state) => {
-    val (valid: Map[String @@ FileName, JValue], notValid: Set[String @@ FileName]) = {
+    val (valid: Map[String @@ FileName, JValue], _: Set[String @@ FileName]) = {
       profiles.mapValues(str => JsonMethods.parseOpt(str)).partition(pair => pair._2.isDefined) |>
         (twoMaps => (twoMaps._1.mapValues(opt => opt.get), twoMaps._2.keySet))
     }

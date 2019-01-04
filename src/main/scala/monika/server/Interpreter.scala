@@ -36,10 +36,14 @@ object Interpreter {
   def startHttpListener(): Unit = {
     Spark.port(Constants.InterpreterPort)
     Spark.get("/request", (req, resp) => {
-      resp.`type`("text/plain") // change to anything but text/html to prevent being intercepted by the proxy
-      implicit val formats: Formats = DefaultFormats
-      val cmd: String = Option(req.queryParams("cmd")).getOrElse("")
-      val parts: List[String] = JsonMethods.parseOpt(cmd).flatMap(_.extractOpt[List[String]]).getOrElse(Nil)
+      def readCommandPartsFromRequest(): List[String] = {
+        implicit val formats: Formats = DefaultFormats
+        val cmd: String = Option(req.queryParams("cmd")).getOrElse("")
+        JsonMethods.parseOpt(cmd).flatMap(_.extractOpt[List[String]]).getOrElse(Nil)
+      }
+
+      resp.`type`("text/plain") // prevent being intercepted by the proxy
+      val parts: List[String] = readCommandPartsFromRequest()
       if (parts.isEmpty) "please provide a command (cmd) in JSON format"
       else handleRequestCommand(parts.head, parts.tail)
     })

@@ -2,7 +2,7 @@ package monika.server
 
 import java.io.File
 
-import monika.server.Profile.MonikaState
+import monika.server.Model.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 

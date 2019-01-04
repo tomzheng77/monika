@@ -4,7 +4,7 @@ import java.io.File
 import java.time.LocalDateTime
 
 import monika.server.Constants.programs
-import monika.server.Profile._
+import monika.server.Model._
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}

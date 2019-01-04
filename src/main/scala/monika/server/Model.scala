@@ -2,21 +2,12 @@ package monika.server
 
 import java.time.{LocalDateTime, ZoneOffset}
 
+import monika.proxy.Proxy.ProxySettings
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
 import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 
-object Profile {
-
-  /**
-    * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
-    * @param transparent whether the proxy should not perform filtering at all
-    *                    if this is set to true, allow/reject properties will be ignored
-    *                    in addition, no certificate will be required
-    * @param allowHtmlPrefix which text/html responses should be allowed through if the url starts with a prefix
-    * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
-    */
-  case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
+object Model {
 
   /**
     * a bookmark to display on the browser's toolbar

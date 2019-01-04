@@ -1,6 +1,6 @@
 package monika.server
 
-import monika.server.Profile.FileName
+import monika.server.Model.FileName
 import scalaz.@@
 
 object Constants {
@@ -44,11 +44,21 @@ object Constants {
   }
 
   object paths {
+
     val MonikaHome: String = "/home/tomzheng/monika"
     val StateDB: String = MonikaHome + "/state.db"
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"
     val ChromeBookmark: String = "/home/profile/.config/google-chrome/Default/Bookmarks"
+
+    // Google Chrome -> Manage Certificates -> Authorities -> Import (certificate.cer), Trust *
+    // create a CA Root Certificate using default settings
+    // use a previously generated keystore.p12 file
+    val CertificateRoot: String = MonikaHome + "/certs"
+    val Certificate: String = CertificateRoot + "/certificate.cer"
+    val PrivateKey: String = CertificateRoot + "/private-key.pem"
+    val KeyStore: String = CertificateRoot + "/keystore.p12"
+
   }
 
 }

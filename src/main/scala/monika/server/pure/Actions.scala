@@ -3,8 +3,8 @@ package monika.server.pure
 import java.time.LocalDateTime
 
 import monika.server.Constants
-import monika.server.Constants.CallablePrograms
-import monika.server.pure.Model.{Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, Action, RestartProxy, RunCommand, ActionReturn, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import monika.server.Constants.CallablePrograms._
+import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
@@ -35,7 +35,7 @@ object Actions {
     * ensures: a command is generated to unlock each user
     */
   def unlockAllUsers(): Action[String] = Action((_, state) => {
-    (Constants.Users.map(user => RunCommand(CallablePrograms.passwd, Vector("-u", user))), "all users unlocked", state)
+    (Constants.Users.map(user => RunCommand(passwd, "-u", user)), "all users unlocked", state)
   })
 
   def makeBookmarks(bookmarks: Vector[Bookmark]): String = {
@@ -54,20 +54,20 @@ object Actions {
     val outMessage = new mutable.StringBuilder()
 
     // creates effects required to setup proxy access for the profile mode
-    def setupProxyAndBrowser(): Vector[Effect] = Vector(
+    val setupProxyAndBrowser: Vector[Effect] = Vector(
       RestartProxy(profile.proxy),
       WriteStringToFile(FilePath(Constants.Locations.ChromeBookmark), makeBookmarks(profile.bookmarks)),
-      RunCommand(CallablePrograms.chown, Vector(profileUserGroup, Constants.Locations.ChromeBookmark))
+      RunCommand(chown, profileUserGroup, Constants.Locations.ChromeBookmark)
     )
 
     // creates effects required to setup project access for the profile mode
-    def setupProjectFolderPermissions(): Vector[Effect] = {
+    val setupProjectFolderPermissions: Vector[Effect] = {
       val effects = mutable.Buffer[Effect]()
 
       // owns the project root with main user, sets permission to 755
       def lockProjectRootFolder(): Unit = {
-        effects += RunCommand(CallablePrograms.chmod, Vector("755", Constants.Locations.ProjectRoot))
-        effects += RunCommand(CallablePrograms.chown, Vector(mainUserGroup, Constants.Locations.ProjectRoot))
+        effects += RunCommand(chmod, "755", Constants.Locations.ProjectRoot)
+        effects += RunCommand(chown, mainUserGroup, Constants.Locations.ProjectRoot)
       }
 
       // sets each project recursively to 770
@@ -75,9 +75,9 @@ object Actions {
       // owns each project root to main user
       def lockEachProjectFolder(): Unit = {
         effects ++= ext.projects.values.flatMap(projPath => Vector(
-          RunCommand(CallablePrograms.chmod, Vector("-R", "770", Tag.unwrap(projPath))),
-          RunCommand(CallablePrograms.chown, Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
-          RunCommand(CallablePrograms.chown, Vector(mainUserGroup, Tag.unwrap(projPath)))
+          RunCommand(chmod, "-R", "770", Tag.unwrap(projPath)),
+          RunCommand(chown, "-R", profileUserGroup, Tag.unwrap(projPath)),
+          RunCommand(chown, mainUserGroup, Tag.unwrap(projPath))
         ))
       }
 
@@ -88,7 +88,7 @@ object Actions {
         val (found, notFound) = profile.projects.partition(ext.projects.contains)
         val projects: Vector[String @@ FilePath] = found.map(ext.projects)
         effects ++= projects.map(projPath => {
-          RunCommand(CallablePrograms.chown, Vector(profileUserGroup, Tag.unwrap(projPath)))
+          RunCommand(chown, profileUserGroup, Tag.unwrap(projPath))
         })
         outMessage append notFound.map(projName => s"project not found: $projName\n").mkString
       }
@@ -100,14 +100,14 @@ object Actions {
     }
 
     // creates effects required to setup program access
-    def associateGroupsForPrograms(): Vector[Effect] = {
-      RunCommand(CallablePrograms.usermod, Vector("-G", "", Constants.ProfileUser)) +:
+    val associateGroupsForPrograms: Vector[Effect] = {
+      RunCommand(usermod, "-G", "", Constants.ProfileUser) +:
       profile.programs.map(prog => {
-        RunCommand(CallablePrograms.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
+        RunCommand(usermod, "-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser)
       })
     }
 
-    val allEffects = setupProxyAndBrowser() ++ setupProjectFolderPermissions() ++ associateGroupsForPrograms()
+    val allEffects = setupProxyAndBrowser ++ setupProjectFolderPermissions ++ associateGroupsForPrograms
     (allEffects, outMessage.toString(), state)
   })
 

@@ -147,6 +147,7 @@ object Model {
   case class RunCommand(program: String @@ FileName, args: Vector[String] = NIL) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
+  def RunCommand(program: String @@ FileName, args: String*): RunCommand = RunCommand(program, args.toVector)
 
   type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
   type ActionReturn[T] = (Vector[Effect], T, MonikaState)

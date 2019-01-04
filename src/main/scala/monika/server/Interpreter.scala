@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import monika.proxy.ProxyServer
 import monika.server.pure.Model._
 import org.apache.commons.io.FileUtils
+import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Formats}
 import org.slf4j.LoggerFactory
@@ -62,6 +63,16 @@ object Interpreter {
     effect match {
       case RunCommand(program, args) => Terminal.call(Tag.unwrap(program), args.toArray)
       case RestartProxy(settings) => ProxyServer.startOrRestart(settings)
+      case WriteLog(level, message) => {
+        level match {
+          case Level.TRACE => LOGGER.trace(message)
+          case Level.DEBUG => LOGGER.debug(message)
+          case Level.INFO => LOGGER.info(message)
+          case Level.WARN => LOGGER.warn(message)
+          case Level.ERROR => LOGGER.error(message)
+          case Level.FATAL => LOGGER.error(message)
+        }
+      }
       case WriteStringToFile(path, content) => {
         val pathString = Tag.unwrap(path)
         FileUtils.writeStringToFile(new File(pathString), content, Constants.GlobalEncoding)

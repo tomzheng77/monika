@@ -3,6 +3,7 @@ package monika.server.pure
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 import monika.proxy.ProxyServer.ProxySettings
+import org.apache.log4j.Level
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
 import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
@@ -147,6 +148,7 @@ object Model {
   case class RunCommand(program: String @@ FileName, args: Vector[String] = NIL) extends Effect
   case class RestartProxy(settings: ProxySettings) extends Effect
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
+  case class WriteLog(level: Level, message: String) extends Effect
   def RunCommand(program: String @@ FileName, args: String*): RunCommand = RunCommand(program, args.toVector)
 
   type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]

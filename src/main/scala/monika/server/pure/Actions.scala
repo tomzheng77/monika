@@ -4,13 +4,13 @@ import java.time.LocalDateTime
 
 import monika.server.Constants
 import monika.server.Constants.CallablePrograms._
-import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteLog, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
 import scalaz.{@@, Tag}
 
-import scala.collection.mutable
 import scala.util.Try
 
 object Actions {
@@ -86,9 +86,15 @@ object Actions {
           RunCommand(chown, profileUserGroup, Tag.unwrap(projPath))
         })
       }
+      // writes a line of log for every project not found
+      val reportNotFoundProjects: Vector[Effect] = {
+        val notFound = profile.projects.filter(ext.projects.contains)
+        notFound.map(proj => WriteLog(Level.DEBUG, s"project not found: ${Tag.unwrap(proj)}"))
+      }
       lockProjectRootFolder ++
       lockEachProjectFolder ++
-      findAndUnlockEachProjectFolder
+      findAndUnlockEachProjectFolder ++
+      reportNotFoundProjects
     }
 
     // creates effects required to setup program access

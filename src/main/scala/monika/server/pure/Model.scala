@@ -88,24 +88,10 @@ object Model {
   }
 
   /**
-    * ensures: any items passed the current time inside the queue are dropped
-    * ensures: the active item is set to None if it has passed
-    */
-  def dropFromQueueAndActive(): Action[Unit] = Action((ext, state) => {
-    (NIL, Unit, {
-      state.copy(queue = state.queue.dropWhile(item => item.end.isBefore(ext.nowTime)),
-        active = state.active.filterNot(item => item.end.isBefore(ext.nowTime)))
-    })
-  })
-
-  /**
     * requires: the queue is not empty
     * ensures: the first item of the queue is returned
     * ensures: the first item is removed from the queue
     */
-  def popQueue(): Action[ProfileRequest] = Action((_, state) => {
-    (NIL, state.queue.head, state.copy(queue = state.queue.tail))
-  })
 
   /**
     * represents the external view
@@ -116,21 +102,6 @@ object Model {
     nowTime: LocalDateTime,
     projects: Map[String @@ FileName, String @@ FilePath]
   )
-
-  /**
-    * ensures: the state is returned
-    */
-  def readExtAndState(): Action[(External, MonikaState)] = Action((ext, state) => {
-    (NIL, (ext, state), state)
-  })
-
-  /**
-    * ensures: the state is returned
-    */
-  def readState(): Action[MonikaState] = Action((ext, state) => {
-    (NIL, state, state)
-  })
-  def respond[T](response: T): Action[T] = Action((_, s) => (NIL, response, s))
 
   /**
     * - the canonical path of a file or folder
@@ -151,14 +122,5 @@ object Model {
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
   case class WriteLog(level: Level, message: String) extends Effect
   def RunCommand(program: String @@ FileName, args: String*): RunCommand = RunCommand(program, args.toVector)
-
-  type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
-  type ActionReturn[T] = (Vector[Effect], T, MonikaState)
-  def Action[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)): Action[T] = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
-  val NIL: Vector[Nothing] = Vector.empty
-
-  implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {
-    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
-  }
 
 }

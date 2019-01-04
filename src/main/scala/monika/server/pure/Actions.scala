@@ -8,12 +8,26 @@ import monika.server.pure.Model._
 import monika.server.pure.ProfileActions.restrictProfile
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
-import scalaz.@@
+import scalaz.{@@, ReaderWriterState, Semigroup}
 import scalaz.syntax.id._
 
 import scala.util.Try
 
 object Actions {
+
+  type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
+  type ActionReturn[T] = (Vector[Effect], T, MonikaState)
+  def Action[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)): Action[T] = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
+  val NIL: Vector[Nothing] = Vector.empty
+
+  implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {
+    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
+  }
+
+  def readExtAndState(): Action[(External, MonikaState)] = Action((ext, state) => (NIL, (ext, state), state))
+  def readState(): Action[MonikaState] = Action((_, state) => (NIL, state, state))
+  def respond[T](response: T): Action[T] = Action((_, s) => (NIL, response, s))
+  def popQueue(): Action[ProfileRequest] = Action((_, state) => (NIL, state.queue.head, state.copy(queue = state.queue.tail)))
 
   def statusReport(): Action[String] = Action((_, state) => {
     implicit val formats: Formats = DefaultFormats
@@ -43,6 +57,17 @@ object Actions {
       (effects, Unit, state.copy(active = Some(item)))
     })
   } yield ""
+
+  /**
+    * ensures: any items passed the current time inside the queue are dropped
+    * ensures: the active item is set to None if it has passed
+    */
+  def dropFromQueueAndActive(): Action[Unit] = Action((ext, state) => {
+    (NIL, Unit, {
+      state.copy(queue = state.queue.dropWhile(item => item.end.isBefore(ext.nowTime)),
+        active = state.active.filterNot(item => item.end.isBefore(ext.nowTime)))
+    })
+  })
 
   def clearActiveOrApplyNext(): Action[String] = for {
     _ <- dropFromQueueAndActive()

@@ -30,13 +30,6 @@ object Model {
                      bookmarks: Vector[Bookmark], proxy: ProxySettings)
 
   /**
-    * @param startTime the start time of this profile
-    * @param endTime the end time of this profile
-    * @param profile which profile should be used throughout the duration
-    */
-  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: Profile)
-
-  /**
     * constructs a profile from a .json definition file
     * this is not a deserialization process, it is fault tolerant and provides
     * default values for all fields
@@ -60,6 +53,13 @@ object Model {
       )
     )
   }
+
+  /**
+    * @param startTime the start time of this profile
+    * @param endTime the end time of this profile
+    * @param profile which profile should be used throughout the duration
+    */
+  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: Profile)
 
   /**
     * the full runtime state of the Monika program
@@ -128,13 +128,14 @@ object Model {
   })
 
   /**
-    * an absolute or canonical path pointing to a file or folder
+    * - the canonical path of a file or folder
+    * - by definition, a canonical path is both absolute and unique
     */
   sealed trait FilePath
   def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
 
   /**
-    * the name of a file or folder
+    * the name of a file or folder within it's parent
     */
   sealed trait FileName
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)

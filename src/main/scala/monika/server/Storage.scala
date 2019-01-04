@@ -2,13 +2,22 @@ package monika.server
 
 import java.io.File
 
+import monika.server.Environment.getClass
 import monika.server.Model.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
+import org.slf4j.{Logger, LoggerFactory}
 
+/**
+  * - persists a single MonikaState to a file
+  * - provides a method to perform a stateful transaction on MonikaState
+  * - reports any errors to log
+  */
 object Storage {
 
-  private val stateDBFile = new File(Constants.Locations.LastState)
+  private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+
+  private val stateDBFile = new File(Constants.Locations.SavedState)
   private val stateDB: ChronicleSet[MonikaState] = ChronicleSetBuilder
     .of(classOf[MonikaState])
     .name("state-set")
@@ -18,7 +27,16 @@ object Storage {
 
   Runtime.getRuntime.addShutdownHook(new Thread(() => stateDB.close()))
 
+  def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
+    stateDB.synchronized {
+      val state = queryState()
+      val (newState, returnValue) = fn(state)
+      saveState(newState); returnValue
+    }
+  }
+
   private def onCorruption(ex: ChronicleHashCorruption): Unit = {
+    LOGGER.error(ex.message() + s" (segment: ${ex.segmentIndex()})", ex.exception())
   }
 
   private def queryState(): MonikaState = {
@@ -29,14 +47,6 @@ object Storage {
   private def saveState(state: MonikaState): Unit = {
     stateDB.clear()
     stateDB.add(state)
-  }
-
-  def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
-    stateDB.synchronized {
-      val state = queryState()
-      val (newState, returnValue) = fn(state)
-      saveState(newState); returnValue
-    }
   }
 
 }

@@ -4,12 +4,15 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
 import monika.server.Model.FileName
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
+import org.slf4j.{Logger, LoggerFactory}
 import scalaz.{@@, Tag}
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
 object Environment {
+
+  private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
@@ -49,7 +52,11 @@ object Environment {
     call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
   }
 
-  def canLocateProgram(program: String @@ FileName): Boolean = {
+  /**
+    * - checks whether a program can be located within PATH by name
+    * - it must exists as a file and monika must have exec permissions
+    */
+  def canExecuteProgram(program: String @@ FileName): Boolean = {
     val programName = Tag.unwrap(program)
     Constants.PathList.exists(aPath => {
       val file = new File(aPath + File.separator + programName)
@@ -57,9 +64,13 @@ object Environment {
     })
   }
 
-  def main(args: Array[String]): Unit = {
-    println(canLocateProgram(FileName("ls")))
-    println(canLocateProgram(FileName("lsa")))
+  def checkIfProgramsAreExecutable(): Unit = {
+    val programs = Constants.ProfilePrograms ++ Constants.CallablePrograms.asList
+    val cannotExecute = programs.filterNot(canExecuteProgram)
+    for (program <- cannotExecute) {
+      val programName = Tag.unwrap(program)
+      LOGGER.warn(s"cannot find executable program: $programName")
+    }
   }
 
 }

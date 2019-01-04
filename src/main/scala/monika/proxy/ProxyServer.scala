@@ -4,13 +4,16 @@ import java.io.File
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
-import monika.server.Constants
+import monika.server.Constants._
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
+import org.littleshoot.proxy._
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
-import org.littleshoot.proxy.{HttpFilters, HttpFiltersAdapter, HttpFiltersSourceAdapter, HttpProxyServer}
+import org.slf4j.LoggerFactory
 
 object ProxyServer {
+
+  private val LOGGER = LoggerFactory.getLogger(getClass)
 
   /**
     * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
@@ -26,31 +29,35 @@ object ProxyServer {
 
   def startOrRestart(settings: ProxySettings): Unit = {
     server.synchronized {
+      LOGGER.info(s"restarting proxy server (transparent: ${settings.transparent}")
       stop()
       if (settings.transparent) serveTransparently()
       else serveWithFilter(settings)
+      LOGGER.info("proxy server successfully started")
     }
   }
 
   private def stop(): Unit = {
     server.synchronized {
       if (server != null) {
+        LOGGER.info("stopping proxy server")
         server.stop()
         server = null
+        LOGGER.info("proxy server successfully stopped")
       }
     }
   }
 
-  def makeCertificates(): Unit = {
+  def writeCertificatesToFiles(): Unit = {
     val rootCertificateGenerator = RootCertificateGenerator.builder.build
 
     // save the newly-generated Root Certificate and Private Key -- the .cer file can be imported
     // directly into a browser
-    rootCertificateGenerator.saveRootCertificateAsPemFile(new File(Constants.Locations.Certificate))
-    rootCertificateGenerator.savePrivateKeyAsPemFile(new File(Constants.Locations.PrivateKey), "123456")
+    rootCertificateGenerator.saveRootCertificateAsPemFile(new File(Locations.Certificate))
+    rootCertificateGenerator.savePrivateKeyAsPemFile(new File(Locations.PrivateKey), "123456")
 
     // or save the certificate and private key as a PKCS12 keystore, for later use
-    rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Constants.Locations.KeyStore),
+    rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Locations.KeyStore),
       "private-key", "123456")
   }
 
@@ -58,7 +65,7 @@ object ProxyServer {
     server.synchronized {
       assert(server == null)
       server = DefaultHttpProxyServer.bootstrap()
-        .withPort(8085)
+        .withPort(ProxyPort)
         .withAllowLocalOnly(true)
         .withTransparent(true)
         .start()
@@ -66,6 +73,10 @@ object ProxyServer {
   }
 
   private def serveWithFilter(settings: ProxySettings): Unit = {
+    /**
+      * - determines whether an HTTP response should be allowed to be returned
+      *   back to the client, also depending on the request
+      */
     def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
       def mkHeaders(msg: HttpMessage): Map[String, String] = {
         import scala.collection.JavaConverters._
@@ -83,19 +94,23 @@ object ProxyServer {
 
       // github.com
       // github.com/netty/netty/issues/2185
+      // FIXME: sometimes uri starts with "http://"
       val host = requestHeaders("Host")
       val url = host + request.getUri
       settings.allowHtmlPrefix.exists(str => url.startsWith(str))
     }
 
-    val filtersSource = new HttpFiltersSourceAdapter() {
+    def allowOrRejectHttp(request: HttpRequest, response: HttpResponse): HttpResponse = {
+      if (shouldAllow(request, response)) response
+      else new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN)
+    }
+
+    val filter: HttpFiltersSource = new HttpFiltersSourceAdapter() {
       override def filterRequest(request: HttpRequest, ctx: ChannelHandlerContext): HttpFilters = {
         new HttpFiltersAdapter(request) {
           override def serverToProxyResponse(httpObject: HttpObject): HttpObject = {
             httpObject match {
-              case http: HttpResponse =>
-                if (shouldAllow(request, http)) httpObject
-                else new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN)
+              case response: HttpResponse => allowOrRejectHttp(request, response)
               case _ => httpObject // allow all non-http responses
             }
           }
@@ -103,18 +118,25 @@ object ProxyServer {
       }
     }
 
+    def startProxyWithKeyStore(file: File): Unit = {
+      val source = new KeyStoreFileCertificateSource("PKCS12", file, "private-key", "123456")
+      val mitmManager = ImpersonatingMitmManager.builder.rootCertificateSource(source).build
+      server = DefaultHttpProxyServer.bootstrap()
+        .withPort(ProxyPort)
+        .withAllowLocalOnly(true)
+        .withManInTheMiddle(mitmManager)
+        .withFiltersSource(filter)
+        .start()
+    }
+
     server.synchronized {
       assert(server == null)
       // https://github.com/lightbody/browsermob-proxy/tree/master/mitm
       // https://github.com/ganskef/LittleProxy-mitm
-      val source = new KeyStoreFileCertificateSource("PKCS12", new File(Constants.Locations.KeyStore), "private-key", "123456")
-      val mitmManager = ImpersonatingMitmManager.builder.rootCertificateSource(source).build
-      server = DefaultHttpProxyServer.bootstrap()
-        .withPort(8085)
-        .withAllowLocalOnly(true)
-        .withManInTheMiddle(mitmManager)
-        .withFiltersSource(filtersSource)
-        .start()
+      val keyStoreFile = new File(Locations.KeyStore)
+      if (!keyStoreFile.exists()) LOGGER.error(s"keystore file (${Locations.KeyStore}) does not exist")
+      else if (!keyStoreFile.canRead) LOGGER.error(s"keystore file (${Locations.KeyStore}) is not readable")
+      else startProxyWithKeyStore(keyStoreFile)
     }
   }
 

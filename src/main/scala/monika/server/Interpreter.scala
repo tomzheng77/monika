@@ -19,7 +19,7 @@ object Interpreter {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 
-  def runAction(rws: Action[String]): String = {
+  def runAction[T](rws: Action[T]): T = {
     StateStore.transaction(state => {
       val ext = composeExternal()
       val (effects, response, newState) = rws.run(ext, state)

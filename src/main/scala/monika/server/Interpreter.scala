@@ -4,6 +4,7 @@ import java.io.File
 import java.time.LocalDateTime
 
 import monika.proxy.ProxyServer
+import monika.server.pure.Actions.Action
 import monika.server.pure.Model._
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Level

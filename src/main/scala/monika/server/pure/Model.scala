@@ -1,4 +1,4 @@
-package monika.server
+package monika.server.pure
 
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 

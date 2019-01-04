@@ -2,7 +2,7 @@ package monika.server
 
 import java.io.File
 
-import monika.server.Model.MonikaState
+import monika.server.pure.Model.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 import org.slf4j.{Logger, LoggerFactory}
@@ -40,7 +40,7 @@ object StateSingleton {
 
   private def queryState(): MonikaState = {
     val iter = stateDB.iterator()
-    if (iter.hasNext) iter.next() else MonikaState(Vector(), None, Map.empty)
+    if (iter.hasNext) iter.next() else MonikaState(Vector(), None, Map.empty, Map.empty)
   }
 
   private def saveState(state: MonikaState): Unit = {

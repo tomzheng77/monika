@@ -2,7 +2,7 @@ package monika.server
 
 import java.io.File
 
-import monika.server.Model.{FileName, FilePath}
+import monika.server.pure.Model.{FileName, FilePath}
 import scalaz.@@
 
 object Constants {

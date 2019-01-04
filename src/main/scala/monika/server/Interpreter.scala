@@ -15,7 +15,7 @@ import scalaz.{@@, Tag}
 import spark.Spark
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
+import scala.collection.{GenIterable, mutable}
 import scala.util.Try
 
 object Interpreter {
@@ -203,20 +203,21 @@ object Interpreter {
     })
   }
 
-  def readProfilesAsString(): Map[String @@ FileName, String] = {
+  def readProfileDefinitions(): Map[String @@ FileName, String] = {
     val profileRoot = new File(Constants.Locations.ProfileRoot)
     val files = FileUtils.listFiles(profileRoot, Array("json"), true).asScala
     files.map(f => FileName(f.getName) -> FileUtils.readFileToString(f, Constants.GlobalEncoding)).toMap
   }
 
   def handleRequestCommand(name: String, args: List[String]): String = {
-    LOGGER.debug(s"received command request: $name $args")
+    LOGGER.debug(s"received command request: $name ${args.mkString(" ")}")
     name match {
       case "chkqueue" => runTransaction(clearActiveOrApplyNext())
       case "addqueue" => runTransaction(enqueueNextProfile(args))
       case "status" => runTransaction(statusReport())
       case "reload" => {
-        val profiles = readProfilesAsString()
+        val profiles = readProfileDefinitions()
+        LOGGER.debug(s"found ${profiles.size} profile definitions")
         runTransaction(reloadProfiles(profiles))
       }
       case "resetprofile" => runTransaction(resetProfile())

@@ -1,20 +1,22 @@
-package monika
+package monika.server
 
 import java.io.File
 import java.time.LocalDateTime
 
-import monika.Profile._
+import monika.server.Profile._
+import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
-import org.json4s.{DefaultFormats, Extraction, Formats}
-import scalaz.syntax.id._
+import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.{@@, Tag}
+import scalaz.syntax.id._
 import spark.Spark
 
 import scala.collection.mutable
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 object Interpreter {
-  
+
   def statusReport(): RWS[String] = RWS((_, state) => {
     implicit val formats: Formats = DefaultFormats
     val response = JsonMethods.pretty(JsonMethods.render(Extraction.decompose(state)))
@@ -159,6 +161,15 @@ object Interpreter {
     }
   })
 
+  def reloadProfiles(profiles: Map[String @@ FileName, String]): RWS[String] = RWS((ext, state) => {
+    val (valid: Map[String @@ FileName, JValue], notValid: Set[String @@ FileName]) = {
+      profiles.mapValues(str => JsonMethods.parseOpt(str)).partition(pair => pair._2.isDefined) |>
+        (twoMaps => (twoMaps._1.mapValues(opt => opt.get), twoMaps._2.keySet))
+    }
+    val newProfiles = state.profiles ++ valid.map(pair => "" -> constructProfile(pair._2, ""))
+    (NIL, s"${valid.size} valid profiles found", state.copy(profiles = newProfiles))
+  })
+
   def listEnvironment(): External = {
     val projectRoot = new File(Constants.paths.ProjectRoot)
     val projects = (projectRoot.listFiles() ?? Array())
@@ -183,11 +194,21 @@ object Interpreter {
     })
   }
 
+  def readProfiles(): Map[String @@ FileName, String] = {
+    val profileRoot = new File(Constants.paths.ProfileRoot)
+    val files = FileUtils.listFiles(profileRoot, Array("json"), true).asScala
+    files.map(f => FileName(f.getName) -> FileUtils.readFileToString(f, Constants.GlobalEncoding)).toMap
+  }
+
   def handleRequestCommand(name: String, args: List[String]): String = {
     name match {
       case "chkqueue" => runTransaction(clearActiveOrApplyNext())
       case "addqueue" => runTransaction(enqueueNextProfile(args))
       case "status" => runTransaction(statusReport())
+      case "reload" => {
+        val profiles = readProfiles()
+        runTransaction(reloadProfiles(profiles))
+      }
       case "resetprofile" => runTransaction(resetProfile())
       case _ => s"unknown command $name"
     }

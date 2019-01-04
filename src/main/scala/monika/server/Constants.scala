@@ -1,6 +1,6 @@
-package monika
+package monika.server
 
-import Profile._
+import monika.server.Profile.FileName
 import scalaz.@@
 
 object Constants {
@@ -11,6 +11,7 @@ object Constants {
     "unlocker"
   )
 
+  val GlobalEncoding = "UTF-8"
   val MainUser = "tomzheng"
   val ProfileUser = "profile"
   val ProxyPort = 9000

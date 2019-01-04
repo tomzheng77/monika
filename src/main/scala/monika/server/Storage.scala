@@ -1,8 +1,8 @@
-package monika
+package monika.server
 
 import java.io.File
 
-import monika.Profile.MonikaState
+import monika.server.Profile.MonikaState
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 

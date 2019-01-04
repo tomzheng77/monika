@@ -1,4 +1,4 @@
-package monika
+package monika.server
 
 object Firewall {
 

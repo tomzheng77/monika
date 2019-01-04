@@ -1,4 +1,4 @@
-package monika
+package monika.server
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 

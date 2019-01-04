@@ -1,10 +1,10 @@
-package monika
+package monika.server
 
 import java.io.File
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
-import monika.Profile.ProxySettings
+import monika.server.Profile.ProxySettings
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer

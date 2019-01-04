@@ -12,7 +12,7 @@ import org.slf4j.{Logger, LoggerFactory}
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object StateSingleton {
+object StateStore {
 
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 

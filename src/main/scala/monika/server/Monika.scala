@@ -2,7 +2,7 @@ package monika.server
 
 import java.util.{Timer, TimerTask}
 
-import monika.server.Environment._
+import monika.server.CommandLine._
 import monika.server.Interpreter.startHttpListener
 import monika.server.pure.Actions
 import org.apache.log4j._

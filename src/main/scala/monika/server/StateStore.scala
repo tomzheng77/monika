@@ -53,7 +53,7 @@ object StateStore {
 
   private def queryState(): MonikaState = {
     val iter = stateDB.iterator()
-    if (iter.hasNext) iter.next() else MonikaState(Vector(), None, Map.empty, Map.empty)
+    if (iter.hasNext) iter.next() else InitialState
   }
 
   private def saveState(state: MonikaState): Unit = {

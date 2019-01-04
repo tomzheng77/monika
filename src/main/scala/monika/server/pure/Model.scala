@@ -97,6 +97,10 @@ object Model {
     assert(passwords.values.forall(pwd => pwd.forall(Character.isLetterOrDigit)))
   }
 
+  val InitialState: MonikaState = {
+    MonikaState(Vector(), None, Map.empty, Map.empty)
+  }
+
   /**
     * requires: the queue is not empty
     * ensures: the first item of the queue is returned

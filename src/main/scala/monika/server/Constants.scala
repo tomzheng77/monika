@@ -32,11 +32,15 @@ object Constants {
   )
 
   val GlobalEncoding = "UTF-8"
-  val MainUser = "tomzheng"
-  val ProfileUser = "profile"
   val ProxyPort = 9000
   val InterpreterPort = 9001
   val MaxQueueSize = 3
+
+  val MainUser = "tomzheng"
+  val MainUserGroup = s"$MainUser:$MainUser"
+
+  val ProfileUser = "profile"
+  val ProfileUserGroup = s"$ProfileUser:$ProfileUser"
 
   /**
     * programs which may be requested by the Profile

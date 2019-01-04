@@ -1,6 +1,6 @@
 package monika.server
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 import monika.proxy.ProxyServer.ProxySettings
 import org.json4s.JsonAST.JValue
@@ -72,8 +72,10 @@ object Model {
     * invariant: the queue is sorted by start time
     * invariant: no two queue items overlap in time
     * invariant: profiles are mapped by their name
+    * invariant: the passwords contain only characters and numbers
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, Profile]) {
+  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, Profile],
+                         passwords: Map[LocalDate, String]) {
     assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
     private val intervals = queue.map(i => {
       (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))
@@ -81,6 +83,7 @@ object Model {
     assert(intervals.forall(pair => pair._2 > pair._1))
     assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
     assert(profiles.forall(pair => pair._1 == pair._2.name))
+    assert(passwords.values.forall(pwd => pwd.forall(Character.isLetterOrDigit)))
   }
 
   /**

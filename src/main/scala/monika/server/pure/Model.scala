@@ -56,11 +56,11 @@ object Model {
   }
 
   /**
-    * @param startTime the start time of this profile
-    * @param endTime the end time of this profile
+    * @param start the start time of this profile
+    * @param end the end time of this profile
     * @param profile which profile should be used throughout the duration
     */
-  case class ProfileInQueue(startTime: LocalDateTime, endTime: LocalDateTime, profile: Profile)
+  case class ProfileRequest(start: LocalDateTime, end: LocalDateTime, profile: Profile)
 
   /**
     * the full runtime state of the Monika program
@@ -75,11 +75,11 @@ object Model {
     * invariant: profiles are mapped by their name
     * invariant: the passwords contain only characters and numbers
     */
-  case class MonikaState(queue: Vector[ProfileInQueue], active: Option[ProfileInQueue], profiles: Map[String, Profile],
+  case class MonikaState(queue: Vector[ProfileRequest], active: Option[ProfileRequest], profiles: Map[String, Profile],
                          passwords: Map[LocalDate, String]) {
-    assert(queue.sortBy(i => i.startTime.toEpochSecond(ZoneOffset.UTC)) == queue)
+    assert(queue.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == queue)
     private val intervals = queue.map(i => {
-      (i.startTime.toEpochSecond(ZoneOffset.UTC), i.endTime.toEpochSecond(ZoneOffset.UTC))
+      (i.start.toEpochSecond(ZoneOffset.UTC), i.end.toEpochSecond(ZoneOffset.UTC))
     })
     assert(intervals.forall(pair => pair._2 > pair._1))
     assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
@@ -93,8 +93,8 @@ object Model {
     */
   def dropFromQueueAndActive(): Action[Unit] = Action((ext, state) => {
     (NIL, Unit, {
-      state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime)),
-        active = state.active.filterNot(item => item.endTime.isBefore(ext.nowTime)))
+      state.copy(queue = state.queue.dropWhile(item => item.end.isBefore(ext.nowTime)),
+        active = state.active.filterNot(item => item.end.isBefore(ext.nowTime)))
     })
   })
 
@@ -103,7 +103,7 @@ object Model {
     * ensures: the first item of the queue is returned
     * ensures: the first item is removed from the queue
     */
-  def popQueue(): Action[ProfileInQueue] = Action((_, state) => {
+  def popQueue(): Action[ProfileRequest] = Action((_, state) => {
     (NIL, state.queue.head, state.copy(queue = state.queue.tail))
   })
 

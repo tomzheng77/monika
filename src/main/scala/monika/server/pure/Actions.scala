@@ -49,7 +49,7 @@ object Actions {
     (ext, state) <- readExtAndState()
     response <- {
       if (state.active.isEmpty && state.queue.isEmpty) unlockAllUsers()
-      else if (state.active.isEmpty && state.queue.head.startTime.isBefore(ext.nowTime)) applyNextProfileInQueue()
+      else if (state.active.isEmpty && state.queue.head.start.isBefore(ext.nowTime)) applyNextProfileInQueue()
       else if (state.active.nonEmpty) respond("profile still active")
       else unlockAllUsers()
     }
@@ -73,12 +73,12 @@ object Actions {
           val profile = state.profiles(profileName)
           def addToQueueAfter(start: LocalDateTime): ActionReturn[String] = {
             (NIL, "successfully added", state.copy(queue = Vector(
-              ProfileInQueue(start, start.plusMinutes(t), profile)
+              ProfileRequest(start, start.plusMinutes(t), profile)
             )))
           }
           if (state.queue.isEmpty && state.active.isEmpty) addToQueueAfter(ext.nowTime)
-          else if (state.queue.isEmpty) addToQueueAfter(state.active.get.endTime)
-          else addToQueueAfter(state.queue.last.endTime)
+          else if (state.queue.isEmpty) addToQueueAfter(state.active.get.end)
+          else addToQueueAfter(state.queue.last.end)
         }
       }
     }

@@ -51,7 +51,6 @@ object Actions {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
-    val outMessage = new mutable.StringBuilder()
 
     // creates effects required to setup proxy access for the profile mode
     val setupProxyAndBrowser: Vector[Effect] = Vector(
@@ -62,41 +61,34 @@ object Actions {
 
     // creates effects required to setup project access for the profile mode
     val setupProjectFolderPermissions: Vector[Effect] = {
-      val effects = mutable.Buffer[Effect]()
-
       // owns the project root with main user, sets permission to 755
-      def lockProjectRootFolder(): Unit = {
-        effects += RunCommand(chmod, "755", Constants.Locations.ProjectRoot)
-        effects += RunCommand(chown, mainUserGroup, Constants.Locations.ProjectRoot)
-      }
-
+      val lockProjectRootFolder: Vector[Effect] = Vector(
+        RunCommand(chmod, "755", Constants.Locations.ProjectRoot),
+        RunCommand(chown, mainUserGroup, Constants.Locations.ProjectRoot)
+      )
       // sets each project recursively to 770
       // owns each project recursively to profile user
       // owns each project root to main user
-      def lockEachProjectFolder(): Unit = {
-        effects ++= ext.projects.values.flatMap(projPath => Vector(
+      val lockEachProjectFolder: Vector[Effect] = {
+        ext.projects.values.flatMap(projPath => Vector(
           RunCommand(chmod, "-R", "770", Tag.unwrap(projPath)),
           RunCommand(chown, "-R", profileUserGroup, Tag.unwrap(projPath)),
           RunCommand(chown, mainUserGroup, Tag.unwrap(projPath))
-        ))
+        )).toVector
       }
-
       // attempts to locate each profile project in the external environment
       // if found, the folder becomes owned by the profile use
       // if not, a message is included to indicate it was not found
-      def findAndUnlockProjectFolder(): Unit = {
-        val (found, notFound) = profile.projects.partition(ext.projects.contains)
+      val findAndUnlockEachProjectFolder: Vector[Effect] = {
+        val found = profile.projects.filter(ext.projects.contains)
         val projects: Vector[String @@ FilePath] = found.map(ext.projects)
-        effects ++= projects.map(projPath => {
+        projects.map(projPath => {
           RunCommand(chown, profileUserGroup, Tag.unwrap(projPath))
         })
-        outMessage append notFound.map(projName => s"project not found: $projName\n").mkString
       }
-
-      lockProjectRootFolder()
-      lockEachProjectFolder()
-      findAndUnlockProjectFolder()
-      effects.toVector
+      lockProjectRootFolder ++
+      lockEachProjectFolder ++
+      findAndUnlockEachProjectFolder
     }
 
     // creates effects required to setup program access
@@ -108,7 +100,7 @@ object Actions {
     }
 
     val allEffects = setupProxyAndBrowser ++ setupProjectFolderPermissions ++ associateGroupsForPrograms
-    (allEffects, outMessage.toString(), state)
+    (allEffects, "", state)
   })
 
   def applyNextProfileInQueue(): Action[String] = for {

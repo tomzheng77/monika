@@ -6,7 +6,7 @@ import monika.proxy.ProxyServer.ProxySettings
 import org.apache.log4j.Level
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
-import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
+import scalaz.{@@, Tag}
 
 object Model {
 

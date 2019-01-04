@@ -2,7 +2,7 @@ package monika.server.pure
 
 import monika.server.Constants.CallablePrograms.{chmod, chown, usermod}
 import monika.server.Constants.{Locations, MainUserGroup, ProfileUser, ProfileUserGroup}
-import monika.server.pure.Model.{Bookmark, Effect, External, FilePath, Profile, RestartProxy, RunCommand, WriteLog, WriteStringToFile}
+import monika.server.pure.Model._
 import org.apache.log4j.Level
 import scalaz.{@@, Tag}
 

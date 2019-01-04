@@ -8,8 +8,8 @@ import monika.server.pure.Model._
 import monika.server.pure.ProfileActions.restrictProfile
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
-import scalaz.{@@, ReaderWriterState, Semigroup}
 import scalaz.syntax.id._
+import scalaz.{@@, ReaderWriterState, Semigroup}
 
 import scala.util.Try
 

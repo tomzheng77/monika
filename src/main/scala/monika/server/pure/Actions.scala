@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import monika.server.Constants
 import monika.server.Constants.CallablePrograms
-import monika.server.pure.Model.{Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, RWS, RestartProxy, RunCommand, STR, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import monika.server.pure.Model.{Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, Action, RestartProxy, RunCommand, ActionReturn, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
@@ -15,15 +15,15 @@ import scala.util.Try
 
 object Actions {
 
-  def statusReport(): RWS[String] = RWS((_, state) => {
+  def statusReport(): Action[String] = Action((_, state) => {
     implicit val formats: Formats = DefaultFormats
     val response = JsonMethods.pretty(JsonMethods.render(Extraction.decompose(state)))
     (NIL, response, state)
   })
 
-  def respond(response: String): RWS[String] = RWS((_, s) => (NIL, response, s))
+  def respond(response: String): Action[String] = Action((_, s) => (NIL, response, s))
 
-  def resetProfile(): RWS[String] = for {
+  def resetProfile(): Action[String] = for {
     state <- readState()
     response <- state.active match {
       case None => respond("no currently active profile")
@@ -34,7 +34,7 @@ object Actions {
   /**
     * ensures: a command is generated to unlock each user
     */
-  def unlockAllUsers(): RWS[String] = RWS((_, state) => {
+  def unlockAllUsers(): Action[String] = Action((_, state) => {
     (Constants.Users.map(user => RunCommand(CallablePrograms.passwd, Vector("-u", user))), "all users unlocked", state)
   })
 
@@ -47,7 +47,7 @@ object Actions {
     * ensures: effects are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def addEffectsForProfile(profile: Profile): RWS[String] = RWS((ext, state) => {
+  def addEffectsForProfile(profile: Profile): Action[String] = Action((ext, state) => {
     // websites, projects, programs
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
@@ -111,15 +111,15 @@ object Actions {
     (allEffects, outMessage.toString(), state)
   })
 
-  def applyNextProfileInQueue(): RWS[String] = for {
+  def applyNextProfileInQueue(): Action[String] = for {
     item <- popQueue()
     response <- addEffectsForProfile(item.profile)
-    _ <- RWS((_, state) => {
+    _ <- Action((_, state) => {
       (NIL, null, state.copy(active = Some(item)))
     })
   } yield response
 
-  def clearActiveOrApplyNext(): RWS[String] = for {
+  def clearActiveOrApplyNext(): Action[String] = for {
     _ <- dropFromQueueAndActive()
     (ext, state) <- readExtAndState()
     response <- {
@@ -134,7 +134,7 @@ object Actions {
     * requires: a profile name and time passed via the arguments
     * ensures: a profile is added to the queue at the earliest feasible time
     */
-  def enqueueNextProfile(args: List[String]): RWS[String] = RWS((ext, state) => {
+  def enqueueNextProfile(args: List[String]): Action[String] = Action((ext, state) => {
     if (args.length != 2) (NIL, "usage: addqueue <profile> <time>", state)
     else {
       val profileName = args.head
@@ -146,7 +146,7 @@ object Actions {
         case Some(t) if t <= 0 => (NIL, s"time must be positive, provided $t", state)
         case Some(t) => {
           val profile = state.profiles(profileName)
-          def addToQueueAfter(start: LocalDateTime): STR[String] = {
+          def addToQueueAfter(start: LocalDateTime): ActionReturn[String] = {
             (NIL, "successfully added", state.copy(queue = Vector(
               ProfileInQueue(start, start.plusMinutes(t), profile)
             )))
@@ -159,7 +159,7 @@ object Actions {
     }
   })
 
-  def reloadProfiles(profiles: Map[String @@ FileName, String]): RWS[String] = RWS((ext, state) => {
+  def reloadProfiles(profiles: Map[String @@ FileName, String]): Action[String] = Action((ext, state) => {
     val (valid: Map[String @@ FileName, JValue], notValid: Set[String @@ FileName]) = {
       profiles.mapValues(str => JsonMethods.parseOpt(str)).partition(pair => pair._2.isDefined) |>
         (twoMaps => (twoMaps._1.mapValues(opt => opt.get), twoMaps._2.keySet))

@@ -38,7 +38,7 @@ object Interpreter {
     }
   }
 
-  def runTransaction(rws: RWS[String]): String = {
+  def runAction(rws: Action[String]): String = {
     StateSingleton.transaction(state => {
       val ext = listEnvironment()
       val (effects, response, newState) = rws.run(ext, state)
@@ -57,15 +57,15 @@ object Interpreter {
     LOGGER.debug(s"received command request: $name ${args.mkString(" ")}")
     import monika.server.pure.Actions._
     name match {
-      case "chkqueue" => runTransaction(clearActiveOrApplyNext())
-      case "addqueue" => runTransaction(enqueueNextProfile(args))
-      case "status" => runTransaction(statusReport())
+      case "chkqueue" => runAction(clearActiveOrApplyNext())
+      case "addqueue" => runAction(enqueueNextProfile(args))
+      case "status" => runAction(statusReport())
       case "reload" => {
         val profiles = readProfileDefinitions()
         LOGGER.debug(s"found ${profiles.size} profile definitions")
-        runTransaction(reloadProfiles(profiles))
+        runAction(reloadProfiles(profiles))
       }
-      case "resetprofile" => runTransaction(resetProfile())
+      case "resetprofile" => runAction(resetProfile())
       case _ => s"unknown command $name"
     }
   }

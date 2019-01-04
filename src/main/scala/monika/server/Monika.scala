@@ -4,6 +4,7 @@ import java.util.{Timer, TimerTask}
 
 import monika.server.Environment._
 import monika.server.Interpreter.startHttpListener
+import monika.server.pure.Actions
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
 
@@ -46,7 +47,7 @@ object Monika {
     LOGGER.info("M.O.N.I.K.A starting...")
     checkIfProgramsAreExecutable()
     rejectOutgoingHttp(forUser = Constants.ProfileUser)
-    setInterval(() => Interpreter.runTransaction(Interpreter.clearActiveOrApplyNext()), 5000)
+    setInterval(() => Interpreter.runAction(Actions.clearActiveOrApplyNext()), 5000)
     startHttpListener()
     LOGGER.info("M.O.N.I.K.A started")
   }

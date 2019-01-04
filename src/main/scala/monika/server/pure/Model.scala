@@ -90,7 +90,7 @@ object Model {
     * ensures: any items passed the current time inside the queue are dropped
     * ensures: the active item is set to None if it has passed
     */
-  def dropFromQueueAndActive(): RWS[Unit] = RWS((ext, state) => {
+  def dropFromQueueAndActive(): Action[Unit] = Action((ext, state) => {
     (NIL, Unit, {
       state.copy(queue = state.queue.dropWhile(item => item.endTime.isBefore(ext.nowTime)),
         active = state.active.filterNot(item => item.endTime.isBefore(ext.nowTime)))
@@ -102,7 +102,7 @@ object Model {
     * ensures: the first item of the queue is returned
     * ensures: the first item is removed from the queue
     */
-  def popQueue(): RWS[ProfileInQueue] = RWS((_, state) => {
+  def popQueue(): Action[ProfileInQueue] = Action((_, state) => {
     (NIL, state.queue.head, state.copy(queue = state.queue.tail))
   })
 
@@ -119,14 +119,14 @@ object Model {
   /**
     * ensures: the state is returned
     */
-  def readExtAndState(): RWS[(External, MonikaState)] = RWS((ext, state) => {
+  def readExtAndState(): Action[(External, MonikaState)] = Action((ext, state) => {
     (NIL, (ext, state), state)
   })
 
   /**
     * ensures: the state is returned
     */
-  def readState(): RWS[MonikaState] = RWS((ext, state) => {
+  def readState(): Action[MonikaState] = Action((ext, state) => {
     (NIL, state, state)
   })
 
@@ -148,9 +148,9 @@ object Model {
   case class RestartProxy(settings: ProxySettings) extends Effect
   case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
 
-  type RWS[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
-  type STR[T] = (Vector[Effect], T, MonikaState)
-  def RWS[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)) = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
+  type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
+  type ActionReturn[T] = (Vector[Effect], T, MonikaState)
+  def Action[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)): Action[T] = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
   val NIL = Vector.empty
 
   implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {

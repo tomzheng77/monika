@@ -44,6 +44,9 @@ object Monika {
 
   def main(args: Array[String]): Unit = {
     setupLogger()
+    if (System.getenv("USER") != "root") {
+      LOGGER.warn("user is not root")
+    }
     LOGGER.info("M.O.N.I.K.A starting...")
     checkIfProgramsAreExecutable()
     rejectOutgoingHttp(forUser = Constants.ProfileUser)

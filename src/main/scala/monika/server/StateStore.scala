@@ -19,7 +19,7 @@ object StateStore {
   private val stateDBFile = new File(Constants.Locations.SavedState)
   private val stateDB: ChronicleSet[MonikaState] = ChronicleSetBuilder
     .of(classOf[MonikaState])
-    .name("state-set")
+    .name("monika-state")
     .entries(1)
     .averageKeySize(1024 * 10)
     .createOrRecoverPersistedTo(stateDBFile, true, onCorruption _)

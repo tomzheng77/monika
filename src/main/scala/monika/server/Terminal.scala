@@ -58,7 +58,7 @@ object Terminal {
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
     */
-  def canExecuteProgram(program: String @@ FileName): Boolean = {
+  private def canExecuteProgram(program: String @@ FileName): Boolean = {
     val programName = Tag.unwrap(program)
     Constants.PathList.exists(aPath => {
       val file = new File(aPath + File.separator + programName)

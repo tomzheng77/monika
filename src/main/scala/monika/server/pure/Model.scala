@@ -75,15 +75,19 @@ object Model {
     * invariant: profiles are mapped by their name
     * invariant: the passwords contain only characters and numbers
     */
-  case class MonikaState(queue: Vector[ProfileRequest], active: Option[ProfileRequest], profiles: Map[String, Profile],
-                         passwords: Map[LocalDate, String]) {
-    assert(queue.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == queue)
-    private val intervals = queue.map(i => {
+  case class MonikaState(
+    nextProfiles: Vector[ProfileRequest],
+    activeProfile: Option[ProfileRequest],
+    knownProfiles: Map[String, Profile],
+    passwords: Map[LocalDate, String]
+  ) {
+    assert(nextProfiles.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == nextProfiles)
+    private val intervals = nextProfiles.map(i => {
       (i.start.toEpochSecond(ZoneOffset.UTC), i.end.toEpochSecond(ZoneOffset.UTC))
     })
     assert(intervals.forall(pair => pair._2 > pair._1))
     assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
-    assert(profiles.forall(pair => pair._1 == pair._2.name))
+    assert(knownProfiles.forall(pair => pair._1 == pair._2.name))
     assert(passwords.values.forall(pwd => pwd.forall(Character.isLetterOrDigit)))
   }
 
@@ -111,7 +115,7 @@ object Model {
   def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
 
   /**
-    * the name of a file or folder within it's parent
+    * - the name of a file or folder relative to it's parent
     */
   sealed trait FileName
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)

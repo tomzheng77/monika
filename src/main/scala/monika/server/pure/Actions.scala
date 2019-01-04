@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import monika.server.Constants
 import monika.server.Constants.CallablePrograms._
-import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteLog, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
+import monika.server.pure.Model.{Action, ActionReturn, Bookmark, Effect, External, FileName, FilePath, NIL, Profile, ProfileInQueue, RestartProxy, RunCommand, WriteLog, WriteStringToFile, constructProfile, dropFromQueueAndActive, popQueue, readExtAndState, readState}
 import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
@@ -27,7 +27,7 @@ object Actions {
     state <- readState()
     response <- state.active match {
       case None => respond("no currently active profile")
-      case Some(piq) => addEffectsForProfile(piq.profile)
+      case Some(piq) => Action((ext, state) => (restrictProfile(ext, piq.profile), "updated profile", state))
     }
   } yield response
 
@@ -47,8 +47,7 @@ object Actions {
     * ensures: effects are generated to ensure the new profile mode
     *          is put into effect for the profile user
     */
-  def addEffectsForProfile(profile: Profile): Action[String] = Action((ext, state) => {
-    // websites, projects, programs
+  def restrictProfile(ext: External, profile: Profile): Vector[Effect] = {
     val mainUserGroup = s"${Constants.MainUser}:${Constants.MainUser}"
     val profileUserGroup = s"${Constants.ProfileUser}:${Constants.ProfileUser}"
 
@@ -104,18 +103,18 @@ object Actions {
         RunCommand(usermod, "-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser)
       })
     }
-
-    val allEffects = setupProxyAndBrowser ++ setupProjectFolderPermissions ++ associateGroupsForPrograms
-    (allEffects, "", state)
-  })
+    setupProxyAndBrowser ++
+    setupProjectFolderPermissions ++
+    associateGroupsForPrograms
+  }
 
   def applyNextProfileInQueue(): Action[String] = for {
     item <- popQueue()
-    response <- addEffectsForProfile(item.profile)
-    _ <- Action((_, state) => {
-      (NIL, null, state.copy(active = Some(item)))
+    _ <- Action((ext, state) => {
+      val effects = restrictProfile(ext, item.profile)
+      (effects, Unit, state.copy(active = Some(item)))
     })
-  } yield response
+  } yield ""
 
   def clearActiveOrApplyNext(): Action[String] = for {
     _ <- dropFromQueueAndActive()

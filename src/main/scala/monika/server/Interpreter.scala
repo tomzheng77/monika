@@ -3,6 +3,7 @@ package monika.server
 import java.io.File
 import java.time.LocalDateTime
 
+import monika.server.Constants.programs
 import monika.server.Profile._
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods
@@ -37,7 +38,7 @@ object Interpreter {
     * ensures: a command is generated to unlock each user
     */
   def unlockAllUsers(): RWS[String] = RWS((_, state) => {
-    (Constants.Users.map(user => RunCommand("passwd", Vector("-u", user))), "all users unlocked", state)
+    (Constants.Users.map(user => RunCommand(programs.passwd, Vector("-u", user))), "all users unlocked", state)
   })
 
   def makeBookmarks(bookmarks: Vector[Bookmark]): String = {
@@ -59,7 +60,7 @@ object Interpreter {
     def setupProxyAndBrowser(): Vector[Effect] = Vector(
       RestartProxy(profile.proxy),
       WriteStringToFile(FilePath(Constants.paths.ChromeBookmark), makeBookmarks(profile.bookmarks)),
-      RunCommand("chown", Vector(profileUserGroup, Constants.paths.ChromeBookmark))
+      RunCommand(programs.chown, Vector(profileUserGroup, Constants.paths.ChromeBookmark))
     )
 
     // creates effects required to setup project access for the profile mode
@@ -68,8 +69,8 @@ object Interpreter {
 
       // owns the project root with main user, sets permission to 755
       def lockProjectRootFolder(): Unit = {
-        effects += RunCommand("chmod", Vector("755", Constants.paths.ProjectRoot))
-        effects += RunCommand("chown", Vector(mainUserGroup, Constants.paths.ProjectRoot))
+        effects += RunCommand(programs.chmod, Vector("755", Constants.paths.ProjectRoot))
+        effects += RunCommand(programs.chown, Vector(mainUserGroup, Constants.paths.ProjectRoot))
       }
 
       // sets each project recursively to 770
@@ -77,9 +78,9 @@ object Interpreter {
       // owns each project root to main user
       def lockEachProjectFolder(): Unit = {
         effects ++= ext.projects.values.flatMap(projPath => Vector(
-          RunCommand("chmod", Vector("-R", "770", Tag.unwrap(projPath))),
-          RunCommand("chown", Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
-          RunCommand("chown", Vector(mainUserGroup, Tag.unwrap(projPath)))
+          RunCommand(programs.chmod, Vector("-R", "770", Tag.unwrap(projPath))),
+          RunCommand(programs.chown, Vector("-R", profileUserGroup, Tag.unwrap(projPath))),
+          RunCommand(programs.chown, Vector(mainUserGroup, Tag.unwrap(projPath)))
         ))
       }
 
@@ -90,7 +91,7 @@ object Interpreter {
         val (found, notFound) = profile.projects.partition(ext.projects.contains)
         val projects: Vector[String @@ FilePath] = found.map(ext.projects)
         effects ++= projects.map(projPath => {
-          RunCommand("chown", Vector(profileUserGroup, Tag.unwrap(projPath)))
+          RunCommand(programs.chown, Vector(profileUserGroup, Tag.unwrap(projPath)))
         })
         outMessage append notFound.map(projName => s"project not found: $projName\n").mkString
       }
@@ -103,9 +104,9 @@ object Interpreter {
 
     // creates effects required to setup program access
     def associateGroupsForPrograms(): Vector[Effect] = {
-      RunCommand("usermod", Vector("-G", "", Constants.ProfileUser)) +:
+      RunCommand(programs.usermod, Vector("-G", "", Constants.ProfileUser)) +:
       profile.programs.map(prog => {
-        RunCommand("usermod", Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
+        RunCommand(programs.usermod, Vector("-a", "-G", s"use-${Tag.unwrap(prog)}", Constants.ProfileUser))
       })
     }
 

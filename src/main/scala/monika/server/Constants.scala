@@ -18,7 +18,7 @@ object Constants {
   val InterpreterPort = 9001
   val MaxQueueSize = 3
 
-  val ManagedPrograms: Vector[String @@ FileName] = Vector(
+  val UserPrograms: Vector[String @@ FileName] = Vector(
     "studio",
     "subl",
     "idea",
@@ -32,6 +32,16 @@ object Constants {
     "ssh",
     "assistant.jar"
   ).map(FileName)
+
+  object programs {
+    val passwd: String @@ FileName = FileName("passwd")
+    val chmod: String @@ FileName = FileName("chmod")
+    val chown: String @@ FileName = FileName("chown")
+    val iptables: String @@ FileName = FileName("iptables")
+    val usermod: String @@ FileName = FileName("usermod")
+    val groupadd: String @@ FileName = FileName("groupadd")
+    val asList = List(chmod, chown, iptables, usermod, groupadd)
+  }
 
   object paths {
     val MonikaHome: String = "/home/tomzheng/monika"

@@ -56,7 +56,7 @@ object Interpreter {
 
   private def applyEffect(effect: Effect): Unit = {
     effect match {
-      case RunCommand(program, args) => CommandLine.call(Tag.unwrap(program), args.toArray)
+      case RunCommand(program, args) => Terminal.call(Tag.unwrap(program), args.toArray)
       case RestartProxy(settings) => ProxyServer.startOrRestart(settings)
       case WriteStringToFile(path, content) => {
         val pathString = Tag.unwrap(path)

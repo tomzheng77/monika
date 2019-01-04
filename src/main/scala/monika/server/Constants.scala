@@ -40,7 +40,7 @@ object Constants {
     val iptables: String @@ FileName = FileName("iptables")
     val usermod: String @@ FileName = FileName("usermod")
     val groupadd: String @@ FileName = FileName("groupadd")
-    val asList = List(chmod, chown, iptables, usermod, groupadd)
+    val asList = List(passwd, chmod, chown, iptables, usermod, groupadd)
   }
 
   object paths {

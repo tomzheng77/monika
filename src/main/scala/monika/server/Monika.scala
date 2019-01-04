@@ -18,7 +18,7 @@ object Monika {
   def main(args: Array[String]): Unit = {
     rejectOutgoingHttp(forUser = Constants.ProfileUser)
     scheduleTimer()
-    Interpreter.startHttpServer()
+    Interpreter.startHttpListener()
   }
 
 }

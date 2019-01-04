@@ -5,6 +5,11 @@ import scalaz.@@
 
 object Constants {
 
+  val MonikaHome: String = System.getenv("MONIKA_HOME")
+  if (MonikaHome == null) {
+    throw new RuntimeException("MONIKA_HOME not found, please check /etc/environment")
+  }
+
   val Users = Vector(
     "tomzheng",
     "profile",
@@ -45,7 +50,6 @@ object Constants {
 
   object paths {
 
-    val MonikaHome: String = "/home/tomzheng/monika"
     val StateDB: String = MonikaHome + "/state.db"
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"

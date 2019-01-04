@@ -220,7 +220,7 @@ object Interpreter {
     * each command should be provided via the 'cmd' parameter, serialized in JSON
     * a response will be returned in plain text
     */
-  def startHttpServer(): Unit = {
+  def startHttpListener(): Unit = {
     Spark.port(Constants.InterpreterPort)
     Spark.get("/request", (req, resp) => {
       resp.`type`("text/plain") // change to anything but text/html to prevent being intercepted by the proxy

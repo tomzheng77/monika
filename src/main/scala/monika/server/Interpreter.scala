@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import monika.server.persist.StateStore
 import monika.server.proxy.ProxyServer
 import monika.server.pure.Actions._
-import monika.server.pure.Model._
+import monika.Primitives._
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Level
 import org.json4s.native.JsonMethods

@@ -3,7 +3,7 @@ package monika.server
 import java.io.File
 import java.time.LocalDateTime
 
-import monika.proxy.ProxyServer
+import monika.server.proxy.ProxyServer
 import monika.server.pure.Actions.Action
 import monika.server.pure.Model._
 import org.apache.commons.io.FileUtils

@@ -2,7 +2,7 @@ package monika.server.pure
 
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
-import monika.proxy.ProxyServer.ProxySettings
+import monika.server.proxy.ProxyServer.ProxySettings
 import org.apache.log4j.Level
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}

@@ -8,7 +8,7 @@ import monika.server.pure.Actions
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
 
-object Monika {
+object MonikaServer {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 

@@ -1,4 +1,4 @@
-package monika.proxy
+package monika.server.proxy
 
 import java.io.File
 

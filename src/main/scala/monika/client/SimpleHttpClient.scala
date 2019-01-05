@@ -8,7 +8,7 @@ import org.json4s.native.JsonMethods._
 
 import scala.io.StdIn
 
-object MonikaClient {
+object SimpleHttpClient {
 
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
@@ -32,6 +32,7 @@ object MonikaClient {
       val partsJson: String = pretty(render(parts))
       val response: String = {
         Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
+          .queryString("user", user)
           .queryString("cmd", partsJson)
           .asString().getBody
       }

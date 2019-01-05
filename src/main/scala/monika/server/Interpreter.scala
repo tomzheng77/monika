@@ -81,10 +81,19 @@ object Interpreter {
     }
   }
 
-  private def handleRequestCommand(name: String, args: List[String]): String = {
-    LOGGER.debug(s"received command request: $name ${args.mkString(" ")}")
+  /**
+    * handles commands from the client
+    *
+    * reload: reloads profile definitions into the state
+    *
+    * @param command name of the command
+    * @param args arguments given
+    * @return response message
+    */
+  private def handleRequestCommand(command: String, args: List[String]): String = {
+    LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     import monika.server.pure.Actions._
-    name match {
+    command match {
       case "chkqueue" => runAction(clearActiveOrApplyNext())
       case "addqueue" => runAction(enqueueNextProfile(args))
       case "status" => runAction(statusReport())
@@ -94,7 +103,7 @@ object Interpreter {
         runAction(reloadProfiles(profiles))
       }
       case "resetprofile" => runAction(resetProfile())
-      case _ => s"unknown command $name"
+      case _ => s"unknown command $command"
     }
   }
 

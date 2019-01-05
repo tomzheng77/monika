@@ -3,8 +3,9 @@ package monika.server
 import java.io.File
 import java.time.LocalDateTime
 
+import monika.server.persist.StateStore
 import monika.server.proxy.ProxyServer
-import monika.server.pure.Actions.Action
+import monika.server.pure.Actions._
 import monika.server.pure.Model._
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Level
@@ -23,7 +24,7 @@ object Interpreter {
 
   def runAction[T](rws: Action[T]): T = {
     StateStore.transaction(state => {
-      val ext = composeExternal()
+      val ext = createExternalForAction()
       val (effects, response, newState) = rws.run(ext, state)
       effects.foreach(applyEffect)
       (newState, response)
@@ -51,16 +52,19 @@ object Interpreter {
     })
   }
 
-  private def composeExternal(): External = {
-    val projectRoot = new File(Constants.Locations.ProjectRoot)
-    val projects = (projectRoot.listFiles() ?? Array())
+  private def createExternalForAction(): ActionExternal = {
+    val projectRoot: File = new File(Constants.Locations.ProjectRoot)
+    val projects: Map[String @@ FileName, String @@ FilePath] = (projectRoot.listFiles() ?? Array())
       .filter(f => f.isDirectory)
       .map(f => (FileName(f.getName), FilePath(f.getCanonicalPath))).toMap
 
-    External(LocalDateTime.now(), projects)
+    val programs: Map[String @@ FileName, String @@ FilePath] = (Constants.ProfilePrograms ++ Constants.CallablePrograms.asList)
+      .flatMap(s => CommandExecutor.findProgramLocation(s).map(l => s -> l)).toMap
+
+    ActionExternal(LocalDateTime.now(), projects, programs)
   }
 
-  private def applyEffect(effect: Effect): Unit = {
+  private def applyEffect(effect: ActionEffect): Unit = {
     effect match {
       case RunCommand(program, args) => CommandExecutor.call(Tag.unwrap(program), args.toArray)
       case RestartProxy(settings) => ProxyServer.startOrRestart(settings)

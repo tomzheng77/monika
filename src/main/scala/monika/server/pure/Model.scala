@@ -63,12 +63,6 @@ object Model {
   case class ProfileRequest(start: LocalDateTime, end: LocalDateTime, profile: Profile)
 
   /**
-    * IMPORTANT: every time MonikaState and it's sub-components are changed
-    * this version number MUST be bumped
-    */
-  val MonikaStateVersion: String = "2019-01-05.1"
-
-  /**
     * the full runtime state of the Monika program
     * since it has very limited amounts of state (< 10KB), it is completely feasible
     * to represent it with an immutable data structure
@@ -108,16 +102,6 @@ object Model {
     */
 
   /**
-    * represents the external view
-    * @param nowTime the current date and time
-    * @param projects known projects mapped from name to path
-    */
-  case class External(
-    nowTime: LocalDateTime,
-    projects: Map[String @@ FileName, String @@ FilePath]
-  )
-
-  /**
     * - the canonical path of a file or folder
     * - by definition, a canonical path is both absolute and unique
     */
@@ -129,12 +113,5 @@ object Model {
     */
   sealed trait FileName
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
-
-  sealed trait Effect
-  case class RunCommand(program: String @@ FileName, args: Vector[String] = Vector.empty) extends Effect
-  case class RestartProxy(settings: ProxySettings) extends Effect
-  case class WriteStringToFile(path: String @@ FilePath, content: String) extends Effect
-  case class WriteLog(level: Level, message: String) extends Effect
-  def RunCommand(program: String @@ FileName, args: String*): RunCommand = RunCommand(program, args.toVector)
 
 }

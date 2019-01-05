@@ -1,8 +1,9 @@
-package monika.server
+package monika.server.persist
 
 import java.io.File
 
-import monika.server.pure.Model._
+import monika.server.Constants
+import monika.server.pure.Model.{InitialState, MonikaState}
 import net.openhft.chronicle.hash.ChronicleHashCorruption
 import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 import org.slf4j.{Logger, LoggerFactory}
@@ -16,7 +17,7 @@ object StateStore {
 
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  private val stateDBFile = new File(Constants.Locations.SavedState + "." + MonikaStateVersion)
+  private val stateDBFile = new File(Constants.Locations.SavedState)
   private val stateDB: ChronicleSet[MonikaState] = openStateDB(stateDBFile)
   Runtime.getRuntime.addShutdownHook(new Thread(() => stateDB.close()))
 

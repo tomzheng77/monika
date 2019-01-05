@@ -2,7 +2,7 @@ package monika.server
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
-import monika.server.pure.Model.FileName
+import monika.server.pure.Model.{FileName, FilePath}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import org.slf4j.LoggerFactory
 import scalaz.{@@, Tag}
@@ -58,17 +58,17 @@ object CommandExecutor {
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
     */
-  private def canExecuteProgram(program: String @@ FileName): Boolean = {
+  def findProgramLocation(program: String @@ FileName): Option[String @@ FilePath] = {
     val programName = Tag.unwrap(program)
-    Constants.PathList.exists(aPath => {
-      val file = new File(aPath + File.separator + programName)
-      file.exists && file.isFile && file.canExecute
-    })
+    Constants.PathList
+      .map(path => new File(path + File.separator + programName))
+      .find(file => file.exists && file.isFile && file.canExecute)
+      .map(file => FilePath(file.getCanonicalPath))
   }
 
   def checkIfProgramsAreExecutable(): Unit = {
     val programs = Constants.ProfilePrograms ++ Constants.CallablePrograms.asList
-    val cannotExecute = programs.filterNot(canExecuteProgram)
+    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
     for (program <- cannotExecute) {
       val programName = Tag.unwrap(program)
       LOGGER.warn(s"cannot find executable program: $programName")

@@ -4,8 +4,10 @@ import java.time.LocalDateTime
 
 import monika.server.Constants.CallablePrograms._
 import monika.server.Constants._
+import monika.server.proxy.ProxyServer.ProxySettings
 import monika.server.pure.Model._
 import monika.server.pure.ProfileActions.restrictProfile
+import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
@@ -15,16 +17,34 @@ import scala.util.Try
 
 object Actions {
 
-  type Action[T] = scalaz.ReaderWriterState[External, Vector[Effect], MonikaState, T]
-  type ActionReturn[T] = (Vector[Effect], T, MonikaState)
-  def Action[T](f: (External, MonikaState) => (Vector[Effect], T, MonikaState)): Action[T] = ReaderWriterState.apply[External, Vector[Effect], MonikaState, T](f)
+  /**
+    * represents the external view
+    * @param nowTime the current date and time
+    * @param projects known projects mapped from name to path
+    */
+  case class ActionExternal(
+    nowTime: LocalDateTime,
+    projects: Map[String @@ FileName, String @@ FilePath],
+    programs: Map[String @@ FileName, String @@ FilePath]
+  )
+
+  sealed trait ActionEffect
+  case class RunCommand(program: String @@ FileName, args: Vector[String] = Vector.empty) extends ActionEffect
+  case class RestartProxy(settings: ProxySettings) extends ActionEffect
+  case class WriteStringToFile(path: String @@ FilePath, content: String) extends ActionEffect
+  case class WriteLog(level: Level, message: String) extends ActionEffect
+  def RunCommand(program: String @@ FileName, args: String*): RunCommand = RunCommand(program, args.toVector)
+
+  type Action[T] = scalaz.ReaderWriterState[ActionExternal, Vector[ActionEffect], MonikaState, T]
+  type ActionReturn[T] = (Vector[ActionEffect], T, MonikaState)
+  def Action[T](f: (ActionExternal, MonikaState) => (Vector[ActionEffect], T, MonikaState)): Action[T] = ReaderWriterState.apply[ActionExternal, Vector[ActionEffect], MonikaState, T](f)
   val NIL: Vector[Nothing] = Vector.empty
 
-  implicit object VectorSemigroup extends Semigroup[Vector[Effect]] {
-    override def append(f1: Vector[Effect], f2: => Vector[Effect]): Vector[Effect] = f1 ++ f2
+  implicit object VectorSemigroup extends Semigroup[Vector[ActionEffect]] {
+    override def append(f1: Vector[ActionEffect], f2: => Vector[ActionEffect]): Vector[ActionEffect] = f1 ++ f2
   }
 
-  def readExtAndState(): Action[(External, MonikaState)] = Action((ext, state) => (NIL, (ext, state), state))
+  def readExtAndState(): Action[(ActionExternal, MonikaState)] = Action((ext, state) => (NIL, (ext, state), state))
   def readState(): Action[MonikaState] = Action((_, state) => (NIL, state, state))
   def respond[T](response: T): Action[T] = Action((_, s) => (NIL, response, s))
   def popQueue(): Action[ProfileRequest] = Action((_, state) => (NIL, state.queue.head, state.copy(queue = state.queue.tail)))

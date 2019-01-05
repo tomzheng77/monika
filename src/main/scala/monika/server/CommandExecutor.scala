@@ -2,7 +2,7 @@ package monika.server
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
-import monika.server.pure.Model.{FileName, FilePath}
+import monika.Primitives._
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import org.slf4j.LoggerFactory
 import scalaz.{@@, Tag}

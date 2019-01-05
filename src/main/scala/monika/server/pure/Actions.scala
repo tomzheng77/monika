@@ -12,6 +12,7 @@ import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
 import scalaz.{@@, ReaderWriterState, Semigroup}
+import monika.Primitives._
 
 import scala.util.Try
 

@@ -2,11 +2,11 @@ package monika.server.pure
 
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
+import monika.Primitives._
 import monika.server.proxy.ProxyServer.ProxySettings
-import org.apache.log4j.Level
 import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
-import scalaz.{@@, Tag}
+import scalaz.@@
 
 object Model {
 
@@ -94,24 +94,5 @@ object Model {
   val InitialState: MonikaState = {
     MonikaState(Vector(), None, Map.empty, Map.empty)
   }
-
-  /**
-    * requires: the queue is not empty
-    * ensures: the first item of the queue is returned
-    * ensures: the first item is removed from the queue
-    */
-
-  /**
-    * - the canonical path of a file or folder
-    * - by definition, a canonical path is both absolute and unique
-    */
-  sealed trait FilePath
-  def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
-
-  /**
-    * - the name of a file or folder relative to it's parent
-    */
-  sealed trait FileName
-  def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
 
 }

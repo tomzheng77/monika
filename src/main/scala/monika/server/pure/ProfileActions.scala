@@ -6,6 +6,7 @@ import monika.server.pure.Model._
 import monika.server.pure.Actions._
 import org.apache.log4j.Level
 import scalaz.{@@, Tag}
+import monika.Primitives._
 
 object ProfileActions {
 

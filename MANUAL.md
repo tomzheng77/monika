@@ -21,6 +21,9 @@
 
 ## Profile Management
 
-- `queue <profile> <time>`: change to the specified profile in 1 minute
-    - once the profile has taken effect, the user will no longer have ROOT access (removed wheel group)
-    - any restricted programs will be terminated
+- `queue <profile_name> <minutes>`: adds a profile into the queue
+    - if the queue was empty then the profile will take effect after 1 minute
+    - otherwise the profile will be queued at the end
+    - monika will scan and apply profiles
+        - once the profile has taken effect, the user will no longer have ROOT access (removed wheel group)
+        - any restricted programs will be terminated

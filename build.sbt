@@ -14,6 +14,7 @@ libraryDependencies += "com.sparkjava" % "spark-core" % "2.8.0"
 libraryDependencies += "org.apache.commons" % "commons-exec" % "1.3"
 libraryDependencies += "net.openhft" % "chronicle-map" % "3.17.0" exclude("xpp3", "xpp3_min")
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.0-M26"
+libraryDependencies += "com.mashape.unirest" % "unirest-java" % "1.4.9"
 
 autoCompilerPlugins := true
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.0-M4")

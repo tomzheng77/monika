@@ -27,3 +27,8 @@
     - monika will scan and apply profiles
         - once the profile has taken effect, the user will no longer have ROOT access (removed wheel group)
         - any restricted programs will be terminated
+
+## Proxy
+
+- the proxy is a tool to restrict which HTML pages can be accessed
+- it can block based on the contents of the response

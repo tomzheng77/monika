@@ -8,6 +8,12 @@ import org.json4s.native.JsonMethods._
 
 import scala.io.StdIn
 
+/**
+  * - asks user for a command
+  * - serializes command into JSON and sends it to the interpreter
+  * - prints out the response as plain text
+  * - repeat until "exit" is entered
+  */
 object SimpleHttpClient {
 
   private def setupLogger(): Unit = {
@@ -27,7 +33,9 @@ object SimpleHttpClient {
     val user = System.getenv("USER")
     assert(user != null, "user cannot be null")
     while (true) {
-      val line: String = StdIn.readLine("M1-1> ")
+      val line: String = StdIn.readLine("M1-1> ").trim
+      if (line == "exit") System.exit(0)
+
       val parts: JValue = seq2jvalue(line.split(' ').toVector)
       val partsJson: String = pretty(render(parts))
       val response: String = {

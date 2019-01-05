@@ -12,14 +12,7 @@
 
 # Examples
 
-## Lock for next day
-
-- start monika client
-- `mk-pwds`: generates passwords for the next 100 days
-- `ls-pwds`: prints out the generated passwords
-- `locknx`: changes the system password to that for the next day
-
-## Profile Management
+## Profile Management (In Development)
 
 - `queue <profile_name> <minutes>`: adds a profile into the queue
     - if the queue was empty then the profile will take effect after 1 minute
@@ -27,6 +20,13 @@
     - monika will scan and apply profiles
         - once the profile has taken effect, the user will no longer have ROOT access (removed wheel group)
         - any restricted programs will be terminated
+
+## Lock for next day
+
+- start monika client
+- `mk-pwds`: generates passwords for the next 100 days
+- `ls-pwds`: prints out the generated passwords
+- `locknx`: changes the system password to that for the next day
 
 ## Proxy
 

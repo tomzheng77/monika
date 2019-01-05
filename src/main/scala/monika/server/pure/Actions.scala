@@ -27,7 +27,7 @@ object Actions {
   def readExtAndState(): Action[(External, MonikaState)] = Action((ext, state) => (NIL, (ext, state), state))
   def readState(): Action[MonikaState] = Action((_, state) => (NIL, state, state))
   def respond[T](response: T): Action[T] = Action((_, s) => (NIL, response, s))
-  def popQueue(): Action[ProfileRequest] = Action((_, state) => (NIL, state.nextProfiles.head, state.copy(nextProfiles = state.nextProfiles.tail)))
+  def popQueue(): Action[ProfileRequest] = Action((_, state) => (NIL, state.queue.head, state.copy(queue = state.queue.tail)))
 
   def statusReport(): Action[String] = Action((_, state) => {
     implicit val formats: Formats = DefaultFormats
@@ -37,7 +37,7 @@ object Actions {
 
   def resetProfile(): Action[String] = for {
     state <- readState()
-    response <- state.activeProfile match {
+    response <- state.active match {
       case None => respond("no currently active profile")
       case Some(piq) => Action((ext, state) => (restrictProfile(ext, piq.profile), "updated profile", state))
     }
@@ -54,7 +54,7 @@ object Actions {
     item <- popQueue()
     _ <- Action((ext, state) => {
       val effects = restrictProfile(ext, item.profile)
-      (effects, Unit, state.copy(activeProfile = Some(item)))
+      (effects, Unit, state.copy(active = Some(item)))
     })
   } yield ""
 
@@ -64,8 +64,8 @@ object Actions {
     */
   def dropFromQueueAndActive(): Action[Unit] = Action((ext, state) => {
     (NIL, Unit, {
-      state.copy(nextProfiles = state.nextProfiles.dropWhile(item => item.end.isBefore(ext.nowTime)),
-        activeProfile = state.activeProfile.filterNot(item => item.end.isBefore(ext.nowTime)))
+      state.copy(queue = state.queue.dropWhile(item => item.end.isBefore(ext.nowTime)),
+        active = state.active.filterNot(item => item.end.isBefore(ext.nowTime)))
     })
   })
 
@@ -73,9 +73,9 @@ object Actions {
     _ <- dropFromQueueAndActive()
     (ext, state) <- readExtAndState()
     response <- {
-      if (state.activeProfile.isEmpty && state.nextProfiles.isEmpty) unlockAllUsers()
-      else if (state.activeProfile.isEmpty && state.nextProfiles.head.start.isBefore(ext.nowTime)) applyNextProfileInQueue()
-      else if (state.activeProfile.nonEmpty) respond("profile still active")
+      if (state.active.isEmpty && state.queue.isEmpty) unlockAllUsers()
+      else if (state.active.isEmpty && state.queue.head.start.isBefore(ext.nowTime)) applyNextProfileInQueue()
+      else if (state.active.nonEmpty) respond("profile still active")
       else unlockAllUsers()
     }
   } yield response
@@ -89,7 +89,7 @@ object Actions {
     else {
       val profileName = args.head
       val minutes = args(1)
-      if (state.nextProfiles.size >= MaxQueueSize) (NIL, "queue is already full", state)
+      if (state.queue.size >= MaxQueueSize) (NIL, "queue is already full", state)
       else if (!state.knownProfiles.contains(profileName)) (NIL, s"profile not found: $profileName", state)
       else Try(minutes.toInt).toOption match {
         case None => (NIL, s"time is invalid", state)
@@ -97,13 +97,13 @@ object Actions {
         case Some(t) => {
           val profile = state.knownProfiles(profileName)
           def addToQueueAfter(start: LocalDateTime): ActionReturn[String] = {
-            (NIL, "successfully added", state.copy(nextProfiles = Vector(
+            (NIL, "successfully added", state.copy(queue = Vector(
               ProfileRequest(start, start.plusMinutes(t), profile)
             )))
           }
-          if (state.nextProfiles.isEmpty && state.activeProfile.isEmpty) addToQueueAfter(ext.nowTime)
-          else if (state.nextProfiles.isEmpty) addToQueueAfter(state.activeProfile.get.end)
-          else addToQueueAfter(state.nextProfiles.last.end)
+          if (state.queue.isEmpty && state.active.isEmpty) addToQueueAfter(ext.nowTime)
+          else if (state.queue.isEmpty) addToQueueAfter(state.active.get.end)
+          else addToQueueAfter(state.queue.last.end)
         }
       }
     }

@@ -66,7 +66,7 @@ object Model {
     * IMPORTANT: every time MonikaState and it's sub-components are changed
     * this version number MUST be bumped
     */
-  val MonikaStateVersion: String = "2019-01-05"
+  val MonikaStateVersion: String = "2019-01-05.1"
 
   /**
     * the full runtime state of the Monika program
@@ -82,13 +82,13 @@ object Model {
     * invariant: the passwords contain only characters and numbers
     */
   case class MonikaState(
-    nextProfiles: Vector[ProfileRequest],
-    activeProfile: Option[ProfileRequest],
+    queue: Vector[ProfileRequest],
+    active: Option[ProfileRequest],
     knownProfiles: Map[String, Profile],
     passwords: Map[LocalDate, String]
   ) {
-    assert(nextProfiles.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == nextProfiles)
-    private val intervals = nextProfiles.map(i => {
+    assert(queue.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == queue)
+    private val intervals = queue.map(i => {
       (i.start.toEpochSecond(ZoneOffset.UTC), i.end.toEpochSecond(ZoneOffset.UTC))
     })
     assert(intervals.forall(pair => pair._2 > pair._1))

@@ -10,7 +10,7 @@ import scalaz.{@@, Tag}
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
-object Terminal {
+object CommandExecutor {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 

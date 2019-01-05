@@ -21,12 +21,12 @@
         - once the profile has taken effect, the user will no longer have ROOT access (removed wheel group)
         - any restricted programs will be terminated
 
-## Lock for next day
+## Lock for next day (On Hold)
 
 - start monika client
 - `mk-pwds`: generates passwords for the next 100 days
 - `ls-pwds`: prints out the generated passwords
-- `locknx`: changes the system password to that for the next day
+- `locknx`: changes the system password to that associated with the next day
 
 ## Proxy
 

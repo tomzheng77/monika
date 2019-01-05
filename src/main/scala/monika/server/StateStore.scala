@@ -8,7 +8,7 @@ import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
-  * - persists a single MonikaState to a file
+  * - persists a single MonikaState to disk
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */

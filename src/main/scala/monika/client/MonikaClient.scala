@@ -16,9 +16,12 @@ object MonikaClient {
       val line: String = StdIn.readLine("M1-1> ")
       val parts: JValue = seq2jvalue(line.split(' ').toVector)
       val partsJson: String = pretty(render(parts))
-      val partsJson: String Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-        .queryString("cmd", partsJson)
-        .asString()
+      val response: String = {
+        Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
+          .queryString("cmd", partsJson)
+          .asString().getBody
+      }
+      println(response)
     }
   }
 

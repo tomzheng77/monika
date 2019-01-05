@@ -12,7 +12,7 @@ object MonikaServer {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 
-  def setupLogger(): Unit = {
+  private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
     // https://stackoverflow.com/questions/8965946/configuring-log4j-loggers-programmatically
     val console = new ConsoleAppender()

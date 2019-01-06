@@ -1,65 +1,171 @@
 package monika.server.persist
 
-import java.io.File
+import java.io._
+import java.nio.channels.Channels
+import java.time.LocalDateTime
 
-import monika.server.Constants
-import monika.server.pure.Model.{InitialState, MonikaState}
-import net.openhft.chronicle.hash.ChronicleHashCorruption
-import net.openhft.chronicle.set.{ChronicleSet, ChronicleSetBuilder}
+import monika.server.Constants.Locations
+import monika.server.pure.Model._
+import org.json4s.{DefaultFormats, Formats, JValue}
+import org.json4s.native.{JsonMethods, Printer}
 import org.slf4j.{Logger, LoggerFactory}
+import JsonMethods._
+import monika.Primitives._
+import monika.server.proxy.ProxyServer.ProxySettings
+import org.json4s.JsonDSL._
+import scalaz.Tag
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * - persists a single MonikaState to disk
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object StateStore {
+object StateStore extends StateStoreH {
 
+  private implicit val formats = DefaultFormats
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  private val stateDBFile = new File(Constants.Locations.SavedState)
-  private val stateDB: ChronicleSet[MonikaState] = openStateDB(stateDBFile)
-  Runtime.getRuntime.addShutdownHook(new Thread(() => stateDB.close()))
-
+  /**
+    * - the caller can provide a function which modifies the state and returns some value R
+    * - this is atomic, if an error occurs then no changes will be persisted
+    * - no two transactions can occur at once, one must wait for the other
+    */
   def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
-    stateDB.synchronized {
-      val state = queryState()
+    this.synchronized {
+      ensureFileWritable()
+      val stateDBFile = new RandomAccessFile(Locations.StateJsonFile, "rw")
+      val channel = stateDBFile.getChannel
+      val lock = channel.tryLock()
+      if (lock == null) {
+        val message = s"a lock cannot be acquired for ${Locations.StateJsonFile}"
+        LOGGER.error(message)
+        throw new RuntimeException(message)
+      }
+
+      val input = Channels.newInputStream(channel)
+      val state = readStateFromInput(input)
       val (newState, returnValue) = fn(state)
-      saveState(newState); returnValue
+
+      val output = Channels.newOutputStream(channel)
+      writeStateToOutput(newState, output)
+      lock.release(); returnValue
     }
   }
 
-  private def openStateDB(file: File): ChronicleSet[MonikaState] = {
-    val builder = ChronicleSetBuilder
-      .of(classOf[MonikaState])
-      .name("monika-state")
-      .entries(1)
-      .averageKeySize(1024 * 10)
-
-    if (!file.exists()) {
-      LOGGER.info(s"DB file ${file.getCanonicalPath} not found, starting from new")
-      builder.createPersistedTo(file)
-    } else if (!(file.canRead & file.canWrite)) {
-      val message = s"DB file ${file.getCanonicalPath} must be readable and writable"
+  private def ensureFileWritable(): Unit = {
+    val file = new File(Locations.StateJsonFile)
+    val lastModified = file.lastModified()
+    if (file.exists() && !file.canWrite) {
+      val message = s"file is not writable ${Locations.StateJsonFile}"
       LOGGER.error(message)
       throw new RuntimeException(message)
-    } else {
-      def onCorruption(ex: ChronicleHashCorruption): Unit = {
-        LOGGER.error("corruption: " + ex.message() + s" (segment: ${ex.segmentIndex()})", ex.exception())
-      }
-      LOGGER.error(s"recovering from DB file ${file.getCanonicalPath}")
-      builder.recoverPersistedTo(file, true, onCorruption _)
+    }
+
+    val parent = file.getParentFile
+    if (!file.exists() && !parent.exists()) {
+      val message = s"parent folder does not exist ${parent.getCanonicalPath}"
+      LOGGER.error(message)
+      throw new RuntimeException(message)
+    }
+
+    if (!file.exists() && !parent.canWrite) {
+      val message = s"file cannot be created in parent folder ${parent.getCanonicalPath}"
+      LOGGER.error(message)
+      throw new RuntimeException(message)
+    }
+
+    if (file.lastModified() != lastModified) {
+      val message = s"lastModified changed since checks were performed ${parent.getCanonicalPath}"
+      LOGGER.error(message)
+      throw new RuntimeException(message)
     }
   }
 
-  private def queryState(): MonikaState = {
-    val iter = stateDB.iterator()
-    if (iter.hasNext) iter.next() else InitialState
+  private def readStateFromInput(input: InputStream): MonikaState = {
+    val json = Try(JsonMethods.parse(input)).orElseX(ex =>{
+      val message = s"file does not contain a valid json format ${Locations.StateJsonFile}"
+      LOGGER.error(message, ex)
+      throw new RuntimeException(message, ex)
+    })
+    Try(jsonToState(json)).orElseX(ex => {
+      val message = s"failed to deserialize JSON ${Locations.StateJsonFile}"
+      LOGGER.error(message, ex)
+      throw new RuntimeException(message, ex)
+    })
   }
 
-  private def saveState(state: MonikaState): Unit = {
-    stateDB.clear()
-    stateDB.add(state)
+  private def writeStateToOutput(state: MonikaState, output: OutputStream): Unit = {
+    val json: JValue = stateToJson(state)
+    val writer = new OutputStreamWriter(output)
+    Printer.compact(render(json), writer)
+  }
+
+  private[persist] def jsonToState(json: JValue): MonikaState = {
+    def jsonToProxy(value: JValue): ProxySettings = {
+      ProxySettings(
+        transparent = (value \ "transparent").extract[Boolean],
+        allowHtmlPrefix = (value \ "allow").extract[Vector[String]],
+        rejectHtmlKeywords = (value \ "block").extract[Vector[String]]
+      )
+    }
+    def jsonToProfile(value: JValue): Profile = {
+      Profile(
+        name = (json \ "name").extract[String],
+        programs = (json \ "programs").extract[Vector[String]].map(FileName),
+        projects = (json \ "projects").extract[Vector[String]].map(FileName),
+        bookmarks = (json \ "bookmarks").extract[Vector[JValue]].map(v => {
+          Bookmark((v \ "name").extract[String], (v \ "url").extract[String])
+        }),
+        proxy = jsonToProxy(json \ "proxy")
+      )
+    }
+    def jsonToRequest(json: JValue): ProfileRequest = {
+      ProfileRequest(
+        start = LocalDateTime.parse((json \ "start").extract[String]),
+        end = LocalDateTime.parse((json \ "end").extract[String]),
+        profile = jsonToProfile(json \ "profile")
+      )
+    }
+    implicit val formats: Formats = DefaultFormats
+    MonikaState(
+      active = null,
+      queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
+      knownProfiles = null,
+      passwords = null
+    )
+  }
+
+  private[persist] def stateToJson(state: MonikaState): JValue = {
+    def proxyToJson(settings: ProxySettings): JValue = {
+      ("transparent" -> settings.transparent) ~
+      ("allow" -> settings.allowHtmlPrefix) ~
+      ("block" -> settings.rejectHtmlKeywords)
+    }
+    def profileToJson(profile: Profile): JValue = {
+      ("name" -> profile.name) ~
+      ("programs" -> profile.programs.map(Tag.unwrap)) ~
+      ("projects" -> profile.programs.map(Tag.unwrap)) ~
+      ("bookmarks" -> profile.bookmarks.map(b => ("name" -> b.name) ~ ("url" -> b.url))) ~
+      ("proxy" -> proxyToJson(profile.proxy))
+    }
+    def requestToJson(request: ProfileRequest): JValue = {
+      ("start" -> request.start.toString) ~
+      ("end" -> request.end.toString) ~
+      ("profile" -> profileToJson(request.profile))
+    }
+    ("queue" -> state.queue.map(requestToJson)) ~
+    ("active" -> state.active.map(requestToJson)) ~
+    ("profiles" -> state.knownProfiles.values.map(profileToJson)) ~
+    ("passwords" -> state.passwords.map(pair => {
+      val (date, password) = pair
+      ("date" -> date.toString) ~ ("password" -> password)
+    }))
+  }
+
+  def main(args: Array[String]): Unit = {
+
   }
 
 }

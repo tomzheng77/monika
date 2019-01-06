@@ -80,7 +80,7 @@ object Constants {
   object Locations {
 
     val PrimaryLog: String = MonikaHome + "/monika.log"
-    val SavedState: String = MonikaHome + "/state.db"
+    val StateJsonFile: String = MonikaHome + "/state.json"
 
     val ProfileRoot: String = MonikaHome + "/profiles"
     val ProjectRoot: String = MonikaHome + "/projects"

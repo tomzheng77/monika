@@ -2,6 +2,8 @@ package monika
 
 import scalaz.{@@, Tag}
 
+import scala.util.Try
+
 object Primitives {
 
   /**
@@ -16,5 +18,9 @@ object Primitives {
     */
   sealed trait FileName
   def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
+
+  implicit class TryExt[T](val t: Try[T]) extends AnyVal {
+    def orElseX[U >: T](fn: Throwable => U): U = t.fold(fn, i => i)
+  }
 
 }

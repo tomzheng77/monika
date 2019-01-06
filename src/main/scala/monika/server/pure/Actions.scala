@@ -11,7 +11,7 @@ import org.apache.log4j.Level
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Extraction, Formats, JValue}
 import scalaz.syntax.id._
-import scalaz.{@@, ReaderWriterState, Semigroup}
+import scalaz.{@@, ReaderWriterState, Semigroup, Tag}
 import monika.Primitives._
 
 import scala.util.Try
@@ -130,13 +130,18 @@ object Actions {
     }
   })
 
-  def reloadProfiles(profiles: Map[String @@ FileName, String]): Action[String] = Action((ext, state) => {
-    val (valid: Map[String @@ FileName, JValue], _: Set[String @@ FileName]) = {
+  def reloadProfiles(profiles: Map[String @@ FileName, String]): Action[String] = Action((_, state) => {
+    val (valid: Map[String @@ FileName, JValue], invalid: Set[String @@ FileName]) = {
       profiles.mapValues(str => JsonMethods.parseOpt(str)).partition(pair => pair._2.isDefined) |>
         (twoMaps => (twoMaps._1.mapValues(opt => opt.get), twoMaps._2.keySet))
     }
-    val newProfiles = state.knownProfiles ++ valid.map(pair => "" -> constructProfile(pair._2, ""))
-    (NIL, s"${valid.size} valid profiles found", state.copy(knownProfiles = newProfiles))
+    def removeSuffix(name: String @@ FileName): String = Tag.unwrap(name).replaceAll("\\.[^\\.]$", "")
+    val newProfiles = state.knownProfiles ++ valid.map(pair => constructProfile(pair._2, removeSuffix(pair._1))).map(p => p.name -> p)
+    val logs: Vector[ActionEffect] = {
+      valid.keys.map(k => WriteLog(Level.DEBUG, s"valid profile found in $k")).toVector ++
+      invalid.map(k => WriteLog(Level.DEBUG, s"invalid profile found in $k")).toVector
+    }
+    (logs, s"${valid.size} valid profiles found", state.copy(knownProfiles = newProfiles))
   })
 
 }

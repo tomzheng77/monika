@@ -128,9 +128,8 @@ object StateStore extends StateStoreH {
         profile = jsonToProfile(json \ "profile")
       )
     }
-    implicit val formats: Formats = DefaultFormats
     MonikaState(
-      active = null,
+      active = (json \ "active").extractOpt[JValue].map(jsonToRequest),
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
       knownProfiles = null,
       passwords = null

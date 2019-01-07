@@ -27,8 +27,13 @@ object Model {
     * @param bookmarks bookmarks to display inside the browser for convenience
     * @param proxy restricts which websites can be accessed
     */
-  case class Profile(name: String, programs: Vector[String @@ FileName], projects: Vector[String @@ FileName],
-                     bookmarks: Vector[Bookmark], proxy: ProxySettings)
+  case class Profile(
+    name: String,
+    programs: Vector[String @@ FileName],
+    projects: Vector[String @@ FileName],
+    bookmarks: Vector[Bookmark],
+    proxy: ProxySettings
+  )
 
   /**
     * constructs a profile from a .json definition file

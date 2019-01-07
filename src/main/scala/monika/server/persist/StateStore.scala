@@ -2,7 +2,7 @@ package monika.server.persist
 
 import java.io._
 import java.nio.channels.Channels
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
 import monika.server.Constants.Locations
 import monika.server.pure.Model._
@@ -131,8 +131,10 @@ object StateStore extends StateStoreH {
     MonikaState(
       active = (json \ "active").extractOpt[JValue].map(jsonToRequest),
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
-      knownProfiles = null,
-      passwords = null
+      knownProfiles = (json \ "profiles").extract[Vector[JValue]].map(jsonToProfile).map(p => p.name -> p).toMap,
+      passwords = (json \ "passwords").extract[Vector[JValue]].map(v => (
+        LocalDate.parse((v \ "date").extract[String]), (v \ "password").extract[String]
+      )).toMap
     )
   }
 

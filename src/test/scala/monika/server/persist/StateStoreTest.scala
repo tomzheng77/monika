@@ -55,9 +55,10 @@ object StateStoreTest extends Properties("StateStore") {
     passwords <- Gen.mapOf(randomPair(randomDate, Gen.alphaNumStr))
   } yield MonikaState(queue, active, knownProfiles, passwords)
 
-  implicit val arbitrary: Arbitrary[MonikaState] = Arbitrary(randomState)
-  property("serialize") = forAll { a: MonikaState =>
-    StateStore.jsonToState(StateStore.stateToJson(a)) == a
+  property("serialize") = {
+    forAll(randomState)(a => {
+      StateStore.jsonToState(StateStore.stateToJson(a)) == a
+    })
   }
 
 /*

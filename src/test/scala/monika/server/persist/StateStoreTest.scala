@@ -2,26 +2,26 @@ package monika.server.persist
 
 import java.time.{LocalDate, LocalDateTime}
 
-import monika.server.pure.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
-import org.scalacheck.{Arbitrary, Gen, Properties}
-import org.scalacheck.Prop.forAll
 import monika.Primitives._
 import monika.server.proxy.ProxyServer.ProxySettings
+import monika.server.pure.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
+import org.scalacheck.Prop.forAll
+import org.scalacheck.{Gen, Properties}
 
 object StateStoreTest extends Properties("StateStore") {
 
-  val randomProxySettings: Gen[ProxySettings] = for {
+  private val randomProxySettings: Gen[ProxySettings] = for {
     transparent <- Gen.oneOf(true, false)
     allow <- Gen.listOf(Gen.asciiPrintableStr).map(_.toVector)
     reject <- Gen.listOf(Gen.asciiPrintableStr).map(_.toVector)
   } yield ProxySettings(transparent, allow, reject)
 
-  val randomBookmark: Gen[Bookmark] = for {
+  private val randomBookmark: Gen[Bookmark] = for {
     name <- Gen.alphaNumStr
     url <- Gen.asciiPrintableStr
   } yield Bookmark(name, url)
 
-  val randomProfile: Gen[Profile] = for {
+  private val randomProfile: Gen[Profile] = for {
     name <- Gen.alphaNumStr
     programs <- Gen.listOf(Gen.alphaNumStr.map(FileName)).map(_.toVector)
     projects <- Gen.listOf(Gen.alphaNumStr.map(FileName)).map(_.toVector)
@@ -29,26 +29,26 @@ object StateStoreTest extends Properties("StateStore") {
     proxy <- randomProxySettings
   } yield Profile(name, programs, projects, bookmarks, proxy)
 
-  val randomDateTime: Gen[LocalDateTime] = for {
+  private val randomDateTime: Gen[LocalDateTime] = for {
     sinceNow <- Gen.choose(-1000, 1000)
   } yield LocalDateTime.now().plusMinutes(sinceNow)
 
-  val randomProfileRequest: Gen[ProfileRequest] = for {
+  private val randomProfileRequest: Gen[ProfileRequest] = for {
     start <- randomDateTime
     end <- randomDateTime
     profile <- randomProfile
   } yield ProfileRequest(start, end, profile)
 
-  def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
+  private def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
     a <- genA
     b <- genB
   } yield (a, b)
 
-  val randomDate: Gen[LocalDate] = for {
+  private val randomDate: Gen[LocalDate] = for {
     sinceNow <- Gen.choose(-100, 100)
   } yield LocalDate.now().plusDays(sinceNow)
 
-  val randomState: Gen[MonikaState] = for {
+  private val randomState: Gen[MonikaState] = for {
     queue <- Gen.listOf(randomProfileRequest).map(_.toVector)
     active <- Gen.option(randomProfileRequest)
     knownProfiles <- Gen.mapOf(randomPair(Gen.alphaNumStr, randomProfile))

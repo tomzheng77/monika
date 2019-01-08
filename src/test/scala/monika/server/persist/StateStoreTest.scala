@@ -6,7 +6,7 @@ import monika.Primitives._
 import monika.server.proxy.ProxyServer.ProxySettings
 import monika.server.pure.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
 import org.scalacheck.Prop.forAll
-import org.scalacheck.{Gen, Properties}
+import org.scalacheck.{Arbitrary, Gen, Properties}
 
 object StateStoreTest extends Properties("StateStore") {
 
@@ -29,9 +29,21 @@ object StateStoreTest extends Properties("StateStore") {
     proxy <- randomProxySettings
   } yield Profile(name, programs, projects, bookmarks, proxy)
 
+  private def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
+    a <- genA
+    b <- genB
+  } yield (a, b)
+
+  private val NowDate: LocalDate = LocalDate.now()
+  private val NowDateTime: LocalDateTime = LocalDateTime.now()
+
+  private val randomDate: Gen[LocalDate] = for {
+    sinceNow <- Gen.choose(-100, 100)
+  } yield NowDate.plusDays(sinceNow)
+
   private val randomDateTime: Gen[LocalDateTime] = for {
     sinceNow <- Gen.choose(-1000, 1000)
-  } yield LocalDateTime.now().plusMinutes(sinceNow)
+  } yield NowDateTime.plusMinutes(sinceNow)
 
   private val randomProfileRequest: Gen[ProfileRequest] = for {
     start <- randomDateTime
@@ -39,17 +51,24 @@ object StateStoreTest extends Properties("StateStore") {
     profile <- randomProfile
   } yield ProfileRequest(start, end, profile)
 
-  private def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
-    a <- genA
-    b <- genB
-  } yield (a, b)
+  private def sequence[T](list: Vector[Gen[T]]): Gen[Vector[T]] = {
+    Gen.sequence[Vector[T], T](list)
+  }
 
-  private val randomDate: Gen[LocalDate] = for {
-    sinceNow <- Gen.choose(-100, 100)
-  } yield LocalDate.now().plusDays(sinceNow)
+  private val randomQueue: Gen[Vector[ProfileRequest]] = {
+    import scalaz.syntax.id._
+    Gen.listOf(Gen.choose(1, 100)).flatMap(l => {
+      l.foldLeft((NowDateTime, Vector[Gen[ProfileRequest]]()))((pair, t) => {
+        val start = pair._1
+        val items = pair._2
+        val end = start.plusMinutes(t)
+        (end, items :+ randomProfile.map(p => ProfileRequest(start, end, p)))
+      })._2 |> sequence
+    })
+  }
 
   private val randomState: Gen[MonikaState] = for {
-    queue <- Gen.listOf(randomProfileRequest).map(_.toVector)
+    queue <- randomQueue
     active <- Gen.option(randomProfileRequest)
     knownProfiles <- Gen.mapOf(randomProfile.map(p => p.name -> p))
     passwords <- Gen.mapOf(randomPair(randomDate, Gen.alphaNumStr))

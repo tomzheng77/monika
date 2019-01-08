@@ -149,7 +149,7 @@ object StateStore extends StateStoreH {
     def profileToJson(profile: Profile): JValue = {
       ("name" -> profile.name) ~
       ("programs" -> profile.programs.map(Tag.unwrap)) ~
-      ("projects" -> profile.programs.map(Tag.unwrap)) ~
+      ("projects" -> profile.projects.map(Tag.unwrap)) ~
       ("bookmarks" -> profile.bookmarks.map(b => ("name" -> b.name) ~ ("url" -> b.url))) ~
       ("proxy" -> proxyToJson(profile.proxy))
     }

@@ -39,8 +39,12 @@ object StateStore extends StateStoreH {
     this.synchronized {
       val stateDBFile = new File(Locations.StateJsonFile)
       ensureFileWritable(stateDBFile)
-      val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
-      val state = readStateFromInput(input)
+      val state: MonikaState = {
+        if (stateDBFile.exists()) {
+          val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
+          readStateFromInput(input)
+        } else InitialState
+      }
       val (newState, returnValue) = fn(state)
 
       val output = new ByteArrayOutputStream()

@@ -11,13 +11,6 @@ import scalaz.@@
 object Model {
 
   /**
-    * a bookmark to display on the browser's toolbar
-    * @param name name to display, if not provided should be a shortened url
-    * @param url url it should lead to
-    */
-  case class Bookmark(name: String, url: String)
-
-  /**
     * defines which programs, projects and websites the profile user can use
     * when this mode is active
     *
@@ -36,29 +29,11 @@ object Model {
   )
 
   /**
-    * constructs a profile from a .json definition file
-    * this is not a deserialization process, it is fault tolerant and provides
-    * default values for all fields
+    * a bookmark to display on the browser's toolbar
+    * @param name name to display, if not provided should be a shortened url
+    * @param url url it should lead to
     */
-  def constructProfile(definition: JValue, defaultName: String): Profile = {
-    implicit val formats: Formats = DefaultFormats
-    Profile(
-      (definition \ "name").extractOpt[String].getOrElse(defaultName),
-      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-      (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
-        val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
-        val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
-        val name = (v \ "name").extractOpt[String].orElse(re.findFirstIn(url)).getOrElse("Unknown")
-        Bookmark(name, url)
-      }),
-      ProxySettings(
-        (definition \ "proxy" \ "transparent").extractOpt[Boolean].getOrElse(false),
-        (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
-        (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
-      )
-    )
-  }
+  case class Bookmark(name: String, url: String)
 
   /**
     * @param start the start time of this profile
@@ -98,6 +73,31 @@ object Model {
 
   val InitialState: MonikaState = {
     MonikaState(Vector(), None, Map.empty, Map.empty)
+  }
+
+  /**
+    * constructs a profile from a .json definition file
+    * this is not a deserialization process, it is fault tolerant and provides
+    * default values for all fields
+    */
+  def constructProfile(definition: JValue, defaultName: String): Profile = {
+    implicit val formats: Formats = DefaultFormats
+    Profile(
+      (definition \ "name").extractOpt[String].getOrElse(defaultName),
+      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
+      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
+      (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
+        val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
+        val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
+        val name = (v \ "name").extractOpt[String].orElse(re.findFirstIn(url)).getOrElse("Unknown")
+        Bookmark(name, url)
+      }),
+      ProxySettings(
+        (definition \ "proxy" \ "transparent").extractOpt[Boolean].getOrElse(false),
+        (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
+        (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
+      )
+    )
   }
 
 }

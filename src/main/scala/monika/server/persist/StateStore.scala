@@ -1,18 +1,19 @@
 package monika.server.persist
 
 import java.io._
-import java.nio.channels.Channels
+import java.nio.channels.{Channels, FileChannel}
 import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
 import monika.server.Constants.Locations
 import monika.server.proxy.ProxyServer.ProxySettings
 import monika.server.pure.Model._
+import org.apache.commons.io.FileUtils
 import org.json4s.JsonAST.{JNothing, JNull}
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.{JsonMethods, Printer}
-import org.json4s.{DefaultFormats, JValue}
+import org.json4s.{DefaultFormats, JValue, JsonInput}
 import org.slf4j.{Logger, LoggerFactory}
 import scalaz.Tag
 import scalaz.syntax.id._
@@ -36,28 +37,19 @@ object StateStore extends StateStoreH {
     */
   def transaction[R](fn: MonikaState => (MonikaState, R)): R = {
     this.synchronized {
-      ensureFileWritable()
-      val stateDBFile = new RandomAccessFile(Locations.StateJsonFile, "rw")
-      val channel = stateDBFile.getChannel
-      val lock = channel.tryLock()
-      if (lock == null) {
-        val message = s"a lock cannot be acquired for ${Locations.StateJsonFile}"
-        LOGGER.error(message)
-        throw new RuntimeException(message)
-      }
-
-      val input = Channels.newInputStream(channel)
+      val stateDBFile = new File(Locations.StateJsonFile)
+      ensureFileWritable(stateDBFile)
+      val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
       val state = readStateFromInput(input)
       val (newState, returnValue) = fn(state)
 
-      val output = Channels.newOutputStream(channel)
+      val output = new ByteArrayOutputStream()
       writeStateToOutput(newState, output)
-      lock.release(); returnValue
+      FileUtils.writeByteArrayToFile(stateDBFile, output.toByteArray); returnValue
     }
   }
 
-  private def ensureFileWritable(): Unit = {
-    val file = new File(Locations.StateJsonFile)
+  private def ensureFileWritable(file: File): Unit = {
     val lastModified = file.lastModified()
     if (file.exists() && !file.canWrite) {
       val message = s"file is not writable ${Locations.StateJsonFile}"
@@ -85,7 +77,7 @@ object StateStore extends StateStoreH {
     }
   }
 
-  private def readStateFromInput(input: InputStream): MonikaState = {
+  private def readStateFromInput(input: JsonInput): MonikaState = {
     val json = Try(JsonMethods.parse(input)).orElseX(ex =>{
       val message = s"file does not contain a valid json format ${Locations.StateJsonFile}"
       LOGGER.error(message, ex)

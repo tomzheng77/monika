@@ -49,6 +49,10 @@ object ProxyServer {
   }
 
   def writeCertificatesToFiles(): Unit = {
+    // create the certificate root if it does not exist
+    val certificateRoot = new File(Locations.CertificateRoot)
+    certificateRoot.mkdirs()
+
     val rootCertificateGenerator = RootCertificateGenerator.builder.build
 
     // save the newly-generated Root Certificate and Private Key -- the .cer file can be imported

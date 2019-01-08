@@ -6,7 +6,10 @@ import monika.Primitives._
 import monika.server.proxy.ProxyServer.ProxySettings
 import monika.server.pure.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
 import org.scalacheck.Prop.forAll
-import org.scalacheck.{Gen, Properties}
+import org.scalacheck.util.Pretty
+import org.scalacheck.{Gen, Prop, Properties, Shrink}
+
+import scala.util.{Failure, Success, Try}
 
 object StateStoreTest extends Properties("StateStore") {
 
@@ -55,8 +58,17 @@ object StateStoreTest extends Properties("StateStore") {
     passwords <- Gen.mapOf(randomPair(randomDate, Gen.alphaNumStr))
   } yield MonikaState(queue, active, knownProfiles, passwords)
 
+  import org.json4s.native.JsonMethods._
+  import scalaz.syntax.id._
   property("serialize") = {
     forAll(randomState)(a => {
+      val json = StateStore.stateToJson(a)
+      println(json |> render |> pretty)
+      println(a)
+      Try(StateStore.jsonToState(json)) match {
+        case Success(b) => println(b)
+        case Failure(ex) => ex.printStackTrace()
+      }
       StateStore.jsonToState(StateStore.stateToJson(a)) == a
     })
   }

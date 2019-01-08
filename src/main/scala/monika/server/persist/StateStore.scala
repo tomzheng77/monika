@@ -12,8 +12,10 @@ import org.slf4j.{Logger, LoggerFactory}
 import JsonMethods._
 import monika.Primitives._
 import monika.server.proxy.ProxyServer.ProxySettings
+import org.json4s.JsonAST.JNull
 import org.json4s.JsonDSL._
 import scalaz.Tag
+import scalaz.syntax.id._
 
 import scala.util.{Failure, Success, Try}
 
@@ -105,14 +107,14 @@ object StateStore extends StateStoreH {
   private[persist] def jsonToState(json: JValue): MonikaState = {
     def jsonToProxy(value: JValue): ProxySettings = {
       ProxySettings(
-        transparent = (value \ "transparent").extract[Boolean],
+        transparent = (value \ "transparent").extractOrElse[Boolean](false),
         allowHtmlPrefix = (value \ "allow").extract[Vector[String]],
         rejectHtmlKeywords = (value \ "block").extract[Vector[String]]
       )
     }
     def jsonToProfile(value: JValue): Profile = {
       Profile(
-        name = (json \ "name").extract[String],
+        name = (json \ "name").extractOrElse[String](""),
         programs = (json \ "programs").extract[Vector[String]].map(FileName),
         projects = (json \ "projects").extract[Vector[String]].map(FileName),
         bookmarks = (json \ "bookmarks").extract[Vector[JValue]].map(v => {
@@ -129,7 +131,7 @@ object StateStore extends StateStoreH {
       )
     }
     MonikaState(
-      active = (json \ "active").extractOpt[JValue].map(jsonToRequest),
+      active = (json \ "active").extract[JValue] |> (v => if (v == JNull) None else Some(jsonToRequest(v))),
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
       knownProfiles = (json \ "profiles").extract[Vector[JValue]].map(jsonToProfile).map(p => p.name -> p).toMap,
       passwords = (json \ "passwords").extract[Vector[JValue]].map(v => (
@@ -163,10 +165,6 @@ object StateStore extends StateStoreH {
       val (date, password) = pair
       ("date" -> date.toString) ~ ("password" -> password)
     }))
-  }
-
-  def main(args: Array[String]): Unit = {
-
   }
 
 }

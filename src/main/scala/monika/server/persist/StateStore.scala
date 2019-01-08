@@ -4,20 +4,20 @@ import java.io._
 import java.nio.channels.Channels
 import java.time.{LocalDate, LocalDateTime}
 
-import monika.server.Constants.Locations
-import monika.server.pure.Model._
-import org.json4s.{DefaultFormats, Formats, JValue}
-import org.json4s.native.{JsonMethods, Printer}
-import org.slf4j.{Logger, LoggerFactory}
-import JsonMethods._
 import monika.Primitives._
+import monika.server.Constants.Locations
 import monika.server.proxy.ProxyServer.ProxySettings
-import org.json4s.JsonAST.JNull
+import monika.server.pure.Model._
+import org.json4s.JsonAST.{JNothing, JNull}
 import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
+import org.json4s.native.{JsonMethods, Printer}
+import org.json4s.{DefaultFormats, JValue}
+import org.slf4j.{Logger, LoggerFactory}
 import scalaz.Tag
 import scalaz.syntax.id._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 /**
   * - persists a single MonikaState to disk
@@ -131,26 +131,13 @@ object StateStore extends StateStoreH {
       )
     }
     MonikaState(
-      active = (json \ "active").extract[JValue] |> (v => if (v == JNull) None else Some(jsonToRequest(v))),
+      active = (json \ "active").extract[JValue] |> (v => if (v == JNull || v == JNothing) None else Some(jsonToRequest(v))),
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
       knownProfiles = (json \ "profiles").extract[Vector[JValue]].map(jsonToProfile).map(p => p.name -> p).toMap,
       passwords = (json \ "passwords").extract[Vector[JValue]].map(v => (
         LocalDate.parse((v \ "date").extract[String]), (v \ "password").extract[String]
       )).toMap
     )
-  }
-
-  def main(args: Array[String]): Unit = {
-    val jsonStr =
-      """{
-        |  "queue":[],
-        |  "profiles":[],
-        |  "passwords":[]
-        |}
-      """.stripMargin
-    val json = JsonMethods.parse(jsonStr)
-    val queue = (json \ "queue").extract[Vector[JValue]]
-    println(queue)
   }
 
   private[persist] def stateToJson(state: MonikaState): JValue = {

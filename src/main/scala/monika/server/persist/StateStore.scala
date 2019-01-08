@@ -140,6 +140,19 @@ object StateStore extends StateStoreH {
     )
   }
 
+  def main(args: Array[String]): Unit = {
+    val jsonStr =
+      """{
+        |  "queue":[],
+        |  "profiles":[],
+        |  "passwords":[]
+        |}
+      """.stripMargin
+    val json = JsonMethods.parse(jsonStr)
+    val queue = (json \ "queue").extract[Vector[JValue]]
+    println(queue)
+  }
+
   private[persist] def stateToJson(state: MonikaState): JValue = {
     def proxyToJson(settings: ProxySettings): JValue = {
       ("transparent" -> settings.transparent) ~

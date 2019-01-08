@@ -8,6 +8,8 @@ import monika.server.pure.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}
 
+import scala.util.Try
+
 object StateStoreTest extends Properties("StateStore") {
 
   private val randomProxySettings: Gen[ProxySettings] = for {
@@ -76,6 +78,13 @@ object StateStoreTest extends Properties("StateStore") {
 
   property("serialize") = {
     forAll(randomState)(a => {
+      import org.json4s.native.JsonMethods._
+      import scalaz.syntax.id._
+      val json = StateStore.stateToJson(a)
+      Try(StateStore.jsonToState(json)).failed.foreach(ex => {
+        json |> render |> pretty |> println
+        ex.printStackTrace()
+      })
       StateStore.jsonToState(StateStore.stateToJson(a)) == a
     })
   }

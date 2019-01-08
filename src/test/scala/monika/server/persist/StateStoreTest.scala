@@ -59,13 +59,15 @@ object StateStoreTest extends Properties("StateStore") {
 
   private val randomQueue: Gen[Vector[ProfileRequest]] = {
     import scalaz.syntax.id._
-    Gen.listOf(Gen.choose(1, 100)).flatMap(l => {
-      l.foldLeft((NowDateTime, Vector[Gen[ProfileRequest]]()))((pair, t) => {
-        val start = pair._1
-        val items = pair._2
-        val end = start.plusMinutes(t)
-        (end, items :+ randomProfile.map(p => ProfileRequest(start, end, p)))
-      })._2 |> sequence
+    Gen.choose(0, 10).flatMap(i => {
+      Gen.listOfN(i, Gen.choose(1, 100)).flatMap(l => {
+        l.foldLeft((NowDateTime, Vector[Gen[ProfileRequest]]()))((pair, t) => {
+          val start = pair._1
+          val items = pair._2
+          val end = start.plusMinutes(t)
+          (end, items :+ randomProfile.map(p => ProfileRequest(start, end, p)))
+        })._2 |> sequence
+      })
     })
   }
 

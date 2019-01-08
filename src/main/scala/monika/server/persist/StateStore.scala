@@ -1,7 +1,6 @@
 package monika.server.persist
 
 import java.io._
-import java.nio.channels.{Channels, FileChannel}
 import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
@@ -25,7 +24,7 @@ import scala.util.Try
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object StateStore extends StateStoreH {
+object StateStore {
 
   private implicit val formats = DefaultFormats
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)

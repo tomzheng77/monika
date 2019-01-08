@@ -105,16 +105,16 @@ object StateStore extends StateStoreH {
   }
 
   private[persist] def jsonToState(json: JValue): MonikaState = {
-    def jsonToProxy(value: JValue): ProxySettings = {
+    def jsonToProxy(json: JValue): ProxySettings = {
       ProxySettings(
-        transparent = (value \ "transparent").extractOrElse[Boolean](false),
-        allowHtmlPrefix = (value \ "allow").extract[Vector[String]],
-        rejectHtmlKeywords = (value \ "block").extract[Vector[String]]
+        transparent = (json \ "transparent").extract[Boolean],
+        allowHtmlPrefix = (json \ "allow").extract[Vector[String]],
+        rejectHtmlKeywords = (json \ "block").extract[Vector[String]]
       )
     }
-    def jsonToProfile(value: JValue): Profile = {
+    def jsonToProfile(json: JValue): Profile = {
       Profile(
-        name = (json \ "name").extractOrElse[String](""),
+        name = (json \ "name").extract[String],
         programs = (json \ "programs").extract[Vector[String]].map(FileName),
         projects = (json \ "projects").extract[Vector[String]].map(FileName),
         bookmarks = (json \ "bookmarks").extract[Vector[JValue]].map(v => {

@@ -1,6 +1,6 @@
 package monika.server
 
-import monika.server.pure.Model.Profile
+import Model.Profile
 
 object UserControl {
 

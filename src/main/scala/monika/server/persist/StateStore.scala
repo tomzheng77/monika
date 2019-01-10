@@ -6,7 +6,7 @@ import java.time.{LocalDate, LocalDateTime}
 import monika.Primitives._
 import monika.server.Constants.Locations
 import monika.server.proxy.ProxyServer.ProxySettings
-import monika.server.pure.Model._
+import monika.server.Model._
 import org.apache.commons.io.FileUtils
 import org.json4s.JsonAST.{JNothing, JNull}
 import org.json4s.JsonDSL._

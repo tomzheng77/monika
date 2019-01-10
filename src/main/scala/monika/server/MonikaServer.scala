@@ -2,11 +2,8 @@ package monika.server
 
 import java.util.{Timer, TimerTask}
 
-import monika.server.Interpreter.startHttpListener
 import monika.server.CommandExecutor._
-import monika.server.proxy.ProxyServer
 import monika.server.proxy.ProxyServer.writeCertificatesToFiles
-import monika.server.pure.Actions
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
 
@@ -53,8 +50,6 @@ object MonikaServer {
     checkIfProgramsAreExecutable()
     writeCertificatesToFiles()
     rejectOutgoingHttp(forUser = Constants.ProfileUser)
-    setInterval(() => Interpreter.runAction(Actions.clearActiveOrApplyNext()), 5000)
-    startHttpListener()
     LOGGER.info("M.O.N.I.K.A started")
   }
 

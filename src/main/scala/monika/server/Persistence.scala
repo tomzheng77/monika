@@ -1,20 +1,21 @@
-package monika.server.persist
+package monika.server
 
-import java.io._
+import java.io.{ByteArrayOutputStream, File, OutputStream, OutputStreamWriter}
 import java.time.{LocalDate, LocalDateTime}
 
-import monika.Primitives._
+import monika.Primitives.FileName
 import monika.server.Constants.Locations
-import monika.server.proxy.ProxyServer.ProxySettings
+import monika.server.LittleProxy.ProxySettings
 import monika.server.Model._
 import org.apache.commons.io.FileUtils
-import org.json4s.JsonAST.{JNothing, JNull}
-import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods._
+import org.json4s.native.JsonMethods.render
 import org.json4s.native.{JsonMethods, Printer}
 import org.json4s.{DefaultFormats, JValue, JsonInput}
 import org.slf4j.{Logger, LoggerFactory}
 import scalaz.Tag
+import monika.Primitives._
+import org.json4s.JsonDSL._
+import org.json4s.JsonAST._
 import scalaz.syntax.id._
 
 import scala.util.Try
@@ -24,7 +25,7 @@ import scala.util.Try
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object StateStore {
+object Persistence {
 
   private implicit val formats = DefaultFormats
   private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
@@ -99,7 +100,7 @@ object StateStore {
     Printer.compact(render(json), writer)
   }
 
-  private[persist] def jsonToState(json: JValue): MonikaState = {
+  private[server] def jsonToState(json: JValue): MonikaState = {
     def jsonToProxy(json: JValue): ProxySettings = {
       ProxySettings(
         transparent = (json \ "transparent").extract[Boolean],
@@ -135,7 +136,7 @@ object StateStore {
     )
   }
 
-  private[persist] def stateToJson(state: MonikaState): JValue = {
+  private[server] def stateToJson(state: MonikaState): JValue = {
     def proxyToJson(settings: ProxySettings): JValue = {
       ("transparent" -> settings.transparent) ~
       ("allow" -> settings.allowHtmlPrefix) ~

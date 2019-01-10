@@ -1,17 +1,17 @@
-package monika.server.proxy
+package monika.server
 
 import java.io.File
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
-import monika.server.Constants._
+import monika.server.Constants.{Locations, ProxyPort}
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
 import org.littleshoot.proxy._
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 import org.slf4j.LoggerFactory
 
-object ProxyServer {
+object LittleProxy {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 

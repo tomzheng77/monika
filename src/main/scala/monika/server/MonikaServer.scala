@@ -2,8 +2,8 @@ package monika.server
 
 import java.util.{Timer, TimerTask}
 
-import monika.server.CommandExecutor._
-import monika.server.proxy.ProxyServer.writeCertificatesToFiles
+import monika.server.Subprocess._
+import LittleProxy.writeCertificatesToFiles
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
 

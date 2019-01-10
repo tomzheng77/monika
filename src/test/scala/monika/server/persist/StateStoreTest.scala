@@ -3,8 +3,9 @@ package monika.server.persist
 import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
-import monika.server.proxy.ProxyServer.ProxySettings
+import monika.server.LittleProxy.ProxySettings
 import monika.server.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
+import monika.server.Persistence
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}
 
@@ -82,12 +83,12 @@ object StateStoreTest extends Properties("StateStore") {
     forAll(randomState)(a => {
       import org.json4s.native.JsonMethods._
       import scalaz.syntax.id._
-      val json = StateStore.stateToJson(a)
-      Try(StateStore.jsonToState(json)).failed.foreach(ex => {
+      val json = Persistence.stateToJson(a)
+      Try(Persistence.jsonToState(json)).failed.foreach(ex => {
         json |> render |> pretty |> println
         ex.printStackTrace()
       })
-      StateStore.jsonToState(StateStore.stateToJson(a)) == a
+      Persistence.jsonToState(Persistence.stateToJson(a)) == a
     })
   }
 

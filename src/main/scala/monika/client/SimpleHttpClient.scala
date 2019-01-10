@@ -30,8 +30,6 @@ object SimpleHttpClient {
 
   def main(args: Array[String]): Unit = {
     setupLogger()
-    val user = System.getenv("USER")
-    assert(user != null, "user cannot be null")
     while (true) {
       val line: String = StdIn.readLine("M1-1> ").trim
       if (line == "exit") System.exit(0)
@@ -40,7 +38,6 @@ object SimpleHttpClient {
       val partsJson: String = pretty(render(parts))
       val response: String = {
         Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-          .queryString("user", user)
           .queryString("cmd", partsJson)
           .asString().getBody
       }

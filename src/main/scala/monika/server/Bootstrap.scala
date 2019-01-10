@@ -7,7 +7,7 @@ import LittleProxy.writeCertificatesToFiles
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
 
-object MonikaServer {
+object Bootstrap {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 

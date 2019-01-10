@@ -35,12 +35,7 @@ object Constants {
   val ProxyPort = 9000
   val InterpreterPort = 9001
   val MaxQueueSize = 3
-
-  val MainUser = "tomzheng"
-  val MainUserGroup = s"$MainUser:$MainUser"
-
-  val ProfileUser = "profile"
-  val ProfileUserGroup = s"$ProfileUser:$ProfileUser"
+  val MonikaUser = "tomzheng"
 
   /**
     * programs which may be requested by the Profile

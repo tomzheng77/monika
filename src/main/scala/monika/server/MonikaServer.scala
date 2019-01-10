@@ -49,7 +49,7 @@ object MonikaServer {
     LOGGER.info("M.O.N.I.K.A starting...")
     checkIfProgramsAreExecutable()
     writeCertificatesToFiles()
-    rejectOutgoingHttp(forUser = Constants.ProfileUser)
+    rejectOutgoingHttp(forUser = Constants.MonikaUser)
     LOGGER.info("M.O.N.I.K.A started")
   }
 

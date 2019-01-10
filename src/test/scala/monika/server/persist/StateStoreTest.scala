@@ -4,7 +4,7 @@ import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
-import monika.server.Model.{Bookmark, MonikaState, Profile, ProfileRequest}
+import monika.server.Structs.{Bookmark, MonikaState, Profile, ProfileRequest}
 import monika.server.Persistence
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}

@@ -6,7 +6,7 @@ import java.time.{LocalDate, LocalDateTime}
 import monika.Primitives.FileName
 import monika.server.Constants.Locations
 import monika.server.LittleProxy.ProxySettings
-import monika.server.Model._
+import monika.server.Structs._
 import org.apache.commons.io.FileUtils
 import org.json4s.native.JsonMethods.render
 import org.json4s.native.{JsonMethods, Printer}

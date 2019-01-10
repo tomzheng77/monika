@@ -8,7 +8,7 @@ import org.json4s.JsonAST.JValue
 import org.json4s.{DefaultFormats, Formats}
 import scalaz.@@
 
-object Model {
+object Structs {
 
   /**
     * defines which programs, projects and websites the profile user can use

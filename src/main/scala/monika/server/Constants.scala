@@ -25,12 +25,6 @@ object Constants {
   val Path: String = PathAdd.mkString(File.pathSeparator) + File.pathSeparator + PathOriginal
   val PathList: Vector[String] = Path.split(File.pathSeparatorChar).toVector
 
-  val Users = Vector(
-    "tomzheng",
-    "profile",
-    "unlocker"
-  )
-
   val GlobalEncoding = "UTF-8"
   val ProxyPort = 9000
   val InterpreterPort = 9001

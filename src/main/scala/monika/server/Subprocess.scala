@@ -49,11 +49,6 @@ object Subprocess {
     CommandOutput(exitValue, stdout.toByteArray, stderr.toByteArray)
   }
 
-  def rejectOutgoingHttp(forUser: String): Unit = {
-    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
-    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
-  }
-
   /**
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
@@ -64,15 +59,6 @@ object Subprocess {
       .map(path => new File(path + File.separator + programName))
       .find(file => file.exists && file.isFile && file.canExecute)
       .map(file => FilePath(file.getCanonicalPath))
-  }
-
-  def checkIfProgramsAreExecutable(): Unit = {
-    val programs = Constants.ProfilePrograms ++ Constants.CallablePrograms.asList
-    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
-    for (program <- cannotExecute) {
-      val programName = Tag.unwrap(program)
-      LOGGER.warn(s"cannot find executable program: $programName")
-    }
   }
 
   // potential issues:

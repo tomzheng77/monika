@@ -2,14 +2,41 @@ package monika.server
 
 import java.util.{Timer, TimerTask}
 
-import monika.server.Subprocess._
+import monika.server.Subprocess.{LOGGER, _}
 import LittleProxy.writeCertificatesToFiles
 import org.apache.log4j._
 import org.slf4j.LoggerFactory
+import scalaz.Tag
 
 object Bootstrap {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
+
+  def main(args: Array[String]): Unit = {
+    setupLogger()
+    if (System.getenv("USER") != "root") {
+      LOGGER.warn("user is not root")
+    }
+    LOGGER.info("M.O.N.I.K.A starting...")
+    checkIfProgramsAreExecutable()
+    writeCertificatesToFiles()
+    rejectOutgoingHttp(forUser = Constants.MonikaUser)
+    LOGGER.info("M.O.N.I.K.A started")
+  }
+
+  private def checkIfProgramsAreExecutable(): Unit = {
+    val programs = Constants.ProfilePrograms ++ Constants.CallablePrograms.asList
+    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
+    for (program <- cannotExecute) {
+      val programName = Tag.unwrap(program)
+      LOGGER.warn(s"cannot find executable program: $programName")
+    }
+  }
+
+  private def rejectOutgoingHttp(forUser: String): Unit = {
+    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
+    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
+  }
 
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
@@ -32,25 +59,6 @@ object Bootstrap {
     Logger.getRootLogger.addAppender(console)
     Logger.getLogger("spark.route").setLevel(Level.ERROR)
     Logger.getLogger("org.eclipse.jetty").setLevel(Level.ERROR)
-  }
-
-  def setInterval(fn: () => Unit, ms: Int): Unit = {
-    val timer = new Timer()
-    timer.schedule(new TimerTask {
-      override def run(): Unit = fn()
-    }, 0, ms)
-  }
-
-  def main(args: Array[String]): Unit = {
-    setupLogger()
-    if (System.getenv("USER") != "root") {
-      LOGGER.warn("user is not root")
-    }
-    LOGGER.info("M.O.N.I.K.A starting...")
-    checkIfProgramsAreExecutable()
-    writeCertificatesToFiles()
-    rejectOutgoingHttp(forUser = Constants.MonikaUser)
-    LOGGER.info("M.O.N.I.K.A started")
   }
 
 }

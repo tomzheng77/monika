@@ -40,39 +40,19 @@ object Structs {
     * @param end the end time of this profile
     * @param profile which profile should be used throughout the duration
     */
-  case class ProfileRequest(start: LocalDateTime, end: LocalDateTime, profile: Profile)
+  case class ActivateProfile(start: LocalDateTime, profile: Profile)
 
   /**
-    * the full runtime state of the Monika program
-    * since it has very limited amounts of state (< 10KB), it is completely feasible
-    * to represent it with an immutable data structure
     *
-    * the profile modes are fully stored within the state, hence prevents them
-    * from being modified even if the .json files are changed
-    *
-    * invariant: the queue is sorted by start time
-    * invariant: no two queue items overlap in time
-    * invariant: profiles are mapped by their name
-    * invariant: the passwords contain only characters and numbers
     */
   case class MonikaState(
-    queue: Vector[ProfileRequest],
-    active: Option[ProfileRequest],
+    queue: Vector[ActivateProfile],
     knownProfiles: Map[String, Profile],
     passwords: Map[LocalDate, String]
-  ) {
-    assert(queue.sortBy(i => i.start.toEpochSecond(ZoneOffset.UTC)) == queue)
-    private val intervals = queue.map(i => {
-      (i.start.toEpochSecond(ZoneOffset.UTC), i.end.toEpochSecond(ZoneOffset.UTC))
-    })
-    assert(intervals.forall(pair => pair._2 > pair._1))
-    assert(intervals.indices.dropRight(1).forall(i => intervals(i)._2 <= intervals(i + 1)._1))
-    assert(knownProfiles.forall(pair => pair._1 == pair._2.name))
-    assert(passwords.values.forall(pwd => pwd.forall(Character.isLetterOrDigit)))
-  }
+  )
 
   val InitialState: MonikaState = {
-    MonikaState(Vector(), None, Map.empty, Map.empty)
+    MonikaState(Vector(), Map.empty, Map.empty)
   }
 
   /**

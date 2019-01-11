@@ -4,14 +4,14 @@ import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
-import monika.server.Structs.{Bookmark, MonikaState, Profile, ProfileRequest}
 import monika.server.Persistence
+import monika.server.Structs.{ActivateProfile, Bookmark, MonikaState, Profile}
 import org.scalacheck.Prop.forAll
-import org.scalacheck.{Arbitrary, Gen, Properties}
+import org.scalacheck.{Gen, Properties}
 
 import scala.util.Try
 
-object StateStoreTest extends Properties("StateStore") {
+object PersistenceSpec extends Properties("StateStore") {
 
   private val randomProxySettings: Gen[ProxySettings] = for {
     transparent <- Gen.oneOf(true, false)
@@ -44,29 +44,19 @@ object StateStoreTest extends Properties("StateStore") {
     sinceNow <- Gen.choose(-100, 100)
   } yield NowDate.plusDays(sinceNow)
 
-  private val randomDateTime: Gen[LocalDateTime] = for {
-    sinceNow <- Gen.choose(-1000, 1000)
-  } yield NowDateTime.plusMinutes(sinceNow)
-
-  private val randomProfileRequest: Gen[ProfileRequest] = for {
-    start <- randomDateTime
-    end <- randomDateTime
-    profile <- randomProfile
-  } yield ProfileRequest(start, end, profile)
-
   private def sequence[T](list: Vector[Gen[T]]): Gen[Vector[T]] = {
     Gen.sequence[Vector[T], T](list)
   }
 
-  private val randomQueue: Gen[Vector[ProfileRequest]] = {
+  private val randomQueue: Gen[Vector[ActivateProfile]] = {
     import scalaz.syntax.id._
     Gen.choose(0, 10).flatMap(i => {
       Gen.listOfN(i, Gen.choose(1, 100)).flatMap(l => {
-        l.foldLeft((NowDateTime, Vector[Gen[ProfileRequest]]()))((pair, t) => {
+        l.foldLeft((NowDateTime, Vector[Gen[ActivateProfile]]()))((pair, t) => {
           val start = pair._1
           val items = pair._2
           val end = start.plusMinutes(t)
-          (end, items :+ randomProfile.map(p => ProfileRequest(start, end, p)))
+          (end, items :+ randomProfile.map(p => ActivateProfile(start, p)))
         })._2 |> sequence
       })
     })
@@ -74,10 +64,9 @@ object StateStoreTest extends Properties("StateStore") {
 
   private val randomState: Gen[MonikaState] = for {
     queue <- randomQueue
-    active <- Gen.option(randomProfileRequest)
     knownProfiles <- Gen.mapOf(randomProfile.map(p => p.name -> p))
     passwords <- Gen.mapOf(randomPair(randomDate, Gen.alphaNumStr))
-  } yield MonikaState(queue, active, knownProfiles, passwords)
+  } yield MonikaState(queue, knownProfiles, passwords)
 
   property("serialize") = {
     forAll(randomState)(a => {

@@ -119,15 +119,13 @@ object Persistence {
         proxy = jsonToProxy(json \ "proxy")
       )
     }
-    def jsonToRequest(json: JValue): ProfileRequest = {
-      ProfileRequest(
+    def jsonToRequest(json: JValue): ActivateProfile = {
+      ActivateProfile(
         start = LocalDateTime.parse((json \ "start").extract[String]),
-        end = LocalDateTime.parse((json \ "end").extract[String]),
         profile = jsonToProfile(json \ "profile")
       )
     }
     MonikaState(
-      active = (json \ "active").extract[JValue] |> (v => if (v == JNull || v == JNothing) None else Some(jsonToRequest(v))),
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
       knownProfiles = (json \ "profiles").extract[Vector[JValue]].map(jsonToProfile).map(p => p.name -> p).toMap,
       passwords = (json \ "passwords").extract[Vector[JValue]].map(v => (
@@ -149,13 +147,11 @@ object Persistence {
       ("bookmarks" -> profile.bookmarks.map(b => ("name" -> b.name) ~ ("url" -> b.url))) ~
       ("proxy" -> proxyToJson(profile.proxy))
     }
-    def requestToJson(request: ProfileRequest): JValue = {
+    def requestToJson(request: ActivateProfile): JValue = {
       ("start" -> request.start.toString) ~
-      ("end" -> request.end.toString) ~
       ("profile" -> profileToJson(request.profile))
     }
     ("queue" -> state.queue.map(requestToJson)) ~
-    ("active" -> state.active.map(requestToJson)) ~
     ("profiles" -> state.knownProfiles.values.map(profileToJson)) ~
     ("passwords" -> state.passwords.map(pair => {
       val (date, password) = pair

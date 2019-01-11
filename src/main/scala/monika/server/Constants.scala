@@ -56,6 +56,8 @@ object Constants {
     * hardcoding the name of each program
     */
   object CallablePrograms {
+    val id: String @@ FileName = FileName("id")
+    val groups: String @@ FileName = FileName("groups")
     val passwd: String @@ FileName = FileName("passwd")
     val chmod: String @@ FileName = FileName("chmod")
     val chown: String @@ FileName = FileName("chown")

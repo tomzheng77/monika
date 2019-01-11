@@ -16,6 +16,10 @@ object Subprocess {
 
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
+  def call(program: String @@ FileName, args: String*): CommandOutput = {
+    callWithInput(Tag.unwrap(program), args.toArray, Array.empty)
+  }
+
   /**
     * calls a program either by name inside PATH or the full path
     * blocks until execution is complete
@@ -26,7 +30,7 @@ object Subprocess {
     * @param input to pass into stdin
     * @return an object containing exit value, stdout and stderr
     */
-  def call(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty): CommandOutput = {
+  def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty): CommandOutput = {
     LOGGER.debug(s"run: $program ${args.mkString(" ")}")
     val cmd = new CommandLine(program)
     cmd.addArguments(args)

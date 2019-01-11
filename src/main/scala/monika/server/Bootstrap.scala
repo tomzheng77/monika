@@ -3,6 +3,7 @@ package monika.server
 import java.io.File
 
 import monika.Primitives.FileName
+import monika.server.Constants.CallablePrograms.iptables
 import monika.server.Constants.{CallablePrograms, Locations, MonikaUser, ProfilePrograms}
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, MonikaState, Profile}
@@ -44,7 +45,7 @@ object Bootstrap {
         val name = args.head
         val profile = profiles(name)
         LittleProxy.startOrRestart(profile.proxy)
-        UserControl.removeFromSudo()
+        UserControl.removeFromWheelGroup()
         UserControl.restrictPrograms(profile.programs)
         UserControl.restrictProjects(profile.projects)
         "set-profile success"
@@ -95,8 +96,8 @@ object Bootstrap {
   }
 
   private def rejectOutgoingHttp(forUser: String): Unit = {
-    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
-    call("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
+    callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
+    callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
   }
 
   private def logToFileAndConsole(): Unit = {

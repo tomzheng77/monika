@@ -5,13 +5,13 @@ import java.time.{LocalDate, LocalDateTime}
 import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Persistence
-import monika.server.Structs.{ActivateProfile, Bookmark, MonikaState, Profile}
+import monika.server.Structs._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Properties}
 
 import scala.util.Try
 
-object PersistenceSpec extends Properties("StateStore") {
+object PersistenceSpec extends Properties("Persistence") {
 
   private val randomProxySettings: Gen[ProxySettings] = for {
     transparent <- Gen.oneOf(true, false)
@@ -32,13 +32,13 @@ object PersistenceSpec extends Properties("StateStore") {
     proxy <- randomProxySettings
   } yield Profile(name, programs, projects, bookmarks, proxy)
 
+  private val NowDate: LocalDate = LocalDate.now()
+  private val NowDateTime: LocalDateTime = LocalDateTime.now()
+
   private def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
     a <- genA
     b <- genB
   } yield (a, b)
-
-  private val NowDate: LocalDate = LocalDate.now()
-  private val NowDateTime: LocalDateTime = LocalDateTime.now()
 
   private val randomDate: Gen[LocalDate] = for {
     sinceNow <- Gen.choose(-100, 100)
@@ -48,15 +48,15 @@ object PersistenceSpec extends Properties("StateStore") {
     Gen.sequence[Vector[T], T](list)
   }
 
-  private val randomQueue: Gen[Vector[ActivateProfile]] = {
+  private val randomQueue: Gen[Vector[(LocalDateTime, Action)]] = {
     import scalaz.syntax.id._
     Gen.choose(0, 10).flatMap(i => {
       Gen.listOfN(i, Gen.choose(1, 100)).flatMap(l => {
-        l.foldLeft((NowDateTime, Vector[Gen[ActivateProfile]]()))((pair, t) => {
+        l.foldLeft((NowDateTime, Vector[Gen[(LocalDateTime, Action)]]()))((pair, t) => {
           val start = pair._1
           val items = pair._2
           val end = start.plusMinutes(t)
-          (end, items :+ randomProfile.map(p => ActivateProfile(start, p)))
+          (end, items :+ randomProfile.map(p => start -> SetProfile(p)))
         })._2 |> sequence
       })
     })
@@ -64,9 +64,8 @@ object PersistenceSpec extends Properties("StateStore") {
 
   private val randomState: Gen[MonikaState] = for {
     queue <- randomQueue
-    knownProfiles <- Gen.mapOf(randomProfile.map(p => p.name -> p))
-    passwords <- Gen.mapOf(randomPair(randomDate, Gen.alphaNumStr))
-  } yield MonikaState(queue, knownProfiles, passwords)
+    proxy <- randomProxySettings
+  } yield MonikaState(queue, proxy)
 
   property("serialize") = {
     forAll(randomState)(a => {

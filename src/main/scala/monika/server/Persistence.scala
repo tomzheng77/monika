@@ -43,7 +43,7 @@ object Persistence {
         if (stateDBFile.exists()) {
           val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
           readStateFromInput(input)
-        } else InitialState
+        } else MonikaState()
       }
       val (newState, returnValue) = fn(state)
 
@@ -119,18 +119,19 @@ object Persistence {
         proxy = jsonToProxy(json \ "proxy")
       )
     }
-    def jsonToRequest(json: JValue): ActivateProfile = {
-      ActivateProfile(
-        start = LocalDateTime.parse((json \ "start").extract[String]),
-        profile = jsonToProfile(json \ "profile")
-      )
+    def jsonToAction(json: JValue): Action = {
+      val name = (json \ "name").extract[String]
+      name match {
+        case "set-profile" => SetProfile(jsonToProfile(json \ "profile"))
+        case "unlock" => Unlock
+      }
+    }
+    def jsonToRequest(json: JValue): (LocalDateTime, Action) = {
+      (LocalDateTime.parse((json \ "time").extract[String]), jsonToAction(json \ "action"))
     }
     MonikaState(
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
-      knownProfiles = (json \ "profiles").extract[Vector[JValue]].map(jsonToProfile).map(p => p.name -> p).toMap,
-      passwords = (json \ "passwords").extract[Vector[JValue]].map(v => (
-        LocalDate.parse((v \ "date").extract[String]), (v \ "password").extract[String]
-      )).toMap
+      proxy = jsonToProxy(json \ "proxy")
     )
   }
 
@@ -147,16 +148,18 @@ object Persistence {
       ("bookmarks" -> profile.bookmarks.map(b => ("name" -> b.name) ~ ("url" -> b.url))) ~
       ("proxy" -> proxyToJson(profile.proxy))
     }
-    def requestToJson(request: ActivateProfile): JValue = {
-      ("start" -> request.start.toString) ~
-      ("profile" -> profileToJson(request.profile))
+    def actionToJson(effect: Action): JValue = {
+      effect match {
+        case a: SetProfile => ("name" -> "set-profile") ~ ("profile" -> profileToJson(a.profile))
+        case Unlock => "name" -> "unlock"
+      }
+    }
+    def requestToJson(request: (LocalDateTime, Action)): JValue = {
+      ("time" -> request._1.toString) ~
+      ("action" -> actionToJson(request._2))
     }
     ("queue" -> state.queue.map(requestToJson)) ~
-    ("profiles" -> state.knownProfiles.values.map(profileToJson)) ~
-    ("passwords" -> state.passwords.map(pair => {
-      val (date, password) = pair
-      ("date" -> date.toString) ~ ("password" -> password)
-    }))
+    ("proxy" -> proxyToJson(state.proxy))
   }
 
 }

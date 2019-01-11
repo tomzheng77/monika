@@ -23,7 +23,11 @@ object LittleProxy {
     * @param allowHtmlPrefix which text/html responses should be allowed through if the url starts with a prefix
     * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
     */
-  case class ProxySettings(transparent: Boolean, allowHtmlPrefix: Vector[String], rejectHtmlKeywords: Vector[String])
+  case class ProxySettings(
+    transparent: Boolean = true,
+    allowHtmlPrefix: Vector[String] = Vector.empty,
+    rejectHtmlKeywords: Vector[String] = Vector.empty
+  )
 
   private var server: HttpProxyServer = _
 

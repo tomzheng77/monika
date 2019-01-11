@@ -98,9 +98,9 @@ object LittleProxy {
 
       // github.com
       // github.com/netty/netty/issues/2185
-      // FIXME: sometimes uri starts with "http://"
       val host = requestHeaders("Host")
-      val url = host + request.getUri
+      val uri = request.getUri
+      val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
       settings.allowHtmlPrefix.exists(str => url.startsWith(str))
     }
 

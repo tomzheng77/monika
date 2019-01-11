@@ -7,11 +7,6 @@ import scalaz.@@
 
 object Constants {
 
-  val MonikaHome: String = System.getenv("MONIKA_HOME")
-  if (MonikaHome == null) {
-    throw new RuntimeException("MONIKA_HOME not found, please check /etc/environment")
-  }
-
   /**
     * additional paths to prepend to the PATH variable
     * in order to locate programs required by the profile
@@ -69,6 +64,11 @@ object Constants {
   }
 
   object Locations {
+
+    val MonikaHome: String = System.getenv("MONIKA_HOME")
+    if (MonikaHome == null) {
+      throw new RuntimeException("MONIKA_HOME not found, please check /etc/environment")
+    }
 
     val PrimaryLog: String = MonikaHome + "/monika.log"
     val StateJsonFile: String = MonikaHome + "/monika.json"

@@ -17,7 +17,7 @@ object Subprocess {
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
   def call(program: String @@ FileName, args: String*): CommandOutput = {
-    callWithInput(Tag.unwrap(program), args.toArray, Array.empty)
+    callWithInput(Tag.unwrap(program), args.toArray, Array.empty, None)
   }
 
   /**
@@ -28,9 +28,11 @@ object Subprocess {
     * @param program either the name of the program or the full path
     * @param args to execute the program with
     * @param input to pass into stdin
+    * @param workingDirectory directory where the program will be run
     * @return an object containing exit value, stdout and stderr
     */
-  def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty): CommandOutput = {
+  def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
+                    workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
     LOGGER.debug(s"run: $program ${args.mkString(" ")}")
     val cmd = new CommandLine(program)
     cmd.addArguments(args)
@@ -42,7 +44,7 @@ object Subprocess {
     val stderr = new ByteArrayOutputStream()
     val psh = new PumpStreamHandler(stdout, stderr, stdin)
     executor.setStreamHandler(psh)
-    executor.setWorkingDirectory(new File(Constants.MonikaHome))
+    workingDirectory.map(Tag.unwrap).map(new File(_)).foreach(executor.setWorkingDirectory)
 
     val environment = Map("PATH" -> Constants.Path).asJava
     val exitValue = Try(executor.execute(cmd, environment)) match {

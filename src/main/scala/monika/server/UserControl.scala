@@ -1,17 +1,22 @@
 package monika.server
 
-import Structs.Profile
+import monika.Primitives.FileName
+import scalaz.@@
 
 object UserControl {
 
-  /**
-    * sets the active user to the restrictions of the given profile
-    * @param profile programs, projects, and proxy settings
-    */
-  def applyRestrictions(profile: Profile): Unit = {
-    //
-//    def restrictProjects(projects)
-//    profile.projects
+  def removeFromSudo(): Unit = {
+
+  }
+
+  def restrictPrograms(programs: Vector[String @@ FileName]): Unit = {
+  }
+
+  def restrictProjects(projects: Vector[String @@ FileName]): Unit = {
+  }
+
+  def unlock(): Unit = {
+
   }
 
 }

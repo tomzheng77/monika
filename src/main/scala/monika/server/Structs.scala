@@ -4,8 +4,6 @@ import java.time.LocalDateTime
 
 import monika.Primitives.FileName
 import monika.server.LittleProxy.ProxySettings
-import org.json4s.JsonAST.JValue
-import org.json4s.{DefaultFormats, Formats}
 import scalaz.@@
 
 object Structs {
@@ -54,30 +52,5 @@ object Structs {
     * @param url url it should lead to
     */
   case class Bookmark(name: String, url: String)
-
-  /**
-    * constructs a profile from a .json definition file
-    * this is not a deserialization process, it is fault tolerant and provides
-    * default values for all fields
-    */
-  def readProfileFromJSON(definition: JValue, defaultName: String): Profile = {
-    implicit val formats: Formats = DefaultFormats
-    Profile(
-      (definition \ "name").extractOpt[String].getOrElse(defaultName),
-      (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-      (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-      (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
-        val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
-        val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
-        val name = (v \ "name").extractOpt[String].orElse(re.findFirstIn(url)).getOrElse("Unknown")
-        Bookmark(name, url)
-      }),
-      ProxySettings(
-        (definition \ "proxy" \ "transparent").extractOpt[Boolean].getOrElse(false),
-        (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
-        (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
-      )
-    )
-  }
 
 }

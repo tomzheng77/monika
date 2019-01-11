@@ -1,22 +1,19 @@
 package monika.server
 
 import java.io.{ByteArrayOutputStream, File, OutputStream, OutputStreamWriter}
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDateTime
 
-import monika.Primitives.FileName
+import monika.Primitives.{FileName, _}
 import monika.server.Constants.Locations
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
 import org.apache.commons.io.FileUtils
+import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods.render
 import org.json4s.native.{JsonMethods, Printer}
 import org.json4s.{DefaultFormats, JValue, JsonInput}
 import org.slf4j.{Logger, LoggerFactory}
 import scalaz.Tag
-import monika.Primitives._
-import org.json4s.JsonDSL._
-import org.json4s.JsonAST._
-import scalaz.syntax.id._
 
 import scala.util.Try
 
@@ -50,6 +47,17 @@ object Persistence {
       val output = new ByteArrayOutputStream()
       writeStateToOutput(newState, output)
       FileUtils.writeByteArrayToFile(stateDBFile, output.toByteArray); returnValue
+    }
+  }
+
+  def readStateOrDefault(): MonikaState = {
+    this.synchronized {
+      val stateDBFile = new File(Locations.StateJsonFile)
+      ensureFileWritable(stateDBFile)
+      if (stateDBFile.exists()) {
+        val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
+        readStateFromInput(input)
+      } else MonikaState()
     }
   }
 

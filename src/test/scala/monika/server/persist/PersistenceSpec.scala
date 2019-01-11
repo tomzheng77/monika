@@ -13,18 +13,18 @@ import scala.util.Try
 
 object PersistenceSpec extends Properties("Persistence") {
 
-  private val randomProxySettings: Gen[ProxySettings] = for {
+  private def randomProxySettings: Gen[ProxySettings] = for {
     transparent <- Gen.oneOf(true, false)
     allow <- Gen.listOf(Gen.asciiPrintableStr).map(_.toVector)
     reject <- Gen.listOf(Gen.asciiPrintableStr).map(_.toVector)
   } yield ProxySettings(transparent, allow, reject)
 
-  private val randomBookmark: Gen[Bookmark] = for {
+  private def randomBookmark: Gen[Bookmark] = for {
     name <- Gen.alphaNumStr
     url <- Gen.asciiPrintableStr
   } yield Bookmark(name, url)
 
-  private val randomProfile: Gen[Profile] = for {
+  private def randomProfile: Gen[Profile] = for {
     name <- Gen.alphaNumStr
     programs <- Gen.listOf(Gen.alphaNumStr.map(FileName)).map(_.toVector)
     projects <- Gen.listOf(Gen.alphaNumStr.map(FileName)).map(_.toVector)
@@ -32,23 +32,13 @@ object PersistenceSpec extends Properties("Persistence") {
     proxy <- randomProxySettings
   } yield Profile(name, programs, projects, bookmarks, proxy)
 
-  private val NowDate: LocalDate = LocalDate.now()
-  private val NowDateTime: LocalDateTime = LocalDateTime.now()
-
-  private def randomPair[A, B](genA: Gen[A], genB: Gen[B]): Gen[(A, B)] = for {
-    a <- genA
-    b <- genB
-  } yield (a, b)
-
-  private val randomDate: Gen[LocalDate] = for {
-    sinceNow <- Gen.choose(-100, 100)
-  } yield NowDate.plusDays(sinceNow)
+  private def NowDateTime: LocalDateTime = LocalDateTime.now()
 
   private def sequence[T](list: Vector[Gen[T]]): Gen[Vector[T]] = {
     Gen.sequence[Vector[T], T](list)
   }
 
-  private val randomQueue: Gen[Vector[(LocalDateTime, Action)]] = {
+  private def randomQueue: Gen[Vector[(LocalDateTime, Action)]] = {
     import scalaz.syntax.id._
     Gen.choose(0, 10).flatMap(i => {
       Gen.listOfN(i, Gen.choose(1, 100)).flatMap(l => {
@@ -62,7 +52,7 @@ object PersistenceSpec extends Properties("Persistence") {
     })
   }
 
-  private val randomState: Gen[MonikaState] = for {
+  private def randomState: Gen[MonikaState] = for {
     queue <- randomQueue
     proxy <- randomProxySettings
   } yield MonikaState(queue, proxy)

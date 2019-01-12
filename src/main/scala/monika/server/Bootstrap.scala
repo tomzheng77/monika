@@ -23,17 +23,9 @@ object Bootstrap {
 
   def main(args: Array[String]): Unit = {
     logToFileAndConsole()
-    if (!SystemUtils.IS_OS_LINUX) {
-      LOGGER.error("system is not linux")
-      System.exit(1)
-    }
-    if (System.getenv("USER") != "root") {
-      LOGGER.error("user is not root")
-      System.exit(1)
-    }
-
     LOGGER.info("M.O.N.I.K.A starting...")
     LOGGER.logIfFail("error while starting") {
+      checkOSEnvironment()
       checkIfProgramsAreExecutable()
       rejectOutgoingHttp()
 
@@ -45,7 +37,18 @@ object Bootstrap {
     LOGGER.info("M.O.N.I.K.A started")
   }
 
-  def handleFromClient(command: String, args: List[String]): String = {
+  private def checkOSEnvironment(): Unit = {
+    if (!SystemUtils.IS_OS_LINUX) {
+      LOGGER.error("system is not linux")
+      System.exit(1)
+    }
+    if (System.getenv("USER") != "root") {
+      LOGGER.error("user is not root")
+      System.exit(1)
+    }
+  }
+
+  private def handleFromClient(command: String, args: List[String]): String = {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     command match {
       case "set-profile" =>

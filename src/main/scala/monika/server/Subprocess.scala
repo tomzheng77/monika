@@ -14,8 +14,10 @@ object Subprocess {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
 
+  case class Command(program: String @@ FileName, args: String*)
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
+  def callCommand(c: Command): CommandOutput = call(c.program, c.args: _*)
   def call(program: String @@ FileName, args: String*): CommandOutput = {
     callWithInput(Tag.unwrap(program), args.toArray, Array.empty, None)
   }

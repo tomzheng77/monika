@@ -30,7 +30,7 @@ object Constants {
     * programs which may be requested by the Profile
     * a group should be created for each of the programs e.g. use-studio
     */
-  val ProfilePrograms: Vector[String @@ FileName] = Vector(
+  val RestrictedPrograms: Vector[String @@ FileName] = Vector(
     "studio",
     "subl",
     "idea",

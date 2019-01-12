@@ -4,7 +4,7 @@ import java.io.File
 
 import monika.Primitives.FileName
 import monika.server.Constants.CallablePrograms.iptables
-import monika.server.Constants.{CallablePrograms, Locations, MonikaUser, ProfilePrograms}
+import monika.server.Constants.{CallablePrograms, Locations, MonikaUser, RestrictedPrograms}
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, MonikaState, Profile}
 import monika.server.Subprocess._
@@ -56,7 +56,7 @@ object Bootstrap {
   }
 
   private def checkIfProgramsAreExecutable(): Unit = {
-    val programs = ProfilePrograms ++ CallablePrograms.asList
+    val programs = RestrictedPrograms ++ CallablePrograms.asList
     val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
     for (program <- cannotExecute) {
       val programName = Tag.unwrap(program)

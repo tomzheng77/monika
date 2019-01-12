@@ -54,15 +54,20 @@ object Bootstrap {
       case "set-profile" =>
         val profiles = listProfiles()
         val name = args.head
-        val profile = profiles(name)
-        LittleProxy.startOrRestart(profile.proxy)
-        UserControl.removeFromWheelGroup()
-        UserControl.restrictPrograms(profile.programs)
-        UserControl.restrictProjects(profile.projects)
-        "set-profile success"
+        if (!profiles.contains(name)) {
+          s"cannot find profile $name, please check ${Locations.ProfileRoot}"
+        } else {
+          val profile = profiles(name)
+          LittleProxy.startOrRestart(profile.proxy)
+          UserControl.removeFromWheelGroup()
+          UserControl.restrictPrograms(profile.programs)
+          UserControl.restrictProjects(profile.projects)
+          "set-profile success"
+        }
       case "unlock" =>
         UserControl.unlock()
         "unlock success"
+      case other => s"unknown command $other"
     }
   }
 

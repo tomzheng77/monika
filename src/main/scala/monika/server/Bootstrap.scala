@@ -119,9 +119,7 @@ object Bootstrap {
 
   private def rejectOutgoingHttp(): Unit = {
     val forUser: String = MonikaUser
-    val out1 = call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
-    val outS = new String(out1.stdout, GlobalEncoding)
-    LOGGER.debug(outS)
+    call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
     call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '): _*)
   }
 

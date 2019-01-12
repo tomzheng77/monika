@@ -52,7 +52,7 @@ object Bootstrap {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     command match {
       case "set-profile" =>
-        val profiles = listProfiles()
+        val profiles = readProfilesFromDefinitions()
         val name = args.head
         if (!profiles.contains(name)) {
           s"cannot find profile $name, please check ${Locations.ProfileRoot}"
@@ -80,7 +80,7 @@ object Bootstrap {
     }
   }
 
-  private def listProfiles(): Map[String, Profile] = {
+  private def readProfilesFromDefinitions(): Map[String, Profile] = {
     /**
       * constructs a profile from a .json definition file
       * this is not a deserialization process, it is fault tolerant and provides

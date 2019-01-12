@@ -20,18 +20,18 @@ object UserControl {
     */
   def removeFromWheelGroup(): Unit = {
     val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
-    val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(3).map(_.trim).toSet)
+    val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup && g!= "wheel")
     Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
   }
 
   def restrictPrograms(except: Vector[String @@ FileName]): Unit = {
-    val locations = Constants.RestrictedPrograms
+    val programs = Constants.RestrictedPrograms
       .filterNot(except.contains)
       .flatMap(Subprocess.findProgramLocation)
 
-    locations.map(l => Command(chmod, "700", Tag.unwrap(l))).foreach(callCommand)
-    locations.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
+    programs.map(l => Command(chmod, "700", Tag.unwrap(l))).foreach(callCommand)
+    programs.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
   }
 
   def restrictProjects(except: Vector[String @@ FileName]): Unit = {
@@ -50,9 +50,14 @@ object UserControl {
     * i.e. sudo, programs, projects
     */
   def unlock(): Unit = {
-    val locations = Constants.RestrictedPrograms.flatMap(Subprocess.findProgramLocation)
-    locations.map(l => Command(chmod, "755", Tag.unwrap(l))).foreach(callCommand)
-    locations.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
+    val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
+    val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
+    val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
+    Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
+
+    val programs = Constants.RestrictedPrograms.flatMap(Subprocess.findProgramLocation)
+    programs.map(l => Command(chmod, "755", Tag.unwrap(l))).foreach(callCommand)
+    programs.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
 
     val projects = Option(new File(Locations.ProjectRoot).listFiles()).getOrElse(Array.empty)
     projects.map(f => Command(chmod, "755", f.getCanonicalPath)).foreach(callCommand)

@@ -32,7 +32,7 @@ object LittleProxy {
   private var server: HttpProxyServer = _
 
   def startOrRestart(settings: ProxySettings): Unit = {
-    server.synchronized {
+    this.synchronized {
       LOGGER.info(s"restarting proxy server (transparent: ${settings.transparent}")
       stop()
       if (settings.transparent) serveTransparently()
@@ -42,7 +42,7 @@ object LittleProxy {
   }
 
   private def stop(): Unit = {
-    server.synchronized {
+    this.synchronized {
       if (server != null) {
         LOGGER.info("stopping proxy server")
         server.stop()
@@ -70,7 +70,7 @@ object LittleProxy {
   }
 
   private def serveTransparently(): Unit = {
-    server.synchronized {
+    this.synchronized {
       assert(server == null)
       server = DefaultHttpProxyServer.bootstrap()
         .withPort(ProxyPort)
@@ -137,7 +137,7 @@ object LittleProxy {
         .start()
     }
 
-    server.synchronized {
+    this.synchronized {
       assert(server == null)
       // https://github.com/lightbody/browsermob-proxy/tree/master/mitm
       // https://github.com/ganskef/LittleProxy-mitm

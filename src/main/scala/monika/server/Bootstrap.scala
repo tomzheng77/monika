@@ -53,8 +53,10 @@ object Bootstrap {
     command match {
       case "set-profile" =>
         val profiles = readProfilesFromDefinitions()
-        val name = args.head
-        if (!profiles.contains(name)) {
+        lazy val name = args.head
+        if (args.isEmpty) {
+          "usage: set-profile <profile>"
+        } else if (!profiles.contains(name)) {
           s"cannot find profile $name, please check ${Locations.ProfileRoot}"
         } else {
           val profile = profiles(name)

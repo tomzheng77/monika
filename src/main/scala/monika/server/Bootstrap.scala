@@ -3,7 +3,7 @@ package monika.server
 import java.io.File
 
 import monika.Primitives.FileName
-import monika.server.Constants.{CallablePrograms, Locations, MonikaUser, RestrictedPrograms}
+import monika.server.Constants._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, MonikaState, Profile}
 import monika.server.Subprocess._
@@ -97,7 +97,9 @@ object Bootstrap {
 
   private def rejectOutgoingHttp(): Unit = {
     val forUser: String = MonikaUser
-    call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
+    val out1 = call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
+    val outS = new String(out1.stdout, GlobalEncoding)
+    LOGGER.debug(outS)
     call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '): _*)
   }
 

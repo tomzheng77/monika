@@ -2,19 +2,20 @@ package monika.server
 
 import java.io.File
 
-import monika.Primitives.FileName
+import monika.Primitives._
+import monika.server.Constants.CallablePrograms._
 import monika.server.Constants._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, MonikaState, Profile}
 import monika.server.Subprocess._
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import org.json4s.JsonAST.JValue
 import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Formats}
 import org.slf4j.LoggerFactory
 import scalaz.Tag
-import Constants.CallablePrograms._
 
 object Bootstrap {
 
@@ -22,18 +23,25 @@ object Bootstrap {
 
   def main(args: Array[String]): Unit = {
     logToFileAndConsole()
-    if (System.getenv("USER") != "root") {
-      LOGGER.warn("user is not root")
+    if (!SystemUtils.IS_OS_LINUX) {
+      LOGGER.error("system is not linux")
+      System.exit(1)
     }
+    if (System.getenv("USER") != "root") {
+      LOGGER.error("user is not root")
+      System.exit(1)
+    }
+
     LOGGER.info("M.O.N.I.K.A starting...")
-    checkIfProgramsAreExecutable()
-    rejectOutgoingHttp()
+    LOGGER.withTry {
+      checkIfProgramsAreExecutable()
+      rejectOutgoingHttp()
 
-    SimpleHttpServer.startHttpListener(handleFromClient)
-    val initialState: MonikaState = Persistence.readStateOrDefault()
-    LittleProxy.writeCertificatesToFiles()
-    LittleProxy.startOrRestart(initialState.proxy)
-
+      SimpleHttpServer.startHttpListener(handleFromClient)
+      val initialState: MonikaState = Persistence.readStateOrDefault()
+      LittleProxy.writeCertificatesToFiles()
+      LittleProxy.startOrRestart(initialState.proxy)
+    }
     LOGGER.info("M.O.N.I.K.A started")
   }
 

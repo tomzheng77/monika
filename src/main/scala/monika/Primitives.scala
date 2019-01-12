@@ -1,8 +1,10 @@
 package monika
 
+import org.slf4j.Logger
 import scalaz.{@@, Tag}
 
-import scala.util.Try
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 object Primitives {
 
@@ -21,6 +23,13 @@ object Primitives {
 
   implicit class TryExt[T](val t: Try[T]) extends AnyVal {
     def orElseX[U >: T](fn: Throwable => U): U = t.fold(fn, i => i)
+  }
+
+  implicit class LoggerExt(val l: Logger) extends AnyVal {
+    def withTry[T](r: => T): Try[T] =
+      try Success(r) catch {
+        case NonFatal(e) => l.error("error", r); Failure(e)
+      }
   }
 
 }

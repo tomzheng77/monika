@@ -35,8 +35,16 @@ object Subprocess {
     */
   def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
                     workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
-    LOGGER.debug(s"run: $program ${args.mkString(" ")}")
-    val cmd = new CommandLine(program)
+    // resolve the program within customized PATH (incl. Constants.PathAdd)
+    val resolvedProgram: String = {
+      if (program.startsWith("/")) program
+      else findProgramLocation(FileName(program)).map(Tag.unwrap).getOrElse {
+        throw new RuntimeException(s"cannot resolve program '$program' in PATH")
+      }
+    }
+
+    LOGGER.debug(s"run: $resolvedProgram ${args.mkString(" ")}")
+    val cmd = new CommandLine(resolvedProgram)
     cmd.addArguments(args)
     cmd.toString
 

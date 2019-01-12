@@ -84,9 +84,9 @@ object Bootstrap {
     /**
       * constructs a profile from a .json definition file
       * this is not a deserialization process, it is fault tolerant and provides
-      * default values for all fields
+      * default values for all fields except name
       */
-    def readProfileFromJSON(definition: JValue): Profile = {
+    def convertJsonToProfile(definition: JValue): Profile = {
       implicit val formats: Formats = DefaultFormats
       Profile(
         (definition \ "name").extract[String],
@@ -106,9 +106,13 @@ object Bootstrap {
       )
     }
     import scala.collection.JavaConverters._
-    val jsonFiles = FileUtils.listFiles(new File(Locations.ProfileRoot), Array("json"), true).asScala.toVector
+    val jsonFiles: Vector[File] = {
+      val profileRoot = new File(Locations.ProfileRoot)
+      if (!profileRoot.exists()) Vector.empty
+      else FileUtils.listFiles(new File(Locations.ProfileRoot), Array("json"), true).asScala.toVector
+    }
     val jsons = jsonFiles.map(JsonMethods.parse(_))
-    jsons.map(readProfileFromJSON).map(p => p.name -> p).toMap
+    jsons.map(convertJsonToProfile).map(p => p.name -> p).toMap
   }
 
   private def rejectOutgoingHttp(): Unit = {

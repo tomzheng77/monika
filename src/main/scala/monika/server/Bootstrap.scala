@@ -3,16 +3,15 @@ package monika.server
 import java.io.File
 
 import monika.Primitives.FileName
-import monika.server.Constants.CallablePrograms.iptables
 import monika.server.Constants.{CallablePrograms, Locations, MonikaUser, RestrictedPrograms}
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, MonikaState, Profile}
 import monika.server.Subprocess._
 import org.apache.commons.io.FileUtils
 import org.apache.log4j._
-import org.json4s.{DefaultFormats, Formats}
 import org.json4s.JsonAST.JValue
 import org.json4s.native.JsonMethods
+import org.json4s.{DefaultFormats, Formats}
 import org.slf4j.LoggerFactory
 import scalaz.Tag
 
@@ -27,7 +26,7 @@ object Bootstrap {
     }
     LOGGER.info("M.O.N.I.K.A starting...")
     checkIfProgramsAreExecutable()
-    rejectOutgoingHttp(forUser = MonikaUser)
+    rejectOutgoingHttp()
 
     SimpleHttpServer.startHttpListener(handleFromClient)
     val initialState: MonikaState = Persistence.readStateOrDefault()
@@ -95,7 +94,8 @@ object Bootstrap {
     jsons.map(readProfileFromJSON).map(p => p.name -> p).toMap
   }
 
-  private def rejectOutgoingHttp(forUser: String): Unit = {
+  private def rejectOutgoingHttp(): Unit = {
+    val forUser: String = MonikaUser
     callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
     callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
   }

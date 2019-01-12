@@ -53,6 +53,8 @@ object LittleProxy {
   }
 
   def writeCertificatesToFiles(): Unit = {
+    LOGGER.info(s"writing certificates to directory ${Locations.CertificateRoot}")
+
     // create the certificate root if it does not exist
     val certificateRoot = new File(Locations.CertificateRoot)
     certificateRoot.mkdirs()

@@ -14,6 +14,7 @@ import org.json4s.native.JsonMethods
 import org.json4s.{DefaultFormats, Formats}
 import org.slf4j.LoggerFactory
 import scalaz.Tag
+import Constants.CallablePrograms._
 
 object Bootstrap {
 
@@ -96,8 +97,8 @@ object Bootstrap {
 
   private def rejectOutgoingHttp(): Unit = {
     val forUser: String = MonikaUser
-    callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '))
-    callWithInput("iptables", s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '))
+    call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
+    call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '): _*)
   }
 
   private def logToFileAndConsole(): Unit = {

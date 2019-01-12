@@ -43,7 +43,7 @@ object Subprocess {
       }
     }
 
-    LOGGER.debug(s"run: $resolvedProgram ${args.mkString(" ")}")
+    LOGGER.debug(s"run: $program ($resolvedProgram) ${args.mkString(" ")}")
     val cmd = new CommandLine(resolvedProgram)
     cmd.addArguments(args)
     cmd.toString

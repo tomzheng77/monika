@@ -33,7 +33,7 @@ object Bootstrap {
     }
 
     LOGGER.info("M.O.N.I.K.A starting...")
-    LOGGER.withTry {
+    LOGGER.logIfFail("error while starting") {
       checkIfProgramsAreExecutable()
       rejectOutgoingHttp()
 

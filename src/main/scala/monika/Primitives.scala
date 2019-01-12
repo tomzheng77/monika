@@ -26,9 +26,9 @@ object Primitives {
   }
 
   implicit class LoggerExt(val l: Logger) extends AnyVal {
-    def withTry[T](r: => T): Try[T] =
+    def logIfFail[T](message: String)(r: => T): Try[T] =
       try Success(r) catch {
-        case NonFatal(e) => l.error("error", r); Failure(e)
+        case NonFatal(e) => l.error(message, r); Failure(e)
       }
   }
 

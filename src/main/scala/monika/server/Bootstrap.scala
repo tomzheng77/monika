@@ -146,7 +146,7 @@ object Bootstrap {
     Logger.getRootLogger.addAppender(console)
     Logger.getLogger("spark.route").setLevel(Level.ERROR)
     Logger.getLogger("org.eclipse.jetty").setLevel(Level.ERROR)
-    Logger.getLogger("io.netty.util.internal").setLevel(Level.ERROR)
+    Logger.getLogger("io.netty").setLevel(Level.ERROR)
   }
 
 }

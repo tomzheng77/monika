@@ -1,7 +1,7 @@
 package monika.server
 
 import java.io.File
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Timer, TimerTask}
 
 import monika.Primitives._
@@ -82,7 +82,7 @@ object Bootstrap {
   }
 
   private def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
-    state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1))
+    state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
   }
 
   private def performRequest(command: String, args: List[String]): String = {

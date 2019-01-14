@@ -132,6 +132,7 @@ object Persistence {
       name match {
         case "set-profile" => SetProfile(jsonToProfile(json \ "profile"))
         case "unlock" => Unlock
+        case "disable-login" => DisableLogin
       }
     }
     def jsonToRequest(json: JValue): (LocalDateTime, Action) = {
@@ -160,6 +161,7 @@ object Persistence {
       effect match {
         case a: SetProfile => ("name" -> "set-profile") ~ ("profile" -> profileToJson(a.profile))
         case Unlock => "name" -> "unlock"
+        case DisableLogin => "name" -> "disable-login"
       }
     }
     def requestToJson(request: (LocalDateTime, Action)): JValue = {

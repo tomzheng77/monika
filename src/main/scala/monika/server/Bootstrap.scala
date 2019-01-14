@@ -1,6 +1,7 @@
 package monika.server
 
 import java.io.File
+import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Timer, TimerTask}
 
@@ -82,6 +83,7 @@ object Bootstrap {
     }
   }
 
+  private val TimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   private def brickFor(minutes: Int): String = {
     def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
       state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
@@ -92,7 +94,7 @@ object Bootstrap {
       val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
       val newState = addItemToQueue(state, timeToUnlock, Unlock)
       val list = newState.queue.map(item => {
-        s"${item._1.formatted("yyyy-MM-dd HH:mm:ss")}: ${item._2}"
+        s"${item._1.format(TimeFormat)}: ${item._2}"
       }).mkString("\n")
       (newState, "successfully added to queue, queue is now:\n" + list)
     })
@@ -104,7 +106,7 @@ object Bootstrap {
       case "queue" =>
         Persistence.transaction(state => {
           val list = state.queue.map(item => {
-            s"${item._1}: ${item._2}"
+            s"${item._1.format(TimeFormat)}}: ${item._2}"
           }).mkString("\n")
           (state, list)
         })

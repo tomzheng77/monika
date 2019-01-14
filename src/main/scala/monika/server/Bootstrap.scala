@@ -74,6 +74,7 @@ object Bootstrap {
   }
 
   private def performAction(action: Action): Unit = {
+    LOGGER.info(s"performing action from queue: ${action.getClass.getSimpleName}")
     action match {
       case DisableLogin => UserControl.disableLogin()
       case Unlock => UserControl.unlock()

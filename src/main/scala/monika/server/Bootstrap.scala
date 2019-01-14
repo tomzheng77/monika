@@ -89,7 +89,8 @@ object Bootstrap {
     UserControl.disableLogin()
     Persistence.transaction(state => {
       val now = LocalDateTime.now()
-      val newState = addItemToQueue(state, now.plusMinutes(minutes), Unlock)
+      val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
+      val newState = addItemToQueue(state, timeToUnlock, Unlock)
       val list = newState.queue.map(item => {
         s"${item._1}: ${item._2}"
       }).mkString("\n")

@@ -92,7 +92,7 @@ object Bootstrap {
       val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
       val newState = addItemToQueue(state, timeToUnlock, Unlock)
       val list = newState.queue.map(item => {
-        s"${item._1}: ${item._2}"
+        s"${item._1.formatted("yyyy-MM-dd HH:mm:ss")}: ${item._2}"
       }).mkString("\n")
       (newState, "successfully added to queue, queue is now:\n" + list)
     })

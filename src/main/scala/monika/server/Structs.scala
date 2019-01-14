@@ -45,6 +45,7 @@ object Structs {
   sealed trait Action
   case class SetProfile(profile: Profile) extends Action
   case object Unlock extends Action
+  case object DisableLogin extends Action
 
   /**
     * a bookmark to display on the browser's toolbar

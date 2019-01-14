@@ -1,12 +1,14 @@
 package monika.server
 
 import java.io.File
+import java.time.LocalDateTime
+import java.util.{Timer, TimerTask}
 
 import monika.Primitives._
 import monika.server.Constants.CallablePrograms._
 import monika.server.Constants._
 import monika.server.LittleProxy.ProxySettings
-import monika.server.Structs.{Bookmark, MonikaState, Profile}
+import monika.server.Structs._
 import monika.server.Subprocess._
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
@@ -28,13 +30,34 @@ object Bootstrap {
       checkOSEnvironment()
       checkIfProgramsAreExecutable()
       rejectOutgoingHttp()
+      setupQueueAutomaticPoll()
 
-      SimpleHttpServer.startHttpListener(handleFromClient)
+      SimpleHttpServer.startWithListener(performRequest)
       val initialState: MonikaState = Persistence.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
+      setupQueueAutomaticPoll()
     }
     LOGGER.info("M.O.N.I.K.A started")
+  }
+
+  def setupQueueAutomaticPoll(): Unit = {
+    val timer = new Timer()
+    timer.schedule(new TimerTask {
+      override def run(): Unit = {
+        LOGGER.info("automatic queue poll starting")
+        Persistence.transaction(state => {
+          val nowTime = LocalDateTime.now()
+          state.queue.headOption match {
+            case None => (state, Unit)
+            case Some((time, _)) if time.isAfter(nowTime) => (state, Unit)
+            case Some((_, action)) =>
+              performAction(action)
+              (state.copy(queue = state.queue.tail), Unit)
+          }
+        })
+      }
+    }, 0, 1000)
   }
 
   private def checkOSEnvironment(): Unit = {
@@ -44,11 +67,19 @@ object Bootstrap {
     }
     if (System.getenv("USER") != "root") {
       LOGGER.error("user is not root")
-      System.exit(1)
+      System.exit(2)
     }
   }
 
-  private def handleFromClient(command: String, args: List[String]): String = {
+  private def performAction(action: Action): Unit = {
+    action match {
+      case DisableLogin => UserControl.disableLogin()
+      case Unlock => UserControl.unlock()
+      case other =>
+    }
+  }
+
+  private def performRequest(command: String, args: List[String]): String = {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     command match {
       case "set-profile" =>

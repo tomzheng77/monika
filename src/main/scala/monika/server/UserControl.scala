@@ -14,6 +14,10 @@ object UserControl {
   // the environment of this user will be affected
   private val User = Constants.MonikaUser
 
+  def disableLogin(): Unit = {
+    Subprocess.call(passwd, "-l", User)
+  }
+
   /**
     * removes the user from the "wheel" group
     * so they cannot perform sudo actions
@@ -50,6 +54,8 @@ object UserControl {
     * i.e. sudo, programs, projects
     */
   def unlock(): Unit = {
+    Subprocess.call(passwd, "-u", User)
+
     val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
     val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"

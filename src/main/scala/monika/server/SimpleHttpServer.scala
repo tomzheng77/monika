@@ -11,7 +11,7 @@ object SimpleHttpServer {
     * each command should be provided via the 'cmd' parameter, serialized in JSON
     * a response will be returned in plain text
     */
-  def startHttpListener(handler: (String, List[String]) => String): Unit = {
+  def startWithListener(handler: (String, List[String]) => String): Unit = {
     this.synchronized {
       Spark.port(Constants.InterpreterPort)
       Spark.get("/request", (req, resp) => {

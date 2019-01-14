@@ -81,8 +81,19 @@ object Bootstrap {
     }
   }
 
-  private def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
-    state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
+  private def brickFor(minutes: Int): String = {
+    def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
+      state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
+    }
+    UserControl.disableLogin()
+    Persistence.transaction(state => {
+      val now = LocalDateTime.now()
+      val newState = addItemToQueue(state, now.plusMinutes(minutes), Unlock)
+      val list = newState.queue.map(item => {
+        s"${item._1}: ${item._2}"
+      }).mkString("\n")
+      (newState, "successfully added to queue, queue is now:\n" + list)
+    })
   }
 
   private def performRequest(command: String, args: List[String]): String = {
@@ -92,17 +103,7 @@ object Bootstrap {
         Try(args.head.toInt).toOption match {
           case None => "usage: brick <minutes>"
           case Some(m) if m <= 0 => "minutes must be greater than zero"
-          case Some(m) => {
-            UserControl.disableLogin()
-            Persistence.transaction(state => {
-              val now = LocalDateTime.now()
-              val newState = addItemToQueue(state, now.plusMinutes(m), Unlock)
-              val list = newState.queue.map(item => {
-                s"${item._1}: ${item._2}"
-              }).mkString("\n")
-              (newState, "successfully added to queue, queue is now:\n" + list)
-            })
-          }
+          case Some(m) => brickFor(m)
         }
       case "set-profile" =>
         val profiles = readProfilesFromDefinitions()

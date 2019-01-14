@@ -99,6 +99,13 @@ object Bootstrap {
   private def performRequest(command: String, args: List[String]): String = {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     command match {
+      case "queue" =>
+        Persistence.transaction(state => {
+          val list = state.queue.map(item => {
+            s"${item._1}: ${item._2}"
+          }).mkString("\n")
+          (state, list)
+        })
       case "brick" =>
         Try(args.head.toInt).toOption match {
           case None => "usage: brick <minutes>"

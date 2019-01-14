@@ -19,6 +19,8 @@ import org.json4s.{DefaultFormats, Formats}
 import org.slf4j.LoggerFactory
 import scalaz.Tag
 
+import scala.util.Try
+
 object Bootstrap {
 
   private val LOGGER = LoggerFactory.getLogger(getClass)
@@ -79,9 +81,29 @@ object Bootstrap {
     }
   }
 
+  private def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
+    state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1))
+  }
+
   private def performRequest(command: String, args: List[String]): String = {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
     command match {
+      case "brick" =>
+        Try(args.head.toInt).toOption match {
+          case None => "usage: brick <minutes>"
+          case Some(m) if m <= 0 => "minutes must be greater than zero"
+          case Some(m) => {
+            UserControl.disableLogin()
+            Persistence.transaction(state => {
+              val now = LocalDateTime.now()
+              val newState = addItemToQueue(state, now.plusMinutes(m), Unlock)
+              val list = newState.queue.map(item => {
+                s"${item._1}: ${item._2}"
+              }).mkString("\n")
+              (newState, "successfully added to queue, queue is now:\n" + list)
+            })
+          }
+        }
       case "set-profile" =>
         val profiles = readProfilesFromDefinitions()
         lazy val name = args.head

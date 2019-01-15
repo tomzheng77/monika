@@ -134,7 +134,7 @@ object Bootstrap {
       case "unlock" =>
         UserControl.unlock()
         "unlock success"
-      case other => s"unknown command $other"
+      case other => s"unknown command '$other'"
     }
   }
 

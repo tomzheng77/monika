@@ -3,6 +3,7 @@
 - download monika.jar
 - set `MONIKA_HOME` in `/etc/environment` to an empty directory
 - `crontab -e` and add `java -jar monika.jar --server`
+- `yum remove gnome-initial-setup`
 - (optional) set `http_proxy` and `https_proxy` in `/etc/environment`
 
 # Basic Usage

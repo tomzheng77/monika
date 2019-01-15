@@ -31,7 +31,6 @@ object Bootstrap {
     LOGGER.info("M.O.N.I.K.A starting...")
     LOGGER.logIfFail("error while starting") {
       checkOSEnvironment()
-      checkIfProgramsAreExecutable()
       rejectOutgoingHttp()
       setupQueueAutomaticPoll()
 
@@ -72,6 +71,16 @@ object Bootstrap {
     if (System.getenv("USER") != "root") {
       LOGGER.error("user is not root")
       System.exit(2)
+    }
+
+    val programs = CallablePrograms.asList
+    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
+    for (program <- cannotExecute) {
+      val programName = Tag.unwrap(program)
+      LOGGER.error(s"cannot find executable program: $programName")
+    }
+    if (cannotExecute.nonEmpty) {
+      System.exit(3)
     }
   }
 
@@ -136,15 +145,6 @@ object Bootstrap {
         UserControl.unlock()
         "unlock success"
       case other => s"unknown command '$other'"
-    }
-  }
-
-  private def checkIfProgramsAreExecutable(): Unit = {
-    val programs = RestrictedPrograms ++ CallablePrograms.asList
-    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
-    for (program <- cannotExecute) {
-      val programName = Tag.unwrap(program)
-      LOGGER.warn(s"cannot find executable program: $programName")
     }
   }
 

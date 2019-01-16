@@ -46,7 +46,7 @@ object PersistenceSpec extends Properties("Persistence") {
           val start = pair._1
           val items = pair._2
           val end = start.plusMinutes(t)
-          (end, items :+ randomProfile.map(p => start -> SetProfile(p)))
+          (end, items :+ randomProfile.map(p => start -> RestrictProfile(p)))
         })._2 |> sequence
       })
     })

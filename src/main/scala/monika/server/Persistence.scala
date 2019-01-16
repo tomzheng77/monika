@@ -122,8 +122,8 @@ object Persistence extends UseLogger with UseJSON {
     def jsonToAction(json: JValue): Action = {
       val name = (json \ "name").extract[String]
       name match {
-        case "set-profile" => SetProfile(jsonToProfile(json \ "profile"))
-        case "unlock" => Unlock
+        case "set-profile" => RestrictProfile(jsonToProfile(json \ "profile"))
+        case "unlock" => ClearAllRestrictions
         case "disable-login" => DisableLogin
       }
     }
@@ -151,8 +151,8 @@ object Persistence extends UseLogger with UseJSON {
     }
     def actionToJson(effect: Action): JValue = {
       effect match {
-        case a: SetProfile => ("name" -> "set-profile") ~ ("profile" -> profileToJson(a.profile))
-        case Unlock => "name" -> "unlock"
+        case a: RestrictProfile => ("name" -> "set-profile") ~ ("profile" -> profileToJson(a.profile))
+        case ClearAllRestrictions => "name" -> "unlock"
         case DisableLogin => "name" -> "disable-login"
       }
     }

@@ -43,8 +43,8 @@ object Structs {
     * - Unlock: removes any profile
     */
   sealed trait Action
-  case class SetProfile(profile: Profile) extends Action
-  case object Unlock extends Action
+  case class RestrictProfile(profile: Profile) extends Action
+  case object ClearAllRestrictions extends Action
   case object DisableLogin extends Action
 
   /**

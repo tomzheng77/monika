@@ -1,5 +1,7 @@
 package monika
 
+import java.time.format.DateTimeFormatter
+
 import org.slf4j.Logger
 import scalaz.{@@, Tag}
 
@@ -30,6 +32,10 @@ object Primitives {
       try Success(r) catch {
         case NonFatal(e) => l.error(message, r); Failure(e)
       }
+  }
+
+  val TimeFormat: DateTimeFormatter = {
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   }
 
 }

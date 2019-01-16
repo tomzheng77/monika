@@ -1,11 +1,12 @@
-package monika.server
+package monika.server.action
 
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.server.Structs.{Action, DisableLogin, SetProfile, Unlock}
+import monika.server.Structs.{Action, ClearAllRestrictions, DisableLogin, RestrictProfile}
+import monika.server.{LittleProxy, Persistence, UseLogger, UserControl}
 
-object AutomaticQueue extends UseLogger {
+object Queue extends UseLogger {
 
   def startPolling(): Unit = {
     def pollQueue(): Unit = {
@@ -31,8 +32,8 @@ object AutomaticQueue extends UseLogger {
     LOGGER.debug(s"performing action: ${action.getClass.getSimpleName}")
     action match {
       case DisableLogin => UserControl.restrictLogin()
-      case Unlock => UserControl.clearAllRestrictions()
-      case SetProfile(profile) =>
+      case ClearAllRestrictions => UserControl.clearAllRestrictions()
+      case RestrictProfile(profile) =>
         LittleProxy.startOrRestart(profile.proxy)
         UserControl.removeFromWheelGroup()
         UserControl.restrictProgramsExcept(profile.programs)

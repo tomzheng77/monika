@@ -1,18 +1,15 @@
 package monika.server
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneOffset}
-
 import monika.Primitives._
 import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
 import monika.server.Subprocess._
+import monika.server.action.Queue
+import monika.server.signal._
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import scalaz.Tag
-
-import scala.util.Try
 
 object Bootstrap extends UseLogger with UseJSON {
 
@@ -23,11 +20,11 @@ object Bootstrap extends UseLogger with UseJSON {
       checkOSEnvironment()
       rejectOutgoingHttp()
 
-      SimpleHttpServer.startWithListener(performRequest)
+      SignalServer.startListener()
       val initialState: MonikaState = Persistence.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
-      AutomaticQueue.startPolling()
+      Queue.startPolling()
     }
     LOGGER.info("M.O.N.I.K.A started")
   }
@@ -52,61 +49,6 @@ object Bootstrap extends UseLogger with UseJSON {
     }
     if (cannotExecute.nonEmpty) {
       System.exit(3)
-    }
-  }
-
-  private val TimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-  private def brickFor(minutes: Int): String = {
-    def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
-      state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
-    }
-    UserControl.restrictLogin()
-    Persistence.transaction(state => {
-      val now = LocalDateTime.now()
-      val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
-      val newState = addItemToQueue(state, timeToUnlock, Unlock)
-      val list = newState.queue.map(item => {
-        s"${item._1.format(TimeFormat)}: ${item._2}"
-      }).mkString("\n")
-      (newState, "successfully added to queue, queue is now:\n" + list)
-    })
-  }
-
-  private def performRequest(command: String, args: List[String]): String = {
-    LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
-    command match {
-      case "queue" =>
-        Persistence.transaction(state => {
-          val list = state.queue.map(item => {
-            s"${item._1.format(TimeFormat)}}: ${item._2}"
-          }).mkString("\n")
-          (state, list)
-        })
-      case "brick" =>
-        Try(args.head.toInt).toOption match {
-          case None => "usage: brick <minutes>"
-          case Some(m) if m <= 0 => "minutes must be greater than zero"
-          case Some(m) => brickFor(m)
-        }
-      case "set-profile" =>
-        val profiles = Configuration.readProfileDefinitions()
-        lazy val name = args.head
-        if (args.isEmpty) {
-          "usage: set-profile <profile>"
-        } else if (!profiles.contains(name)) {
-          s"cannot find profile $name, please check ${Locations.ProfileRoot}"
-        } else {
-          val profile = profiles(name)
-          LittleProxy.startOrRestart(profile.proxy)
-          UserControl.removeFromWheelGroup()
-          UserControl.restrictProgramsExcept(profile.programs)
-          UserControl.restrictProjectsExcept(profile.projects)
-          "set-profile success"
-        }
-      case "unlock" =>
-        UserControl.clearAllRestrictions()
-        "unlock success"
-      case other => s"unknown command '$other'"
     }
   }
 

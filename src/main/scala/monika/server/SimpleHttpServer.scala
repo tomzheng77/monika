@@ -5,9 +5,8 @@ import spark.Spark
 object SimpleHttpServer extends UseJSON {
 
   /**
-    * runs an HTTP command interpreter which listens for user commands
-    * each command should be provided via the 'cmd' parameter, serialized in JSON
-    * a response will be returned in plain text
+    * - receives commands from the SimpleHttpClient
+    * - passes them into the provided handler
     */
   def startWithListener(handler: (String, List[String]) => String): Unit = {
     this.synchronized {

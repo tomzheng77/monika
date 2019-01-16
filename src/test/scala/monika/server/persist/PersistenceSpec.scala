@@ -38,15 +38,15 @@ object PersistenceSpec extends Properties("Persistence") {
     Gen.sequence[Vector[T], T](list)
   }
 
-  private def randomQueue: Gen[Vector[(LocalDateTime, Action)]] = {
+  private def randomQueue: Gen[Vector[FutureAction]] = {
     import scalaz.syntax.id._
     Gen.choose(0, 10).flatMap(i => {
       Gen.listOfN(i, Gen.choose(1, 100)).flatMap(l => {
-        l.foldLeft((NowDateTime, Vector[Gen[(LocalDateTime, Action)]]()))((pair, t) => {
+        l.foldLeft((NowDateTime, Vector[Gen[FutureAction]]()))((pair, t) => {
           val start = pair._1
           val items = pair._2
           val end = start.plusMinutes(t)
-          (end, items :+ randomProfile.map(p => start -> RestrictProfile(p)))
+          (end, items :+ randomProfile.map(p => FutureAction(start, RestrictProfile(p))))
         })._2 |> sequence
       })
     })

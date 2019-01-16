@@ -32,7 +32,7 @@ object Structs {
     * @param proxy settings which the proxy was last set to
     */
   case class MonikaState(
-    queue: Vector[(LocalDateTime, Action)] = Vector.empty,
+    queue: Vector[FutureAction] = Vector.empty,
     proxy: ProxySettings = ProxySettings()
   )
 
@@ -46,6 +46,7 @@ object Structs {
   case class RestrictProfile(profile: Profile) extends Action
   case object ClearAllRestrictions extends Action
   case object DisableLogin extends Action
+  case class FutureAction(at: LocalDateTime, action: Action)
 
   /**
     * a bookmark to display on the browser's toolbar

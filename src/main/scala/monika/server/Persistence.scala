@@ -127,8 +127,8 @@ object Persistence extends UseLogger with UseJSON {
         case "disable-login" => DisableLogin
       }
     }
-    def jsonToRequest(json: JValue): (LocalDateTime, Action) = {
-      (LocalDateTime.parse((json \ "time").extract[String]), jsonToAction(json \ "action"))
+    def jsonToRequest(json: JValue): FutureAction = {
+      FutureAction(LocalDateTime.parse((json \ "time").extract[String]), jsonToAction(json \ "action"))
     }
     MonikaState(
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
@@ -156,9 +156,9 @@ object Persistence extends UseLogger with UseJSON {
         case DisableLogin => "name" -> "disable-login"
       }
     }
-    def requestToJson(request: (LocalDateTime, Action)): JValue = {
-      ("time" -> request._1.toString) ~
-      ("action" -> actionToJson(request._2))
+    def requestToJson(request: FutureAction): JValue = {
+      ("time" -> request.at.toString) ~
+      ("action" -> actionToJson(request.action))
     }
     ("queue" -> state.queue.map(requestToJson)) ~
     ("proxy" -> proxyToJson(state.proxy))

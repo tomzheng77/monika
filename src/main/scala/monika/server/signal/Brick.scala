@@ -3,7 +3,7 @@ package monika.server.signal
 import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.Primitives.TimeFormat
-import monika.server.Structs.{Action, MonikaState, ClearAllRestrictions}
+import monika.server.Structs.{Action, ClearAllRestrictions, FutureAction, MonikaState}
 import monika.server.{Persistence, UserControl}
 
 import scala.util.Try
@@ -18,7 +18,7 @@ object Brick extends Signal {
   }
   private def brickFor(minutes: Int): String = {
     def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
-      state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
+      state.copy(queue = (state.queue :+ FutureAction(time, action)).sortBy(_.at.toEpochSecond(ZoneOffset.UTC)))
     }
     UserControl.restrictLogin()
     Persistence.transaction(state => {
@@ -26,7 +26,7 @@ object Brick extends Signal {
       val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
       val newState = addItemToQueue(state, timeToUnlock, ClearAllRestrictions)
       val list = newState.queue.map(item => {
-        s"${item._1.format(TimeFormat)}: ${item._2}"
+        s"${item.at.format(TimeFormat)}: ${item.action}"
       }).mkString("\n")
       (newState, "successfully added to queue, queue is now:\n" + list)
     })

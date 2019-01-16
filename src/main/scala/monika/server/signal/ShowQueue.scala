@@ -7,7 +7,7 @@ object ShowQueue extends Signal {
   override def run(args: Vector[String]): String = {
     Persistence.transaction(state => {
       val list = state.queue.map(item => {
-        s"${item._1.format(TimeFormat)}}: ${item._2}"
+        s"${item.at.format(TimeFormat)}}: ${item.action}"
       }).mkString("\n")
       (state, list)
     })

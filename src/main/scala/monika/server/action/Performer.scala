@@ -3,7 +3,7 @@ package monika.server.action
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.server.Structs.{Action, ClearAllRestrictions, DisableLogin, RestrictProfile}
+import monika.server.Structs._
 import monika.server.{LittleProxy, Persistence, UseLogger, UserControl}
 
 object Performer extends UseLogger {
@@ -15,8 +15,8 @@ object Performer extends UseLogger {
         val nowTime = LocalDateTime.now()
         state.queue.headOption match {
           case None => (state, Unit)
-          case Some((time, _)) if time.isAfter(nowTime) => (state, Unit)
-          case Some((_, action)) =>
+          case Some(FutureAction(time, _)) if time.isAfter(nowTime) => (state, Unit)
+          case Some(FutureAction(_, action)) =>
             performAction(action)
             (state.copy(queue = state.queue.tail), Unit)
         }

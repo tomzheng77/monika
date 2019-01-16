@@ -129,7 +129,7 @@ object Bootstrap {
           case Some(m) => brickFor(m)
         }
       case "set-profile" =>
-        val profiles = readProfilesFromDefinitions()
+        val profiles = readProfileDefinitions()
         lazy val name = args.head
         if (args.isEmpty) {
           "usage: set-profile <profile>"
@@ -150,7 +150,7 @@ object Bootstrap {
     }
   }
 
-  private def readProfilesFromDefinitions(): Map[String, Profile] = {
+  private def readProfileDefinitions(): Map[String, Profile] = {
     /**
       * constructs a profile from a .json definition file
       * this is not a deserialization process, it is fault tolerant and provides

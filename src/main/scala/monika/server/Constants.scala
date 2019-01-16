@@ -61,7 +61,7 @@ object Constants {
     val groupadd: String @@ FileName = FileName("groupadd")
     val killall: String @@ FileName = FileName("killall")
 
-    private val list = Array(passwd, chmod, chown, iptables, usermod, groupadd, killall)
+    private val list = Vector(passwd, chmod, chown, iptables, usermod, groupadd, killall)
     override def length: Int = list.length
     override def apply(idx: Int): String @@ FileName = list(idx)
     override def iterator: Iterator[String @@ FileName] = list.iterator

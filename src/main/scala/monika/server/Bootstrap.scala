@@ -76,7 +76,6 @@ object Bootstrap {
       LOGGER.error("user is not root")
       System.exit(2)
     }
-    val cannotExecute = RestrictedPrograms.filter(findProgramLocation(_).isEmpty)
     val cannotExecute = UtilityPrograms.filter(findProgramLocation(_).isEmpty)
     for (program <- cannotExecute) {
       val programName = Tag.unwrap(program)

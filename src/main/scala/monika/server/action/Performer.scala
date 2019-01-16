@@ -6,9 +6,9 @@ import java.util.{Timer, TimerTask}
 import monika.server.Structs.{Action, ClearAllRestrictions, DisableLogin, RestrictProfile}
 import monika.server.{LittleProxy, Persistence, UseLogger, UserControl}
 
-object Queue extends UseLogger {
+object Performer extends UseLogger {
 
-  def startPolling(): Unit = {
+  def pollQueueAutomatically(interval: Int = 1000): Unit = {
     def pollQueue(): Unit = {
       LOGGER.debug("poll queue")
       Persistence.transaction(state => {
@@ -25,7 +25,7 @@ object Queue extends UseLogger {
     val timer = new Timer()
     timer.schedule(new TimerTask {
       override def run(): Unit = pollQueue()
-    }, 0, 1000)
+    }, 0, interval)
   }
 
   private def performAction(action: Action): Unit = {

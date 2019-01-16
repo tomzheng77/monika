@@ -5,7 +5,7 @@ import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
 import monika.server.Subprocess._
-import monika.server.action.Queue
+import monika.server.action.Performer
 import monika.server.signal._
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
@@ -24,7 +24,7 @@ object Bootstrap extends UseLogger with UseJSON {
       val initialState: MonikaState = Persistence.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
-      Queue.startPolling()
+      Performer.pollQueueAutomatically()
     }
     LOGGER.info("M.O.N.I.K.A started")
   }

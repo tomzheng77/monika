@@ -1,6 +1,5 @@
 package monika.server
 
-import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Timer, TimerTask}
@@ -8,10 +7,8 @@ import java.util.{Timer, TimerTask}
 import monika.Primitives._
 import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
-import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
 import monika.server.Subprocess._
-import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import scalaz.Tag
@@ -26,35 +23,14 @@ object Bootstrap extends UseLogger with UseJSON {
     LOGGER.logIfFail("error while starting") {
       checkOSEnvironment()
       rejectOutgoingHttp()
-      setupQueueAutomaticPoll()
 
       SimpleHttpServer.startWithListener(performRequest)
       val initialState: MonikaState = Persistence.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
-      setupQueueAutomaticPoll()
+      AutomaticQueue.startPolling()
     }
     LOGGER.info("M.O.N.I.K.A started")
-  }
-
-  private def setupQueueAutomaticPoll(): Unit = {
-    def pollQueue(): Unit = {
-      LOGGER.debug("poll queue")
-      Persistence.transaction(state => {
-        val nowTime = LocalDateTime.now()
-        state.queue.headOption match {
-          case None => (state, Unit)
-          case Some((time, _)) if time.isAfter(nowTime) => (state, Unit)
-          case Some((_, action)) =>
-            performAction(action)
-            (state.copy(queue = state.queue.tail), Unit)
-        }
-      })
-    }
-    val timer = new Timer()
-    timer.schedule(new TimerTask {
-      override def run(): Unit = pollQueue()
-    }, 0, 1000)
   }
 
   /**
@@ -77,20 +53,6 @@ object Bootstrap extends UseLogger with UseJSON {
     }
     if (cannotExecute.nonEmpty) {
       System.exit(3)
-    }
-  }
-
-  private def performAction(action: Action): Unit = {
-    LOGGER.debug(s"performing action: ${action.getClass.getSimpleName}")
-    action match {
-      case DisableLogin => UserControl.restrictLogin()
-      case Unlock => UserControl.clearAllRestrictions()
-      case SetProfile(profile) =>
-        LittleProxy.startOrRestart(profile.proxy)
-        UserControl.removeFromWheelGroup()
-        UserControl.restrictProgramsExcept(profile.programs)
-        UserControl.restrictProjectsExcept(profile.projects)
-      case other =>
     }
   }
 

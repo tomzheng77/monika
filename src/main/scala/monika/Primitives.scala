@@ -1,12 +1,8 @@
 package monika
 
-import java.time.format.DateTimeFormatter
-
-import org.slf4j.Logger
 import scalaz.{@@, Tag}
 
-import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object Primitives {
 
@@ -25,17 +21,6 @@ object Primitives {
 
   implicit class TryExt[T](val t: Try[T]) extends AnyVal {
     def orElseX[U >: T](fn: Throwable => U): U = t.fold(fn, i => i)
-  }
-
-  implicit class LoggerExt(val l: Logger) extends AnyVal {
-    def logIfFail[T](message: String)(r: => T): Try[T] =
-      try Success(r) catch {
-        case NonFatal(e) => l.error(message, r); Failure(e)
-      }
-  }
-
-  val TimeFormat: DateTimeFormatter = {
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   }
 
 }

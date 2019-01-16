@@ -20,11 +20,11 @@ object Bootstrap extends UseLogger with UseJSON {
       checkOSEnvironment()
       rejectOutgoingHttp()
 
-      SignalServer.startListener()
       val initialState: MonikaState = Persistence.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
       Performer.pollQueueAutomatically()
+      SignalServer.startListener()
     }
     LOGGER.info("M.O.N.I.K.A started")
   }

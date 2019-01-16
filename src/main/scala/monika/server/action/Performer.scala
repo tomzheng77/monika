@@ -4,9 +4,17 @@ import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
 import monika.server.Structs._
-import monika.server.{LittleProxy, Persistence, UseLogger, UserControl}
+import monika.server._
 
-object Performer extends UseLogger {
+import scala.collection.GenIterable
+
+object Performer extends UseLogger with UseDateTime {
+
+  def enqueueAll(actions: GenIterable[FutureAction]): Unit = {
+    Persistence.transaction(state => {
+      (state.copy(queue = (state.queue ++ actions).sortBy(a => a.at)), Unit)
+    })
+  }
 
   def pollQueueAutomatically(interval: Int = 1000): Unit = {
     def pollQueue(): Unit = {
@@ -28,16 +36,16 @@ object Performer extends UseLogger {
     }, 0, interval)
   }
 
-  private def performAction(action: Action): Unit = {
+  def performAction(action: Action): Unit = {
     LOGGER.debug(s"performing action: ${action.getClass.getSimpleName}")
     action match {
-      case DisableLogin => UserControl.restrictLogin()
-      case ClearAllRestrictions => UserControl.clearAllRestrictions()
+      case DisableLogin => Restrictions.restrictLogin()
+      case ClearAllRestrictions => Restrictions.clearAllRestrictions()
       case RestrictProfile(profile) =>
         LittleProxy.startOrRestart(profile.proxy)
-        UserControl.removeFromWheelGroup()
-        UserControl.restrictProgramsExcept(profile.programs)
-        UserControl.restrictProjectsExcept(profile.projects)
+        Restrictions.removeFromWheelGroup()
+        Restrictions.restrictProgramsExcept(profile.programs)
+        Restrictions.restrictProjectsExcept(profile.projects)
       case other =>
     }
   }

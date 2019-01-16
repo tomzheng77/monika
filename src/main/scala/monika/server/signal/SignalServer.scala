@@ -1,9 +1,10 @@
 package monika.server.signal
 
-import monika.server.{Constants, UseJSON, UseLogger}
+import monika.server.action.Performer
+import monika.server.{Constants, UseJSON, UseLogger, UseScalaz}
 import spark.Spark
 
-object SignalServer extends UseLogger with UseJSON {
+object SignalServer extends UseLogger with UseJSON with UseScalaz {
 
   /**
     * - receives commands from the SimpleHttpClient
@@ -36,8 +37,8 @@ object SignalServer extends UseLogger with UseJSON {
       case None => s"unknown command '$command'"
       case Some(c) =>
         val result = c.run(args.toVector)
-        result.actions
-        result.futureActions
+        result.actions.foreach(Performer.performAction)
+        result.futureActions |> (s => Performer.enqueueAll(s))
         result.message
     }
   }

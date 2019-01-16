@@ -9,7 +9,7 @@ import monika.server.Subprocess._
 import scalaz.{@@, Tag}
 import scalaz.syntax.id._
 
-object UserControl {
+object Restrictions {
 
   // the environment of this user will be affected
   private val User = Constants.MonikaUser

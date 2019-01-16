@@ -45,9 +45,9 @@ object Constants {
   ).map(FileName)
 
   /**
-    * programs which may be called by monika
-    * these constants should be referenced instead of
-    * hardcoding the name of each program
+    * programs which will be called by monika
+    * when starting, it should be checked that these programs
+    * are inside PATH and are executable
     */
   object UtilityPrograms extends Seq[String @@ FileName] {
 

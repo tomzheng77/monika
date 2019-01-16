@@ -14,7 +14,7 @@ import scala.io.StdIn
   * - prints out the response as plain text
   * - repeat until "exit" is entered
   */
-object SimpleHttpClient {
+object SignalClient {
 
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/

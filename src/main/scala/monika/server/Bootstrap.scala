@@ -91,6 +91,11 @@ object Bootstrap {
     action match {
       case DisableLogin => UserControl.restrictLogin()
       case Unlock => UserControl.clearAllRestrictions()
+      case SetProfile(profile) =>
+        LittleProxy.startOrRestart(profile.proxy)
+        UserControl.removeFromWheelGroup()
+        UserControl.restrictProgramsExcept(profile.programs)
+        UserControl.restrictProjectsExcept(profile.projects)
       case other =>
     }
   }

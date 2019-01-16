@@ -128,7 +128,7 @@ object Bootstrap extends UseLogger with UseJSON {
           case Some(m) => brickFor(m)
         }
       case "set-profile" =>
-        val profiles = readProfileDefinitions()
+        val profiles = Configuration.readProfileDefinitions()
         lazy val name = args.head
         if (args.isEmpty) {
           "usage: set-profile <profile>"
@@ -147,40 +147,6 @@ object Bootstrap extends UseLogger with UseJSON {
         "unlock success"
       case other => s"unknown command '$other'"
     }
-  }
-
-  private def readProfileDefinitions(): Map[String, Profile] = {
-    /**
-      * constructs a profile from a .json definition file
-      * this is not a deserialization process, it is fault tolerant and provides
-      * default values for all fields except name
-      */
-    def convertJsonToProfile(definition: JValue): Profile = {
-      Profile(
-        (definition \ "name").extract[String],
-        (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-        (definition \ "projects").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
-        (definition \ "bookmarks").extractOpt[Vector[JValue]].getOrElse(Vector.empty).map(v => {
-          val url = (v \ "url").extractOpt[String].getOrElse("http://www.google.com")
-          val re = "[A-Za-z-]+(\\.[A-Za-z-]+)*\\.[A-Za-z-]+".r
-          val name = (v \ "name").extractOpt[String].orElse(re.findFirstIn(url)).getOrElse("Unknown")
-          Bookmark(name, url)
-        }),
-        ProxySettings(
-          (definition \ "proxy" \ "transparent").extractOpt[Boolean].getOrElse(false),
-          (definition \ "proxy" \ "allowHtmlPrefix").extractOpt[Vector[String]].getOrElse(Vector.empty),
-          (definition \ "proxy" \ "rejectHtmlKeywords").extractOpt[Vector[String]].getOrElse(Vector.empty)
-        )
-      )
-    }
-    import scala.collection.JavaConverters._
-    val jsonFiles: Vector[File] = {
-      val profileRoot = new File(Locations.ProfileRoot)
-      if (!profileRoot.exists()) Vector.empty
-      else FileUtils.listFiles(new File(Locations.ProfileRoot), Array("json"), true).asScala.toVector
-    }
-    val jsons = jsonFiles.map(parseJSON(_))
-    jsons.map(convertJsonToProfile).map(p => p.name -> p).toMap
   }
 
   private def rejectOutgoingHttp(): Unit = {

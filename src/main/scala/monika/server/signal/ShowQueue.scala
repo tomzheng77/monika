@@ -4,6 +4,8 @@ import monika.Primitives.TimeFormat
 import monika.server.Persistence
 
 object ShowQueue extends Signal {
+  import scalaz.syntax.id
+  import scalaz.Scalaz._
   override def run(args: Vector[String]): String = {
     Persistence.transaction(state => {
       val list = state.queue.map(item => {

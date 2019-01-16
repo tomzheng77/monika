@@ -34,7 +34,11 @@ object SignalServer extends UseLogger with UseJSON {
     )
     commands.get(command) match {
       case None => s"unknown command '$command'"
-      case Some(c) => c.run(args.toVector)
+      case Some(c) =>
+        val result = c.run(args.toVector)
+        result.actions
+        result.futureActions
+        result.message
     }
   }
 

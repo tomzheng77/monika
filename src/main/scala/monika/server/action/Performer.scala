@@ -19,13 +19,22 @@ object Performer extends UseLogger with UseDateTime {
     })
   }
 
-  def schedulePoll(interval: Int = 1000): Unit = {
+  def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {
       if (!hasPollStarted) {
         hasPollStarted = true
         timer.schedule(new TimerTask {
           override def run(): Unit = pollQueue()
         }, 0, interval)
+      }
+    }
+  }
+
+  def stopPoll(): Unit = {
+    this.synchronized {
+      if (hasPollStarted) {
+        hasPollStarted = false
+        timer.cancel()
       }
     }
   }

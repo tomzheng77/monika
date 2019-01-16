@@ -11,6 +11,7 @@ trait UseJSON extends JsonDSL with DoubleMode {
   type JValue = org.json4s.JValue
   type JsonInput = org.json4s.JsonInput
   def parseJSON(input: JsonInput): JValue = JsonMethods.parse(input)
+  def parseOptJSON(input: JsonInput): Option[JValue] = JsonMethods.parseOpt(input)
   def renderJSON(json: JValue): Document = JsonMethods.render(json)
   def printCompact[A <: Writer](d: Document, out: A): A = Printer.compact(d, out)
 

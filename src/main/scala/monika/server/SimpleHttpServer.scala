@@ -1,10 +1,8 @@
 package monika.server
 
-import org.json4s.native.JsonMethods
-import org.json4s.{DefaultFormats, Formats}
 import spark.Spark
 
-object SimpleHttpServer {
+object SimpleHttpServer extends UseJSON {
 
   /**
     * runs an HTTP command interpreter which listens for user commands
@@ -17,9 +15,8 @@ object SimpleHttpServer {
       Spark.get("/request", (req, resp) => {
         resp.`type`("text/plain") // prevent being intercepted by the proxy
         val parts: List[String] = {
-          implicit val formats: Formats = DefaultFormats
           val cmd: String = Option(req.queryParams("cmd")).getOrElse("")
-          JsonMethods.parseOpt(cmd).flatMap(_.extractOpt[List[String]]).getOrElse(Nil)
+          parseOptJSON(cmd).flatMap(_.extractOpt[List[String]]).getOrElse(Nil)
         }
         if (parts.isEmpty) "please provide a command (cmd) in JSON format"
         else handler(parts.head, parts.tail)

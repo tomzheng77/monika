@@ -4,15 +4,12 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
 import monika.Primitives._
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
-import org.slf4j.LoggerFactory
 import scalaz.{@@, Tag}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
-object Subprocess {
-
-  private val LOGGER = LoggerFactory.getLogger(getClass)
+object Subprocess extends UseLogger {
 
   case class Command(program: String @@ FileName, args: String*)
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])

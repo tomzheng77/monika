@@ -14,17 +14,11 @@ import monika.server.Subprocess._
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
-import org.json4s.JsonAST.JValue
-import org.json4s.native.JsonMethods
-import org.json4s.{DefaultFormats, Formats}
-import org.slf4j.LoggerFactory
 import scalaz.Tag
 
 import scala.util.Try
 
-object Bootstrap {
-
-  private val LOGGER = LoggerFactory.getLogger(getClass)
+object Bootstrap extends UseLogger with UseJSON {
 
   def main(args: Array[String]): Unit = {
     logToFileAndConsole()
@@ -162,7 +156,6 @@ object Bootstrap {
       * default values for all fields except name
       */
     def convertJsonToProfile(definition: JValue): Profile = {
-      implicit val formats: Formats = DefaultFormats
       Profile(
         (definition \ "name").extract[String],
         (definition \ "programs").extractOpt[Vector[String]].getOrElse(Vector.empty).map(FileName),
@@ -186,7 +179,7 @@ object Bootstrap {
       if (!profileRoot.exists()) Vector.empty
       else FileUtils.listFiles(new File(Locations.ProfileRoot), Array("json"), true).asScala.toVector
     }
-    val jsons = jsonFiles.map(JsonMethods.parse(_))
+    val jsons = jsonFiles.map(parseJSON(_))
     jsons.map(convertJsonToProfile).map(p => p.name -> p).toMap
   }
 

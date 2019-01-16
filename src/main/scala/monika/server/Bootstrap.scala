@@ -6,7 +6,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import java.util.{Timer, TimerTask}
 
 import monika.Primitives._
-import monika.server.Constants.CallablePrograms._
+import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
@@ -63,6 +63,10 @@ object Bootstrap {
     }, 0, 1000)
   }
 
+  /**
+    * -
+    * - exit if a critical requirement is not met
+    */
   private def checkOSEnvironment(): Unit = {
     if (!SystemUtils.IS_OS_LINUX) {
       LOGGER.error("system is not linux")
@@ -72,9 +76,8 @@ object Bootstrap {
       LOGGER.error("user is not root")
       System.exit(2)
     }
-
-    val programs = CallablePrograms.asList
-    val cannotExecute = programs.filter(findProgramLocation(_).isEmpty)
+    val cannotExecute = RestrictedPrograms.filter(findProgramLocation(_).isEmpty)
+    val cannotExecute = UtilityPrograms.filter(findProgramLocation(_).isEmpty)
     for (program <- cannotExecute) {
       val programName = Tag.unwrap(program)
       LOGGER.error(s"cannot find executable program: $programName")

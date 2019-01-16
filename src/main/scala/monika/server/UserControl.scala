@@ -3,7 +3,7 @@ package monika.server
 import java.io.File
 
 import monika.Primitives.FileName
-import monika.server.Constants.CallablePrograms._
+import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants.Locations
 import monika.server.Subprocess._
 import scalaz.{@@, Tag}

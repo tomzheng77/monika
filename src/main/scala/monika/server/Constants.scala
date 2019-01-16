@@ -27,8 +27,7 @@ object Constants {
   val MonikaUser = "tomzheng"
 
   /**
-    * programs which may be requested by the Profile
-    * a group should be created for each of the programs e.g. use-studio
+    * programs cannot be executed unless specified by the profile
     */
   val RestrictedPrograms: Vector[String @@ FileName] = Vector(
     "studio",
@@ -50,7 +49,8 @@ object Constants {
     * these constants should be referenced instead of
     * hardcoding the name of each program
     */
-  object CallablePrograms {
+  object UtilityPrograms extends Seq[String @@ FileName] {
+
     val id: String @@ FileName = FileName("id")
     val groups: String @@ FileName = FileName("groups")
     val passwd: String @@ FileName = FileName("passwd")
@@ -60,7 +60,12 @@ object Constants {
     val usermod: String @@ FileName = FileName("usermod")
     val groupadd: String @@ FileName = FileName("groupadd")
     val killall: String @@ FileName = FileName("killall")
-    val asList = List(passwd, chmod, chown, iptables, usermod, groupadd, killall)
+
+    private val list = Array(passwd, chmod, chown, iptables, usermod, groupadd, killall)
+    override def length: Int = list.length
+    override def apply(idx: Int): String @@ FileName = list(idx)
+    override def iterator: Iterator[String @@ FileName] = list.iterator
+
   }
 
   object Locations {

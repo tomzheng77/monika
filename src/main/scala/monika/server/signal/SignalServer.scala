@@ -6,12 +6,22 @@ import spark.Spark
 
 object SignalServer extends UseLogger with UseJSON with UseScalaz {
 
+  private val commands: Map[String, Signal] = Map(
+    "brick" -> Brick,
+    "set-profile" -> SetProfile,
+    "show-queue" -> ShowQueue,
+    "unlock" -> Unlock
+  )
+
   /**
     * - receives commands from the SimpleHttpClient
     * - passes them into the provided handler
     */
   def startListener(): Unit = {
     this.synchronized {
+      commands.foreach(pair => {
+        LOGGER.debug(s"found command: ${pair._1}")
+      })
       Spark.port(Constants.InterpreterPort)
       Spark.get("/request", (req, resp) => {
         resp.`type`("text/plain") // prevent being intercepted by the proxy
@@ -27,12 +37,6 @@ object SignalServer extends UseLogger with UseJSON with UseScalaz {
 
   private def performRequest(command: String, args: List[String]): String = {
     LOGGER.debug(s"received command request: $command ${args.mkString(" ")}")
-    val commands: Map[String, Signal] = Map(
-      "brick" -> Brick,
-      "set-profile" -> SetProfile,
-      "show-queue" -> ShowQueue,
-      "unlock" -> Unlock
-    )
     commands.get(command) match {
       case None => s"unknown command '$command'"
       case Some(c) =>

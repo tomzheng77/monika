@@ -89,8 +89,8 @@ object Bootstrap {
   private def performAction(action: Action): Unit = {
     LOGGER.debug(s"performing action: ${action.getClass.getSimpleName}")
     action match {
-      case DisableLogin => UserControl.disableLogin()
-      case Unlock => UserControl.unlock()
+      case DisableLogin => UserControl.restrictLogin()
+      case Unlock => UserControl.clearAllRestrictions()
       case other =>
     }
   }
@@ -100,7 +100,7 @@ object Bootstrap {
     def addItemToQueue(state: MonikaState, time: LocalDateTime, action: Action): MonikaState = {
       state.copy(queue = (state.queue :+ ((time, action))).sortBy(_._1.toEpochSecond(ZoneOffset.UTC)))
     }
-    UserControl.disableLogin()
+    UserControl.restrictLogin()
     Persistence.transaction(state => {
       val now = LocalDateTime.now()
       val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
@@ -139,12 +139,12 @@ object Bootstrap {
           val profile = profiles(name)
           LittleProxy.startOrRestart(profile.proxy)
           UserControl.removeFromWheelGroup()
-          UserControl.restrictPrograms(profile.programs)
-          UserControl.restrictProjects(profile.projects)
+          UserControl.restrictProgramsExcept(profile.programs)
+          UserControl.restrictProjectsExcept(profile.projects)
           "set-profile success"
         }
       case "unlock" =>
-        UserControl.unlock()
+        UserControl.clearAllRestrictions()
         "unlock success"
       case other => s"unknown command '$other'"
     }

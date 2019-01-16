@@ -14,13 +14,13 @@ object UserControl {
   // the environment of this user will be affected
   private val User = Constants.MonikaUser
 
-  def disableLogin(): Unit = {
+  def restrictLogin(): Unit = {
     Subprocess.call(passwd, "-l", User)
   }
 
   /**
-    * removes the user from the "wheel" group
-    * so they cannot perform sudo actions
+    * - disassociates the user from the "wheel" secondary group
+    * - this takes effect upon next login
     */
   def removeFromWheelGroup(): Unit = {
     val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
@@ -29,7 +29,7 @@ object UserControl {
     Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
   }
 
-  def restrictPrograms(except: Vector[String @@ FileName]): Unit = {
+  def restrictProgramsExcept(except: Vector[String @@ FileName]): Unit = {
     val programs = Constants.RestrictedPrograms
       .filterNot(except.contains)
       .flatMap(Subprocess.findProgramLocation)
@@ -38,7 +38,7 @@ object UserControl {
     programs.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
   }
 
-  def restrictProjects(except: Vector[String @@ FileName]): Unit = {
+  def restrictProjectsExcept(except: Vector[String @@ FileName]): Unit = {
     val projectNameSet = except.map(Tag.unwrap).toSet
     val projects = Option(new File(Locations.ProjectRoot).listFiles()).getOrElse(Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
@@ -53,7 +53,7 @@ object UserControl {
     * clears any restrictions previously applied on the user
     * i.e. sudo, programs, projects
     */
-  def unlock(): Unit = {
+  def clearAllRestrictions(): Unit = {
     Subprocess.call(passwd, "-u", User)
 
     val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode

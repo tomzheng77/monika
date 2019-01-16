@@ -9,11 +9,16 @@ import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
 import org.littleshoot.proxy._
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
-import org.slf4j.LoggerFactory
 
-object LittleProxy {
-
-  private val LOGGER = LoggerFactory.getLogger(getClass)
+/**
+  * - can provide transparent proxy (no additional certificate required) which does not
+  *   perform any filter. a transparent proxy should have no problem maintaining long TCP connections
+  *   which are required by online games
+  *
+  * - can provide MITM proxy, which can filter based on the URL of the requested page as well
+  *   as the content of the page. an SSL certificate must be imported to use this proxy
+  */
+object LittleProxy extends UseLogger {
 
   /**
     * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
@@ -83,10 +88,6 @@ object LittleProxy {
   }
 
   private def serveWithFilter(settings: ProxySettings): Unit = {
-    /**
-      * - determines whether an HTTP response should be allowed to be returned
-      *   back to the client, also depending on the request
-      */
     def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
       def mkHeaders(msg: HttpMessage): Map[String, String] = {
         import scala.collection.JavaConverters._

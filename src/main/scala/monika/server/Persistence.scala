@@ -8,11 +8,6 @@ import monika.server.Constants.Locations
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
 import org.apache.commons.io.FileUtils
-import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods.render
-import org.json4s.native.{JsonMethods, Printer}
-import org.json4s.{DefaultFormats, JValue, JsonInput}
-import org.slf4j.{Logger, LoggerFactory}
 import scalaz.Tag
 
 import scala.util.Try
@@ -22,10 +17,7 @@ import scala.util.Try
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object Persistence {
-
-  private implicit val formats = DefaultFormats
-  private val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+object Persistence extends UseLogger with UseJSON {
 
   /**
     * - the caller can provide a function which modifies the state and returns some value R
@@ -90,7 +82,7 @@ object Persistence {
   }
 
   private def readStateFromInput(input: JsonInput): MonikaState = {
-    val json = Try(JsonMethods.parse(input)).orElseX(ex =>{
+    val json = Try(parseJSON(input)).orElseX(ex =>{
       val message = s"file does not contain a valid json format ${Locations.StateJsonFile}"
       LOGGER.error(message, ex)
       throw new RuntimeException(message, ex)
@@ -105,7 +97,7 @@ object Persistence {
   private def writeStateToOutput(state: MonikaState, output: OutputStream): Unit = {
     val json: JValue = stateToJson(state)
     val writer = new OutputStreamWriter(output)
-    Printer.compact(render(json), writer)
+    printCompact(renderJSON(json), writer)
   }
 
   private[server] def jsonToState(json: JValue): MonikaState = {

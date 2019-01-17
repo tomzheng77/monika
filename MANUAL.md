@@ -13,6 +13,10 @@
 
 # Examples
 
+## Brick Device
+
+- `brick <minutes>`: disables the device from now for <minutes>.
+
 ## Profile Management (In Development)
 
 - `queue <profile_name> <minutes>`: adds a profile into the queue

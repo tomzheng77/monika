@@ -4,10 +4,9 @@ import java.io.File
 
 import monika.Primitives.FileName
 import monika.server.Constants.UtilityPrograms._
-import monika.server.Constants.Locations
 import monika.server.Subprocess._
-import scalaz.{@@, Tag}
 import scalaz.syntax.id._
+import scalaz.{@@, Tag}
 
 object Restrictions {
 
@@ -34,8 +33,8 @@ object Restrictions {
       .filterNot(except.contains)
       .flatMap(Subprocess.findProgramLocation)
 
-    programs.map(l => Command(chmod, "700", Tag.unwrap(l))).foreach(callCommand)
-    programs.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
+    programs.map(l => call(chmod, "700", Tag.unwrap(l)))
+    programs.map(l => call(chown, "root:root", Tag.unwrap(l)))
   }
 
   def restrictProjectsExcept(except: Vector[String @@ FileName]): Unit = {
@@ -43,11 +42,11 @@ object Restrictions {
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
 
-    Constants.Restricted.Projects.map(p => Command(chown, "root:root", Tag.unwrap(p))).foreach(callCommand)
-    toUnlock.map(f => Command(chmod, "755", f.getCanonicalPath)).foreach(callCommand)
-    toUnlock.map(f => Command(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath)).foreach(callCommand)
-    toLock.map(f => Command(chmod, "700", f.getCanonicalPath)).foreach(callCommand)
-    toLock.map(f => Command(chown, "root:root", f.getCanonicalPath)).foreach(callCommand)
+    Constants.Restricted.Projects.map(p => call(chown, "root:root", Tag.unwrap(p)))
+    toUnlock.map(f => call(chmod, "755", f.getCanonicalPath))
+    toUnlock.map(f => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath))
+    toLock.map(f => call(chmod, "700", f.getCanonicalPath))
+    toLock.map(f => call(chown, "root:root", f.getCanonicalPath))
   }
 
   /**
@@ -63,13 +62,13 @@ object Restrictions {
     Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
 
     val programs = Constants.Restricted.Programs.flatMap(Subprocess.findProgramLocation)
-    programs.map(l => Command(chmod, "755", Tag.unwrap(l))).foreach(callCommand)
-    programs.map(l => Command(chown, "root:root", Tag.unwrap(l))).foreach(callCommand)
+    programs.map(l => call(chmod, "755", Tag.unwrap(l)))
+    programs.map(l => call(chown, "root:root", Tag.unwrap(l)))
 
-    Constants.Restricted.Projects.map(p => Command(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", Tag.unwrap(p))).foreach(callCommand)
+    Constants.Restricted.Projects.map(p => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", Tag.unwrap(p)))
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
-    projects.map(f => Command(chmod, "755", f.getCanonicalPath)).foreach(callCommand)
-    projects.map(f => Command(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath)).foreach(callCommand)
+    projects.map(f => call(chmod, "755", f.getCanonicalPath))
+    projects.map(f => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath))
   }
 
   private def decode(bytes: Array[Byte]): String = {

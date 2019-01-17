@@ -38,6 +38,17 @@ object Orbit {
       }
     })
 
+    val value = kit.wallet().getBalance
+    System.out.println("Forwarding " + value.toFriendlyString + " BTC")
+    // Now send the coins back! Send with a small fee attached to ensure rapid confirmation.
+    val amountToSend = value.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE)
+    val forwardingAddress = Address.fromBase58(params, "")
+    val sendResult = kit.wallet.sendCoins(kit.peerGroup, forwardingAddress, amountToSend)
+    System.out.println("Sending ...")
+    // Register a callback that is invoked when the transaction has propagated across the network.
+    // This shows a second style of registering ListenableFuture callbacks, it works when you don't
+    // need access to the object the future returns.
+
     while (true) {
       Thread.sleep(1000)
     }

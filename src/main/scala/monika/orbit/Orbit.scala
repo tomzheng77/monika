@@ -2,11 +2,14 @@ package monika.orbit
 
 import java.io.File
 
+import com.google.common.util.concurrent.FutureCallback
 import monika.server.Constants.Locations
 import org.apache.log4j._
-import org.bitcoinj.core.{ECKey, NetworkParameters}
+import org.bitcoinj.core._
 import org.bitcoinj.kits.WalletAppKit
 import org.bitcoinj.params.TestNet3Params
+import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener
 
 object Orbit {
 
@@ -26,6 +29,13 @@ object Orbit {
     }
     kit.startAsync()
     kit.awaitRunning()
+    kit.wallet().addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener {
+      override def onCoinsReceived(wallet: Wallet, tx: Transaction, prevBalance: Coin, newBalance: Coin): Unit = {
+        val coin = tx.getValueSentToMe(wallet)
+        System.out.println("Received tx for " + coin.toFriendlyString + ": " + tx)
+        System.out.println("Transaction will be forwarded after it confirms.")
+      }
+    })
   }
 
   private def logToConsole(): Unit = {

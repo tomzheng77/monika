@@ -28,7 +28,7 @@ object LockSite extends Script {
       val minutes = args(1).toInt
       LittleProxy.startOrRestart(ProxySettings(
         transparent = false,
-        allowHtmlPrefix = Vector(site)
+        allow = Vector(site)
       ))
       val nowTime = LocalDateTime.now()
       FutureAction(nowTime.plusMinutes(minutes), Unlock)

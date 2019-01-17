@@ -25,16 +25,16 @@ object LittleProxy extends UseLogger {
     * @param transparent whether the proxy should not perform filtering at all
     *                    if this is set to true, allow/reject properties will be ignored
     *                    in addition, no certificate will be required
-    * @param allowHtmlPrefix which text/html responses should be allowed through if the url starts with a prefix
-    * @param rejectHtmlKeywords which text/html responses should be rejected if they contain one of the keywords
+    * @param allow which text/html responses should be allowed through if the url starts with a prefix
+    * @param reject which text/html responses should be rejected if they contain one of the keywords
     */
   case class ProxySettings(
     transparent: Boolean = true,
-    allowHtmlPrefix: Vector[String] = Vector.empty,
-    rejectHtmlKeywords: Vector[String] = Vector.empty
+    allow: Vector[String] = Vector.empty,
+    reject: Vector[String] = Vector.empty
   )
 
-  val Transparent = ProxySettings(transparent = true)
+  val Transparent = ProxySettings()
 
   private var server: HttpProxyServer = _
 
@@ -110,7 +110,7 @@ object LittleProxy extends UseLogger {
       val host = requestHeaders("Host")
       val uri = request.getUri
       val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
-      settings.allowHtmlPrefix.exists(str => url.startsWith(str))
+      settings.allow.exists(str => url.startsWith(str))
     }
 
     def allowOrRejectHttp(request: HttpRequest, response: HttpResponse): HttpResponse = {

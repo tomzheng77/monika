@@ -104,8 +104,8 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
     def jsonToProxy(json: JValue): ProxySettings = {
       ProxySettings(
         transparent = (json \ "transparent").extract[Boolean],
-        allowHtmlPrefix = (json \ "allow").extract[Vector[String]],
-        rejectHtmlKeywords = (json \ "block").extract[Vector[String]]
+        allow = (json \ "allow").extract[Vector[String]],
+        reject = (json \ "block").extract[Vector[String]]
       )
     }
     def jsonToRequest(json: JValue): FutureAction = {
@@ -124,8 +124,8 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
   private[server] def stateToJson(state: MonikaState): JValue = {
     def proxyToJson(settings: ProxySettings): JValue = {
       ("transparent" -> settings.transparent) ~
-      ("allow" -> settings.allowHtmlPrefix) ~
-      ("block" -> settings.rejectHtmlKeywords)
+      ("allow" -> settings.allow) ~
+      ("block" -> settings.reject)
     }
     def requestToJson(request: FutureAction): JValue = {
       ("time" -> request.at.toString) ~

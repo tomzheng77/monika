@@ -3,13 +3,12 @@ package monika.server
 import java.io.{ByteArrayOutputStream, File, OutputStream, OutputStreamWriter}
 import java.time.LocalDateTime
 
-import monika.Primitives.{FileName, _}
+import monika.Primitives._
 import monika.server.Constants.Locations
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
 import monika.server.signal.Script
 import org.apache.commons.io.FileUtils
-import scalaz.Tag
 
 import scala.util.Try
 

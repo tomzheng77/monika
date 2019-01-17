@@ -29,7 +29,7 @@ object Orbit {
     }
     kit.startAsync()
     kit.awaitRunning()
-    println(kit.wallet().currentReceiveAddress())
+    println("receive address: " + kit.wallet().currentReceiveAddress())
     kit.wallet().addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener {
       override def onCoinsReceived(wallet: Wallet, tx: Transaction, prevBalance: Coin, newBalance: Coin): Unit = {
         val coin = tx.getValueSentToMe(wallet)
@@ -52,6 +52,9 @@ object Orbit {
     Logger.getRootLogger.getLoggerRepository.resetConfiguration()
     Logger.getRootLogger.setLevel(Level.DEBUG)
     Logger.getRootLogger.addAppender(console)
+    Logger.getLogger("org.bitcoinj.wallet").setLevel(Level.INFO)
+    Logger.getLogger("org.bitcoinj.core").setLevel(Level.ERROR)
+    Logger.getLogger("org.bitcoinj.net").setLevel(Level.ERROR)
   }
 
 }

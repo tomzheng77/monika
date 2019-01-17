@@ -26,23 +26,33 @@ object Constants {
   val MaxQueueSize = 3
   val MonikaUser = "tomzheng"
 
+  object Restricted {
+
+    val Programs: Vector[String @@ FileName] = Vector(
+      "studio",
+      "subl",
+      "idea",
+      "firefox",
+      "google-chrome",
+      "steam",
+      "virtualbox",
+      "jetbrains-toolbox",
+      "wine",
+      "libreoffice",
+      "ssh",
+      "assistant.jar"
+    ).map(FileName)
+
+    val Projects: Vector[String @@ FilePath] = Vector(
+      Locations.ProjectRoot,
+      "/home/tomzheng/Documents/Projects"
+    ).map(FilePath)
+
+  }
+
   /**
     * programs cannot be executed unless specified by the profile
     */
-  val RestrictedPrograms: Vector[String @@ FileName] = Vector(
-    "studio",
-    "subl",
-    "idea",
-    "firefox",
-    "google-chrome",
-    "steam",
-    "virtualbox",
-    "jetbrains-toolbox",
-    "wine",
-    "libreoffice",
-    "ssh",
-    "assistant.jar"
-  ).map(FileName)
 
   /**
     * programs which will be called by monika

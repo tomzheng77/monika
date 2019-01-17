@@ -29,6 +29,7 @@ object Orbit {
     }
     kit.startAsync()
     kit.awaitRunning()
+    println(kit.wallet().currentReceiveAddress())
     kit.wallet().addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener {
       override def onCoinsReceived(wallet: Wallet, tx: Transaction, prevBalance: Coin, newBalance: Coin): Unit = {
         val coin = tx.getValueSentToMe(wallet)
@@ -36,6 +37,10 @@ object Orbit {
         System.out.println("Transaction will be forwarded after it confirms.")
       }
     })
+
+    while (true) {
+      Thread.sleep(1000)
+    }
   }
 
   private def logToConsole(): Unit = {

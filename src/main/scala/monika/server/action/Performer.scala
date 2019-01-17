@@ -14,7 +14,7 @@ object Performer extends UseLogger with UseDateTime {
   private var hasPollStarted = false
 
   def enqueueAll(actions: GenIterable[FutureAction]): Unit = {
-    Persistence.transaction(state => {
+    Hibernate.transaction(state => {
       (state.copy(queue = (state.queue ++ actions).sortBy(a => a.at)), Unit)
     })
   }
@@ -41,7 +41,7 @@ object Performer extends UseLogger with UseDateTime {
 
   private def pollQueue(): Unit = {
     LOGGER.debug("poll queue")
-    Persistence.transaction(state => {
+    Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()
       state.queue.headOption match {
         case None => (state, Unit)

@@ -1,6 +1,5 @@
 package monika.server
 
-import monika.Primitives._
 import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
@@ -20,10 +19,10 @@ object Bootstrap extends UseLogger with UseJSON {
       checkOSEnvironment()
       rejectOutgoingHttp()
 
-      val initialState: MonikaState = Persistence.readStateOrDefault()
+      val initialState: MonikaState = Hibernate.readStateOrDefault()
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
-      Performer.schedulePoll()
+      Performer.startPoll()
       SignalServer.startListener()
     }
     LOGGER.info("M.O.N.I.K.A started")

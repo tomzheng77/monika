@@ -4,7 +4,7 @@ import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
-import monika.server.Persistence
+import monika.server.Hibernate
 import monika.server.Structs._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Properties}
@@ -61,12 +61,12 @@ object PersistenceSpec extends Properties("Persistence") {
     forAll(randomState)(a => {
       import org.json4s.native.JsonMethods._
       import scalaz.syntax.id._
-      val json = Persistence.stateToJson(a)
-      Try(Persistence.jsonToState(json)).failed.foreach(ex => {
+      val json = Hibernate.stateToJson(a)
+      Try(Hibernate.jsonToState(json)).failed.foreach(ex => {
         json |> render |> pretty |> println
         ex.printStackTrace()
       })
-      Persistence.jsonToState(Persistence.stateToJson(a)) == a
+      Hibernate.jsonToState(Hibernate.stateToJson(a)) == a
     })
   }
 

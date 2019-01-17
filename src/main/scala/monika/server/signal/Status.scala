@@ -1,10 +1,10 @@
 package monika.server.signal
 
-import monika.server.{Persistence, UseDateTime, UseScalaz}
+import monika.server.{Hibernate, UseDateTime, UseScalaz}
 
-object ShowQueue extends Signal with UseScalaz with UseDateTime {
+object Status extends Signal with UseScalaz with UseDateTime {
   override def run(args: Vector[String]): SignalResult = {
-    Persistence.transaction(state => {
+    Hibernate.transaction(state => {
       val list = state.queue.map(item => {
         s"${item.at.format(DefaultFormatter)}}: ${item.action}"
       }).mkString("\n")

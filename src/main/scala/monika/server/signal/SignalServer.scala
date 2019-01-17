@@ -9,7 +9,7 @@ object SignalServer extends UseLogger with UseJSON with UseScalaz {
   private val commands: Map[String, Signal] = Map(
     "brick" -> Brick,
     "set-profile" -> SetProfile,
-    "show-queue" -> ShowQueue,
+    "status" -> Status,
     "unlock" -> Unlock
   )
 

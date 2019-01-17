@@ -17,7 +17,7 @@ import scala.util.Try
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object Persistence extends UseLogger with UseJSON {
+object Hibernate extends UseLogger with UseJSON {
 
   /**
     * - the caller can provide a function which modifies the state and returns some value R

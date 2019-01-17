@@ -6,7 +6,7 @@ import monika.server.Structs._
 
 import scala.util.Try
 
-object Brick extends Signal {
+object Brick extends Script {
   override def run(args: Vector[String]): SignalResult = {
     Try(args.head.toInt).toOption match {
       case None => "usage: brick <minutes>"

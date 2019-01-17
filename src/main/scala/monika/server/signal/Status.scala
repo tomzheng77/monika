@@ -2,7 +2,7 @@ package monika.server.signal
 
 import monika.server.{Hibernate, UseDateTime, UseScalaz}
 
-object Status extends Signal with UseScalaz with UseDateTime {
+object Status extends Script with UseScalaz with UseDateTime {
   override def run(args: Vector[String]): SignalResult = {
     Hibernate.transaction(state => {
       val list = state.queue.map(item => {

@@ -4,7 +4,7 @@ import monika.server.UseScalaz
 
 import scala.language.implicitConversions
 
-trait Signal extends UseScalaz {
+trait Script extends UseScalaz {
 
   val callKey: String = {
     val className = getClass.getSimpleName

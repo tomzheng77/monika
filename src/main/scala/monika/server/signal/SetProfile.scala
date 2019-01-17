@@ -4,7 +4,7 @@ import monika.server.Configuration
 import monika.server.Constants.Locations
 import monika.server.Structs.RestrictProfile
 
-object SetProfile extends Signal {
+object SetProfile extends Script {
   override def run(args: Vector[String]): SignalResult = {
     val profiles = Configuration.readProfileDefinitions()
     lazy val name = args.head

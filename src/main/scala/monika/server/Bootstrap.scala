@@ -23,7 +23,7 @@ object Bootstrap extends UseLogger with UseJSON {
       LittleProxy.writeCertificatesToFiles()
       LittleProxy.startOrRestart(initialState.proxy)
       Performer.startPoll()
-      SignalServer.startListener()
+      ScriptServer.startListener()
     }
     LOGGER.info("M.O.N.I.K.A started")
   }

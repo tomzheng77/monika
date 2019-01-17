@@ -4,9 +4,9 @@ import monika.server.action.Performer
 import monika.server.{Constants, UseJSON, UseLogger, UseScalaz}
 import spark.Spark
 
-object SignalServer extends UseLogger with UseJSON with UseScalaz {
+object ScriptServer extends UseLogger with UseJSON with UseScalaz {
 
-  private val commands: Map[String, Signal] = Map(
+  private val commands: Map[String, Script] = Map(
     "brick" -> Brick,
     "set-profile" -> SetProfile,
     "status" -> Status,

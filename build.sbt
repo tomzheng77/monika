@@ -17,6 +17,7 @@ libraryDependencies += "net.openhft" % "chronicle-map" % "3.17.0" exclude("xpp3"
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.0-M26"
 libraryDependencies += "com.mashape.unirest" % "unirest-java" % "1.4.9" exclude("commons-logging", "commons-logging")
 libraryDependencies += "com.storm-enroute" %% "scalameter-core" % "0.10.1"
+libraryDependencies += "org.bitcoinj" % "bitcoinj-core" % "0.14.7"
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-SNAP10" % Test
 

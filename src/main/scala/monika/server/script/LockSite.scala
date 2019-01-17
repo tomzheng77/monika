@@ -3,9 +3,9 @@ package monika.server.script
 import java.io.PrintWriter
 import java.time.LocalDateTime
 
+import monika.server.LittleProxy
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.FutureAction
-import monika.server.{Configuration, LittleProxy}
 
 import scala.util.Try
 
@@ -17,8 +17,6 @@ import scala.util.Try
 object LockSite extends Script with RequireRoot {
 
   override def run(args: Vector[String], out: PrintWriter): Unit = {
-    val profiles = Configuration.readProfileDefinitions()
-    lazy val name = args.head
     if (args.size != 2) {
       out.println("usage: lock-site <site> <minutes>")
     } else if (Try(args(1).toInt).filter(_ > 0).isFailure) {
@@ -32,7 +30,7 @@ object LockSite extends Script with RequireRoot {
       ))
       val nowTime = LocalDateTime.now()
       FutureAction(nowTime.plusMinutes(minutes), Unlock)
-      out.println("set-profile success")
+      out.println(s"locked onto site for $minutes minutes")
     }
   }
 

@@ -1,20 +1,25 @@
 package monika.server.signal
 
-import monika.server.Configuration
+import java.io.PrintWriter
+
+import monika.server.{Configuration, LittleProxy, Restrictions}
 import monika.server.Constants.Locations
-import monika.server.Structs.RestrictProfile
 
 object SetProfile extends Script {
-  override def run(args: Vector[String]): SignalResult = {
+  override def run(args: Vector[String], out: PrintWriter): Unit = {
     val profiles = Configuration.readProfileDefinitions()
     lazy val name = args.head
     if (args.isEmpty) {
-      SignalResult("usage: set-profile <profile>")
+      out.println("usage: set-profile <profile>")
     } else if (!profiles.contains(name)) {
-      SignalResult(s"cannot find profile $name, please check ${Locations.ProfileRoot}")
+      out.println(s"cannot find profile $name, please check ${Locations.ProfileRoot}")
     } else {
       val profile = profiles(name)
-      SignalResult("set-profile success", actions = Vector(RestrictProfile(profile)))
+      LittleProxy.startOrRestart(profile.proxy)
+      Restrictions.removeFromWheelGroup()
+      Restrictions.restrictProgramsExcept(profile.programs)
+      Restrictions.restrictProjectsExcept(profile.projects)
+      out.println("set-profile success")
     }
   }
 }

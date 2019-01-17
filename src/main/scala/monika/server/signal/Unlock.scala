@@ -1,9 +1,11 @@
 package monika.server.signal
 
-import monika.server.Structs.ClearAllRestrictions
+import java.io.PrintWriter
+import monika.server.Restrictions
 
 object Unlock extends Script {
-  override def run(args: Vector[String]): SignalResult = {
-    SignalResult(message = "unlock success", actions = Vector(ClearAllRestrictions))
+  override def run(args: Vector[String], out: PrintWriter): Unit = {
+    Restrictions.clearAllRestrictions()
+    out.write("unlock success")
   }
 }

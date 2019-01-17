@@ -6,6 +6,7 @@ import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Hibernate
 import monika.server.Structs._
+import monika.server.signal.Script
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Properties}
 
@@ -38,6 +39,8 @@ object PersistenceSpec extends Properties("Persistence") {
     Gen.sequence[Vector[T], T](list)
   }
 
+  private def randomScript: Gen[Script] = Gen.oneOf(Script.allScripts)
+
   private def randomQueue: Gen[Vector[FutureAction]] = {
     import scalaz.syntax.id._
     Gen.choose(0, 10).flatMap(i => {
@@ -46,7 +49,10 @@ object PersistenceSpec extends Properties("Persistence") {
           val start = pair._1
           val items = pair._2
           val end = start.plusMinutes(t)
-          (end, items :+ randomProfile.map(p => FutureAction(start, RestrictProfile(p))))
+          (end, items :+ (for {
+            script <- randomScript
+            args <- Gen.listOf(Gen.alphaLowerStr)
+          } yield FutureAction(start, script, args.toVector)))
         })._2 |> sequence
       })
     })

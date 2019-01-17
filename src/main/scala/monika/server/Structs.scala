@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import monika.Primitives.FileName
 import monika.server.LittleProxy.ProxySettings
+import monika.server.signal.Script
 import scalaz.@@
 
 object Structs {
@@ -36,17 +37,7 @@ object Structs {
     proxy: ProxySettings = ProxySettings()
   )
 
-  /**
-    * an effect changes the environment of the user
-    * it can be one of the following:
-    * - SetProfile: sets the environment of the user to the specified profile
-    * - Unlock: removes any profile
-    */
-  sealed trait Action
-  case class RestrictProfile(profile: Profile) extends Action
-  case object ClearAllRestrictions extends Action
-  case object DisableLogin extends Action
-  case class FutureAction(at: LocalDateTime, action: Action)
+  case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
 
   /**
     * a bookmark to display on the browser's toolbar

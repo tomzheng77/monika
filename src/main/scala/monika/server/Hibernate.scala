@@ -7,6 +7,7 @@ import monika.Primitives.{FileName, _}
 import monika.server.Constants.Locations
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
+import monika.server.signal.Script
 import org.apache.commons.io.FileUtils
 import scalaz.Tag
 
@@ -17,7 +18,7 @@ import scala.util.Try
   * - provides a method to perform a stateful transaction on MonikaState
   * - reports any errors to log
   */
-object Hibernate extends UseLogger with UseJSON {
+object Hibernate extends UseLogger with UseJSON with UseScalaz {
 
   /**
     * - the caller can provide a function which modifies the state and returns some value R
@@ -108,27 +109,12 @@ object Hibernate extends UseLogger with UseJSON {
         rejectHtmlKeywords = (json \ "block").extract[Vector[String]]
       )
     }
-    def jsonToProfile(json: JValue): Profile = {
-      Profile(
-        name = (json \ "name").extract[String],
-        programs = (json \ "programs").extract[Vector[String]].map(FileName),
-        projects = (json \ "projects").extract[Vector[String]].map(FileName),
-        bookmarks = (json \ "bookmarks").extract[Vector[JValue]].map(v => {
-          Bookmark((v \ "name").extract[String], (v \ "url").extract[String])
-        }),
-        proxy = jsonToProxy(json \ "proxy")
-      )
-    }
-    def jsonToAction(json: JValue): Action = {
-      val name = (json \ "name").extract[String]
-      name match {
-        case "set-profile" => RestrictProfile(jsonToProfile(json \ "profile"))
-        case "unlock" => ClearAllRestrictions
-        case "disable-login" => DisableLogin
-      }
-    }
     def jsonToRequest(json: JValue): FutureAction = {
-      FutureAction(LocalDateTime.parse((json \ "time").extract[String]), jsonToAction(json \ "action"))
+      FutureAction(
+        LocalDateTime.parse((json \ "time").extract[String]),
+        (json \ "script").extract[String] |> Script.allScriptsByKey,
+        (json \ "args").extract[Vector[String]]
+      )
     }
     MonikaState(
       queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
@@ -142,23 +128,10 @@ object Hibernate extends UseLogger with UseJSON {
       ("allow" -> settings.allowHtmlPrefix) ~
       ("block" -> settings.rejectHtmlKeywords)
     }
-    def profileToJson(profile: Profile): JValue = {
-      ("name" -> profile.name) ~
-      ("programs" -> profile.programs.map(Tag.unwrap)) ~
-      ("projects" -> profile.projects.map(Tag.unwrap)) ~
-      ("bookmarks" -> profile.bookmarks.map(b => ("name" -> b.name) ~ ("url" -> b.url))) ~
-      ("proxy" -> proxyToJson(profile.proxy))
-    }
-    def actionToJson(effect: Action): JValue = {
-      effect match {
-        case a: RestrictProfile => ("name" -> "set-profile") ~ ("profile" -> profileToJson(a.profile))
-        case ClearAllRestrictions => "name" -> "unlock"
-        case DisableLogin => "name" -> "disable-login"
-      }
-    }
     def requestToJson(request: FutureAction): JValue = {
       ("time" -> request.at.toString) ~
-      ("action" -> actionToJson(request.action))
+      ("script" -> request.script.callKey) ~
+      ("args" -> request.args)
     }
     ("queue" -> state.queue.map(requestToJson)) ~
     ("proxy" -> proxyToJson(state.proxy))

@@ -1,5 +1,7 @@
 package monika.server.signal
 
+import java.io.PrintWriter
+
 import monika.server.UseScalaz
 
 import scala.language.implicitConversions
@@ -15,8 +17,11 @@ trait Script extends UseScalaz {
     } |> (s => s.dropWhile(_ == '-'))
   }
 
-  def run(args: Vector[String]): SignalResult
+  def run(args: Vector[String], out: PrintWriter): Unit
 
-  protected implicit def messageToResult(str: String): SignalResult = SignalResult(str)
+}
 
+object Script {
+  val allScripts = Vector(Brick, SetProfile, Status, Unlock)
+  val allScriptsByKey: Map[String, Script] = allScripts.map(s => s.callKey -> s).toMap
 }

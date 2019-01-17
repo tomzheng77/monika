@@ -9,6 +9,7 @@ import monika.server.Structs._
 import scala.util.Try
 
 object Brick extends Script {
+
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     Try(args.head.toInt).toOption match {
       case None => out println "usage: brick <minutes>"
@@ -16,10 +17,12 @@ object Brick extends Script {
       case Some(m) => brickFor(m); out println "bricked successfully"
     }
   }
+
   private def brickFor(minutes: Int): Unit = {
     val now = LocalDateTime.now()
     val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
     Restrictions.restrictLogin()
     ScriptServer.enqueue(FutureAction(timeToUnlock, Unlock))
   }
+
 }

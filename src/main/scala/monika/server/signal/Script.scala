@@ -8,7 +8,7 @@ import scala.language.implicitConversions
 
 trait Script extends UseScalaz {
 
-  val callKey: String = {
+  val name: String = {
     val className = getClass.getSimpleName
     className.flatMap {
       case '$' => ""
@@ -23,5 +23,5 @@ trait Script extends UseScalaz {
 
 object Script {
   val allScripts = Vector(Brick, SetProfile, Status, Unlock)
-  val allScriptsByKey: Map[String, Script] = allScripts.map(s => s.callKey -> s).toMap
+  val allScriptsByKey: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
 }

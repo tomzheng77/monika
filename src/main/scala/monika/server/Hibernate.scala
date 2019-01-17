@@ -129,7 +129,7 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
     }
     def requestToJson(request: FutureAction): JValue = {
       ("time" -> request.at.toString) ~
-      ("script" -> request.script.callKey) ~
+      ("script" -> request.script.name) ~
       ("args" -> request.args)
     }
     ("queue" -> state.queue.map(requestToJson)) ~

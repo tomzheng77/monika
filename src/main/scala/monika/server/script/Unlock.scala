@@ -4,7 +4,7 @@ import java.io.PrintWriter
 
 import monika.server.{Hibernate, LittleProxy, Restrictions}
 
-object Unlock extends Script {
+object Unlock extends Script with RequireRoot {
 
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     LittleProxy.startOrRestart(LittleProxy.Transparent)

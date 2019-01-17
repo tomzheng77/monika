@@ -8,7 +8,7 @@ import monika.server.Structs._
 
 import scala.util.Try
 
-object Brick extends Script {
+object Brick extends Script with RequireRoot {
 
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     Try(args.head.toInt).toOption match {

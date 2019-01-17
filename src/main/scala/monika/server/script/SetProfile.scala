@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import monika.server.{Configuration, Hibernate, LittleProxy, Restrictions}
 import monika.server.Constants.Locations
 
-object SetProfile extends Script {
+object SetProfile extends Script with RequireRoot {
 
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     val profiles = Configuration.readProfileDefinitions()

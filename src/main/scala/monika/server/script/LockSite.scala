@@ -14,7 +14,7 @@ import scala.util.Try
   * - HTTP pages will be intercepted unless starting with the provided prefix
   * - will call "unlock" after time has expired
   */
-object LockSite extends Script {
+object LockSite extends Script with RequireRoot {
 
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     val profiles = Configuration.readProfileDefinitions()

@@ -12,10 +12,7 @@ import scala.collection.GenIterable
 
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {
 
-  private val PublicScripts: Map[String, Script] = Map(
-    "brick" -> Brick,
-    "status" -> Status
-  )
+  private val PublicScripts: Map[String, Script] = Script.allScriptsByKey
 
   /**
     * - receives commands from the SimpleHttpClient
@@ -41,8 +38,10 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
 
   private def runScript(script: String, args: Vector[String]): String = {
     LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
+    val hasRoot = Hibernate.readStateOrDefault().root
     PublicScripts.get(script) match {
       case None => s"unknown command '$script'"
+      case Some(_: RequireRoot) if !hasRoot => "this command requires root"
       case Some(c) =>
         val message = new StringWriter()
         val writer = new PrintWriter(message)

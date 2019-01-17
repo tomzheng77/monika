@@ -6,7 +6,7 @@ import monika.Primitives._
 import monika.server.LittleProxy.ProxySettings
 import monika.server.Hibernate
 import monika.server.Structs._
-import monika.server.signal.Script
+import monika.server.script.Script
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Properties}
 

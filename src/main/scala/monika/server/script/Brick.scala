@@ -1,4 +1,4 @@
-package monika.server.signal
+package monika.server.script
 
 import java.io.PrintWriter
 import java.time.LocalDateTime

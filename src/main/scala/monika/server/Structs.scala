@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import monika.Primitives.FileName
 import monika.server.LittleProxy.ProxySettings
-import monika.server.signal.Script
+import monika.server.script.Script
 import scalaz.@@
 
 object Structs {

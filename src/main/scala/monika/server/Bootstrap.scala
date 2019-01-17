@@ -4,7 +4,7 @@ import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
 import monika.server.Subprocess._
-import monika.server.signal._
+import monika.server.script._
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import scalaz.Tag

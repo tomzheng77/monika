@@ -34,6 +34,8 @@ object LittleProxy extends UseLogger {
     rejectHtmlKeywords: Vector[String] = Vector.empty
   )
 
+  val Transparent = ProxySettings(transparent = true)
+
   private var server: HttpProxyServer = _
 
   def startOrRestart(settings: ProxySettings): Unit = {

@@ -12,11 +12,9 @@ import scala.collection.GenIterable
 
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {
 
-  private val scripts: Map[String, Script] = Map(
+  private val PublicScripts: Map[String, Script] = Map(
     "brick" -> Brick,
-    "set-profile" -> SetProfile,
-    "status" -> Status,
-    "unlock" -> Unlock
+    "status" -> Status
   )
 
   /**
@@ -25,7 +23,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     */
   def startListener(): Unit = {
     this.synchronized {
-      scripts.foreach(pair => {
+      PublicScripts.foreach(pair => {
         LOGGER.debug(s"found script: ${pair._1}")
       })
       Spark.port(Constants.InterpreterPort)
@@ -43,7 +41,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
 
   private def runScript(script: String, args: Vector[String]): String = {
     LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
-    scripts.get(script) match {
+    PublicScripts.get(script) match {
       case None => s"unknown command '$script'"
       case Some(c) =>
         val message = new StringWriter()

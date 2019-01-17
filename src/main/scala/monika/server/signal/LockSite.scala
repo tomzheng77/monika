@@ -1,9 +1,13 @@
 package monika.server.signal
 
 import java.io.PrintWriter
+import java.time.LocalDateTime
 
-import monika.server.Constants.Locations
-import monika.server.{Configuration, Hibernate, LittleProxy, Restrictions}
+import monika.server.LittleProxy.ProxySettings
+import monika.server.Structs.FutureAction
+import monika.server.{Configuration, LittleProxy}
+
+import scala.util.Try
 
 /**
   * - locks onto the specified website for a fixed amount of time
@@ -15,17 +19,19 @@ object LockSite extends Script {
   override def run(args: Vector[String], out: PrintWriter): Unit = {
     val profiles = Configuration.readProfileDefinitions()
     lazy val name = args.head
-    if (args.isEmpty) {
-      out.println("usage: set-profile <profile>")
-    } else if (!profiles.contains(name)) {
-      out.println(s"cannot find profile $name, please check ${Locations.ProfileRoot}")
+    if (args.size != 2) {
+      out.println("usage: lock-site <site> <minutes>")
+    } else if (Try(args(1).toInt).filter(_ > 0).isFailure) {
+      out.println(s"minutes must be a positive integer")
     } else {
-      val profile = profiles(name)
-      LittleProxy.startOrRestart(profile.proxy)
-      Restrictions.removeFromWheelGroup()
-      Restrictions.restrictProgramsExcept(profile.programs)
-      Restrictions.restrictProjectsExcept(profile.projects)
-      Hibernate.transaction(state => (state.copy(proxy = profile.proxy), Unit))
+      val site = args(0)
+      val minutes = args(1).toInt
+      LittleProxy.startOrRestart(ProxySettings(
+        transparent = false,
+        allowHtmlPrefix = Vector(site)
+      ))
+      val nowTime = LocalDateTime.now()
+      FutureAction(nowTime.plusMinutes(minutes), Unlock)
       out.println("set-profile success")
     }
   }

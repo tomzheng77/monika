@@ -33,8 +33,10 @@ object Restrictions {
       .filterNot(except.contains)
       .flatMap(Subprocess.findProgramLocation)
 
-    programs.map(l => call(chmod, "700", Tag.unwrap(l)))
-    programs.map(l => call(chown, "root:root", Tag.unwrap(l)))
+    for (program <- programs) {
+      call(chmod, "700", Tag.unwrap(program))
+      call(chown, "root:root", Tag.unwrap(program))
+    }
   }
 
   def restrictProjectsExcept(except: Vector[String @@ FileName]): Unit = {
@@ -42,11 +44,18 @@ object Restrictions {
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
 
-    Constants.Restricted.Projects.map(p => call(chown, "root:root", Tag.unwrap(p)))
-    toUnlock.map(f => call(chmod, "755", f.getCanonicalPath))
-    toUnlock.map(f => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath))
-    toLock.map(f => call(chmod, "700", f.getCanonicalPath))
-    toLock.map(f => call(chown, "root:root", f.getCanonicalPath))
+    for (projectLocation <- Constants.Restricted.Projects) {
+      call(chown, "root:root", Tag.unwrap(projectLocation))
+      call(chmod, "777", Tag.unwrap(projectLocation))
+    }
+    for (project <- toUnlock) {
+      call(chmod, "755", project.getCanonicalPath)
+      call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", project.getCanonicalPath)
+    }
+    for (project <- toLock) {
+      call(chmod, "700", project.getCanonicalPath)
+      call(chown, "root:root", project.getCanonicalPath)
+    }
   }
 
   /**
@@ -62,13 +71,20 @@ object Restrictions {
     Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
 
     val programs = Constants.Restricted.Programs.flatMap(Subprocess.findProgramLocation)
-    programs.map(l => call(chmod, "755", Tag.unwrap(l)))
-    programs.map(l => call(chown, "root:root", Tag.unwrap(l)))
+    for (program <- programs) {
+      call(chmod, "755", Tag.unwrap(program))
+      call(chown, "root:root", Tag.unwrap(program))
+    }
 
-    Constants.Restricted.Projects.map(p => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", Tag.unwrap(p)))
+    for (projectLocation <- Constants.Restricted.Projects) {
+      call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", Tag.unwrap(projectLocation))
+      call(chmod, "755", Tag.unwrap(projectLocation))
+    }
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
-    projects.map(f => call(chmod, "755", f.getCanonicalPath))
-    projects.map(f => call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", f.getCanonicalPath))
+    for (project <- projects) {
+      call(chmod, "755", project.getCanonicalPath)
+      call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", project.getCanonicalPath)
+    }
   }
 
   private def decode(bytes: Array[Byte]): String = {

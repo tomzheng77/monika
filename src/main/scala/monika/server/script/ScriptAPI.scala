@@ -21,7 +21,7 @@ trait ScriptAPI {
     * - runs another script at the specified time
     * - if the time is before now, it will be run immediately after the current script has completed
     */
-  def enqueue(at: LocalDateTime, script: Script, args: List[String] = List.empty)
+  def enqueue(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
 
   /**
     * - executes a shell command and returns the output

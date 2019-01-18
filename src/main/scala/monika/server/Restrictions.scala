@@ -14,7 +14,7 @@ object Restrictions {
   private val User = Constants.MonikaUser
 
   def restrictLogin(): Unit = {
-    Subprocess.call(passwd, "-l", User)
+    call(passwd, "-l", User)
   }
 
   /**
@@ -22,10 +22,10 @@ object Restrictions {
     * - this takes effect upon next login
     */
   def removeFromWheelGroup(): Unit = {
-    val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
-    val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
+    val primaryGroup = call(id, "-gn", User).stdout |> decode
+    val oldGroups = call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup && g!= "wheel")
-    Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
+    call(usermod, "-G", newGroups.mkString(","), User)
   }
 
   def restrictProgramsExcept(except: Vector[String @@ FileName]): Unit = {
@@ -63,12 +63,12 @@ object Restrictions {
     * i.e. sudo, programs, projects
     */
   def clearAllRestrictions(): Unit = {
-    Subprocess.call(passwd, "-u", User)
+    call(passwd, "-u", User)
 
-    val primaryGroup = Subprocess.call(id, "-gn", User).stdout |> decode
-    val oldGroups = Subprocess.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
+    val primaryGroup = call(id, "-gn", User).stdout |> decode
+    val oldGroups = call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
-    Subprocess.call(usermod, "-G", newGroups.mkString(","), User)
+    call(usermod, "-G", newGroups.mkString(","), User)
 
     val programs = Constants.Restricted.Programs.flatMap(Subprocess.findProgramLocation)
     for (program <- programs) {

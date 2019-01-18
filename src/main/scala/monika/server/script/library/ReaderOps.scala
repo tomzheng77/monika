@@ -8,6 +8,8 @@ import monika.server.proxy.Filter
 import monika.server.script.Script
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess.CommandOutput
+import monika.Primitives._
+import scalaz.@@
 
 import scala.collection.{GenIterable, mutable}
 
@@ -26,6 +28,7 @@ trait ReaderOps extends UseScalaz {
   def update(fn: MonikaState => MonikaState): SC[Unit] = transaction(state => (fn(state), Unit))
   def transaction[A](fn: MonikaState => (MonikaState, A)): SC[A] = SC(api => api.transaction(fn))
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
+  def findExecutableInPath(name: String @@ FileName): SC[Option[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
 
   def setNewProxy(filter: Filter): SC[Unit] = SC(api => {
     api.restartProxy(filter)

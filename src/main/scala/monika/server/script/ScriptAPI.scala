@@ -2,10 +2,12 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
+import monika.Primitives.{FileName, FilePath}
 import monika.server.Structs.{MonikaState, Profile}
 import monika.server.proxy.Filter
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess.CommandOutput
+import scalaz.@@
 
 trait ScriptAPI {
 
@@ -33,5 +35,7 @@ trait ScriptAPI {
     * - restarts the proxy with the given filter
     */
   def restartProxy(filter: Filter): Unit
+
+  def findExecutableInPath(name: String @@ FileName): Option[String @@ FilePath]
 
 }

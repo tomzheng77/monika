@@ -5,7 +5,6 @@ import java.io.File
 import monika.Primitives.FileName
 import monika.server.script.Script
 import monika.server.subprocess.Commands._
-import monika.server.subprocess.Subprocess
 import monika.server.{Constants, UseScalaz}
 import scalaz.{@@, Tag}
 
@@ -35,11 +34,17 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   })
 
   def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
-    val programs = Constants.Restricted.Programs
-      .filterNot(except.contains)
-      .flatMap(Subprocess.findExecutableInPath)
+    val (toUnlock, toLock) = Constants.Restricted.Programs
+      .partition(except.contains) |> (pair => (
+        pair._1.flatMap(api.findExecutableInPath),
+        pair._2.flatMap(api.findExecutableInPath)
+      ))
 
-    for (program <- programs) {
+    for (program <- toUnlock) {
+      api.call(chmod, "755", Tag.unwrap(program))
+      api.call(chown, "root:root", Tag.unwrap(program))
+    }
+    for (program <- toLock) {
       api.call(chmod, "700", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))
     }
@@ -76,7 +81,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
     api.call(usermod, "-G", newGroups.mkString(","), User)
 
-    val programs = Constants.Restricted.Programs.flatMap(Subprocess.findExecutableInPath)
+    val programs = Constants.Restricted.Programs.flatMap(api.findExecutableInPath)
     for (program <- programs) {
       api.call(chmod, "755", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))

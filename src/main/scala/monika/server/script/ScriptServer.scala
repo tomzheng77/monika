@@ -4,12 +4,15 @@ import java.io.{PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
+import monika.Primitives
+import monika.Primitives.{FileName, FilePath}
 import monika.server.Structs.FutureAction
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess
 import monika.server.subprocess.Subprocess.CommandOutput
+import scalaz.@@
 import spark.Spark
 
 import scala.collection.{GenIterable, mutable}
@@ -58,6 +61,9 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def query(): Structs.MonikaState = Hibernate.readStateOrDefault()
     override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = Hibernate.transaction(fn)
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
+    override def findExecutableInPath(name: String @@ FileName): Option[String @@ FilePath] = {
+      Subprocess.findExecutableInPath(name)
+    }
 
     def consoleOutput(): String = {
       writer.flush()

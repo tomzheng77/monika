@@ -13,6 +13,7 @@ object Constants {
     * and monika itself
     */
   val PathAdd: Vector[String @@ FilePath] = Vector(
+    "/usr/bin",
     "/usr/sbin",
     "/usr/local/bin"
   ).map(FilePath)

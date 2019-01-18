@@ -2,7 +2,8 @@ package monika.server.script
 
 import monika.server.Constants.Locations
 import monika.server.proxy.ProxyServer
-import monika.server.{Configuration, Hibernate, Restrictions}
+import monika.server.script.library.Restrictions
+import monika.server.{Configuration, Hibernate}
 
 object SetProfile extends Script with RequireRoot {
 

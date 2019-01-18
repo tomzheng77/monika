@@ -2,7 +2,7 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
-import monika.server.Restrictions
+import monika.server.script.library.Restrictions
 
 import scala.util.Try
 

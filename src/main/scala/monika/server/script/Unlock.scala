@@ -1,7 +1,7 @@
 package monika.server.script
 
-import monika.server.Restrictions
 import monika.server.proxy.{ProxyServer, TransparentFilter}
+import monika.server.script.library.Restrictions
 
 object Unlock extends Script with RequireRoot {
 

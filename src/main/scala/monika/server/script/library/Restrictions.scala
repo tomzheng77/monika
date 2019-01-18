@@ -1,14 +1,14 @@
-package monika.server
+package monika.server.script.library
 
 import java.io.File
 
 import monika.Primitives.FileName
 import monika.server.Constants.UtilityPrograms._
-import monika.server.Subprocess._
-import scalaz.syntax.id._
+import monika.server.Subprocess.call
+import monika.server.{Constants, Subprocess, UseScalaz}
 import scalaz.{@@, Tag}
 
-object Restrictions {
+object Restrictions extends UseScalaz {
 
   // the environment of this user will be affected
   private val User = Constants.MonikaUser

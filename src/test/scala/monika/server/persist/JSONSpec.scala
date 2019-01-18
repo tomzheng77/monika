@@ -29,6 +29,14 @@ object JSONSpec extends Properties("JSON") with UseJSON {
   ))
   implicit val MonikaGenArb: Arbitrary[MonikaState] = Arbitrary(Gen.resultOf(MonikaState))
 
+  property("serialize string lists") = {
+    forAll(arbitrary[List[String]])(a => {
+      val writer = new StringWriter()
+      writeItemAsJSON(a, writer)
+      readJSONToItem[List[String]](writer.toString) == a
+    })
+  }
+
   property("serialize date time") = {
     forAll(arbitrary[LocalDateTime])(a => {
       val writer = new StringWriter()

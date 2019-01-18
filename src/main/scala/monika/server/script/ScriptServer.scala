@@ -9,6 +9,7 @@ import monika.server._
 import spark.Spark
 
 import scala.collection.GenIterable
+import scala.util.Try
 
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {
 
@@ -28,7 +29,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         resp.`type`("text/plain") // prevent being intercepted by the proxy
         val parts: List[String] = {
           val cmd: String = Option(req.queryParams("cmd")).getOrElse("")
-          parseOptJSON(cmd).flatMap(_.extractOpt[List[String]]).getOrElse(Nil)
+          Try(readJSONToItem[List[String]](cmd)).getOrElse(Nil)
         }
         if (parts.isEmpty) "please provide a command (cmd) in JSON format"
         else runScript(parts.head, parts.tail.toVector)

@@ -1,11 +1,11 @@
 package monika.server
 
-import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
-import monika.server.Subprocess._
 import monika.server.proxy.ProxyServer
 import monika.server.script._
+import monika.server.subprocess.Commands._
+import monika.server.subprocess.Subprocess._
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import scalaz.Tag
@@ -41,7 +41,7 @@ object Bootstrap extends UseLogger {
       LOGGER.error("user is not root")
       System.exit(2)
     }
-    val cannotExecute = UtilityPrograms.filter(findProgramLocation(_).isEmpty)
+    val cannotExecute = CommandArray.map(c => c.name).filter(findExecutableInPath(_).isEmpty)
     for (program <- cannotExecute) {
       val programName = Tag.unwrap(program)
       LOGGER.error(s"cannot find executable program: $programName")

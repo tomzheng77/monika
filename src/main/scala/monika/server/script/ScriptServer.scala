@@ -4,12 +4,12 @@ import java.io.{PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.Primitives
 import monika.server.Structs.FutureAction
-import monika.server.Subprocess.CommandOutput
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
-import scalaz.@@
+import monika.server.subprocess.Commands.Command
+import monika.server.subprocess.Subprocess
+import monika.server.subprocess.Subprocess.CommandOutput
 import spark.Spark
 
 import scala.collection.{GenIterable, mutable}
@@ -54,7 +54,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def enqueue(at: LocalDateTime, script: Script, args: List[String]): Unit = {
       newFutureActions += FutureAction(at, script, args.toVector)
     }
-    override def call(command: String @@ Primitives.FileName, args: String*): CommandOutput = Subprocess.call(command, args: _*)
+    override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)
     override def query(): Structs.MonikaState = Hibernate.readStateOrDefault()
     override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = Hibernate.transaction(fn)
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)

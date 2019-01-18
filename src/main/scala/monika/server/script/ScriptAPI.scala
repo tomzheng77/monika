@@ -2,11 +2,10 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
-import monika.Primitives.FileName
 import monika.server.Structs.{MonikaState, Profile}
-import monika.server.Subprocess.CommandOutput
 import monika.server.proxy.Filter
-import scalaz.@@
+import monika.server.subprocess.Commands.Command
+import monika.server.subprocess.Subprocess.CommandOutput
 
 trait ScriptAPI {
 
@@ -25,7 +24,7 @@ trait ScriptAPI {
   /**
     * - executes a shell command and returns the output
     */
-  def call(command: String @@ FileName, args: String*): CommandOutput
+  def call(command: Command, args: String*): CommandOutput
   def query(): MonikaState
   def update(fn: MonikaState => MonikaState): Unit = transaction(state => (fn(state), Unit))
   def transaction[A](fn: MonikaState => (MonikaState, A)): A

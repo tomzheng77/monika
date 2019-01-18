@@ -1,8 +1,10 @@
-package monika.server
+package monika.server.subprocess
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
-import monika.Primitives._
+import monika.Primitives.{FileName, FilePath}
+import monika.server.subprocess.Commands.Command
+import monika.server.{Constants, UseLogger}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import scalaz.{@@, Tag}
 
@@ -11,12 +13,10 @@ import scala.util.{Failure, Success, Try}
 
 object Subprocess extends UseLogger {
 
-  case class Command(program: String @@ FileName, args: String*)
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
-  def callCommand(c: Command): CommandOutput = call(c.program, c.args: _*)
-  def call(program: String @@ FileName, args: String*): CommandOutput = {
-    callWithInput(Tag.unwrap(program), args.toArray, Array.empty, None)
+  def call(command: Command, args: String*): CommandOutput = {
+    callWithInput(Tag.unwrap(command.name), args.toArray, Array.empty, None)
   }
 
   /**
@@ -30,12 +30,12 @@ object Subprocess extends UseLogger {
     * @param workingDirectory directory where the program will be run
     * @return an object containing exit value, stdout and stderr
     */
-  def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
+  private def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
                     workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
     // resolve the program within customized PATH (incl. Constants.PathAdd)
     val resolvedProgram: String = {
       if (program.startsWith("/")) program
-      else findProgramLocation(FileName(program)).map(Tag.unwrap).getOrElse {
+      else findExecutableInPath(FileName(program)).map(Tag.unwrap).getOrElse {
         throw new RuntimeException(s"cannot resolve program '$program' in PATH")
       }
     }
@@ -66,7 +66,7 @@ object Subprocess extends UseLogger {
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
     */
-  def findProgramLocation(program: String @@ FileName): Option[String @@ FilePath] = {
+  def findExecutableInPath(program: String @@ FileName): Option[String @@ FilePath] = {
     val programName = Tag.unwrap(program)
     Constants.PathList
       .map(path => new File(path + File.separator + programName))

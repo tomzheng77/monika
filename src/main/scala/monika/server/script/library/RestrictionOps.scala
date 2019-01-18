@@ -3,9 +3,10 @@ package monika.server.script.library
 import java.io.File
 
 import monika.Primitives.FileName
-import monika.server.Constants.UtilityPrograms._
 import monika.server.script.Script
-import monika.server.{Constants, Subprocess, UseScalaz}
+import monika.server.subprocess.Commands._
+import monika.server.subprocess.Subprocess
+import monika.server.{Constants, UseScalaz}
 import scalaz.{@@, Tag}
 
 trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
@@ -31,7 +32,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
     val programs = Constants.Restricted.Programs
       .filterNot(except.contains)
-      .flatMap(Subprocess.findProgramLocation)
+      .flatMap(Subprocess.findExecutableInPath)
 
     for (program <- programs) {
       api.call(chmod, "700", Tag.unwrap(program))
@@ -70,7 +71,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
     api.call(usermod, "-G", newGroups.mkString(","), User)
 
-    val programs = Constants.Restricted.Programs.flatMap(Subprocess.findProgramLocation)
+    val programs = Constants.Restricted.Programs.flatMap(Subprocess.findExecutableInPath)
     for (program <- programs) {
       api.call(chmod, "755", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))

@@ -50,34 +50,6 @@ object Constants {
 
   }
 
-  /**
-    * programs cannot be executed unless specified by the profile
-    */
-
-  /**
-    * programs which will be called by monika
-    * when starting, it should be checked that these programs
-    * are inside PATH and are executable
-    */
-  object UtilityPrograms extends Seq[String @@ FileName] {
-
-    val id: String @@ FileName = FileName("id")
-    val groups: String @@ FileName = FileName("groups")
-    val passwd: String @@ FileName = FileName("passwd")
-    val chmod: String @@ FileName = FileName("chmod")
-    val chown: String @@ FileName = FileName("chown")
-    val iptables: String @@ FileName = FileName("iptables")
-    val usermod: String @@ FileName = FileName("usermod")
-    val groupadd: String @@ FileName = FileName("groupadd")
-    val killall: String @@ FileName = FileName("killall")
-
-    private val list = Vector(passwd, chmod, chown, iptables, usermod, groupadd, killall)
-    override def length: Int = list.length
-    override def apply(idx: Int): String @@ FileName = list(idx)
-    override def iterator: Iterator[String @@ FileName] = list.iterator
-
-  }
-
   object Locations {
 
     val MonikaHome: String = System.getenv("MONIKA_HOME")

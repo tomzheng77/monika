@@ -9,5 +9,6 @@ trait ReaderOps extends UseScalaz {
   protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
 
   def printLine(text: String): SC[Unit] = SC(api => api.println(text))
+  def setAsNonRoot(): SC[Unit] = SC(api => api.update(state => state.copy(root = false)))
 
 }

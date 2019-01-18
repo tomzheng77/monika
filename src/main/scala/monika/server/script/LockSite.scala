@@ -27,10 +27,11 @@ object LockSite extends Script with RequireRoot with RestrictionOps {
   private def lockSiteInternal(site: String, minutes: Int): SC[Unit] = SC(api => {
     val nowTime = api.nowTime()
     api.restartProxy(HTMLPrefixFilter(Set(site)))
-    removeFromWheelGroup()
-    restrictProgramsExcept(Vector.empty)
-    restrictProjectsExcept(Vector.empty)
+    removeFromWheelGroup()(api)
+    restrictProgramsExcept(Vector.empty)(api)
+    restrictProjectsExcept(Vector.empty)(api)
     api.enqueue(nowTime.plusMinutes(minutes), Unlock)
+    setAsNonRoot()(api)
     api.println(s"locked onto site for $minutes minutes")
   })
 

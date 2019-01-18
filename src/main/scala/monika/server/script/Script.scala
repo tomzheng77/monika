@@ -23,5 +23,5 @@ trait Script extends UseScalaz {
 
 object Script {
   val allScripts = Vector(Brick, SetProfile, Status, Unlock)
-  val allScriptsByKey: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
+  val allScriptsByName: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
 }

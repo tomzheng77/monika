@@ -10,7 +10,7 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
 import scalaz.Tag
 
-object Bootstrap extends UseLogger with UseJSON {
+object Bootstrap extends UseLogger {
 
   def main(args: Array[String]): Unit = {
     logToFileAndConsole()

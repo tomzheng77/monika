@@ -1,12 +1,10 @@
 package monika.server
 
-import java.io.{ByteArrayOutputStream, File, OutputStream, OutputStreamWriter}
-import java.time.LocalDateTime
+import java.io.{ByteArrayOutputStream, File, OutputStreamWriter}
 
 import monika.Primitives._
 import monika.server.Constants.Locations
 import monika.server.Structs._
-import monika.server.script.Script
 import org.apache.commons.io.FileUtils
 
 import scala.util.Try
@@ -36,7 +34,8 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
       val (newState, returnValue) = fn(state)
 
       val output = new ByteArrayOutputStream()
-      writeStateToOutput(newState, output)
+      val writer = new OutputStreamWriter(output)
+      writeItemAsJSON(newState, writer)
       FileUtils.writeByteArrayToFile(stateDBFile, output.toByteArray); returnValue
     }
   }
@@ -81,58 +80,11 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
   }
 
   private def readStateFromInput(input: JsonInput): MonikaState = {
-    val json = Try(parseJSON(input)).orElseX(ex =>{
-      val message = s"file does not contain a valid json format ${Locations.StateJsonFile}"
-      LOGGER.error(message, ex)
-      throw new RuntimeException(message, ex)
-    })
-    Try(jsonToState(json)).orElseX(ex => {
+    Try(readJSONToItem[MonikaState](input)).orElseX(ex => {
       val message = s"failed to deserialize JSON ${Locations.StateJsonFile}"
       LOGGER.error(message, ex)
       throw new RuntimeException(message, ex)
     })
-  }
-
-  private def writeStateToOutput(state: MonikaState, output: OutputStream): Unit = {
-    val json: JValue = stateToJson(state)
-    val writer = new OutputStreamWriter(output)
-    printCompact(renderJSON(json), writer)
-  }
-
-  private[server] def jsonToState(json: JValue): MonikaState = {
-    def jsonToProxy(json: JValue): ProxySettings = {
-      ProxySettings(
-        transparent = (json \ "transparent").extract[Boolean],
-        allow = (json \ "allow").extract[Vector[String]],
-        reject = (json \ "block").extract[Vector[String]]
-      )
-    }
-    def jsonToRequest(json: JValue): FutureAction = {
-      FutureAction(
-        LocalDateTime.parse((json \ "time").extract[String]),
-        (json \ "script").extract[String] |> Script.allScriptsByKey,
-        (json \ "args").extract[Vector[String]]
-      )
-    }
-    MonikaState(
-      queue = (json \ "queue").extract[Vector[JValue]].map(jsonToRequest),
-      proxy = jsonToProxy(json \ "proxy")
-    )
-  }
-
-  private[server] def stateToJson(state: MonikaState): JValue = {
-    def proxyToJson(settings: ProxySettings): JValue = {
-      ("transparent" -> settings.transparent) ~
-      ("allow" -> settings.allow) ~
-      ("block" -> settings.reject)
-    }
-    def requestToJson(request: FutureAction): JValue = {
-      ("time" -> request.at.toString) ~
-      ("script" -> request.script.name) ~
-      ("args" -> request.args)
-    }
-    ("queue" -> state.queue.map(requestToJson)) ~
-    ("proxy" -> proxyToJson(state.proxy))
   }
 
 }

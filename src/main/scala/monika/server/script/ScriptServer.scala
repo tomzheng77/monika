@@ -12,7 +12,7 @@ import scala.collection.GenIterable
 
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {
 
-  private val PublicScripts: Map[String, Script] = Script.allScriptsByKey
+  private val PublicScripts: Map[String, Script] = Script.allScriptsByName
 
   /**
     * - receives commands from the SimpleHttpClient

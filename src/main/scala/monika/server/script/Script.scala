@@ -1,13 +1,11 @@
 package monika.server.script
 
 import monika.server.UseScalaz
+import monika.server.script.library.ReaderOps
 
 import scala.language.implicitConversions
 
-trait Script extends UseScalaz {
-
-  type SC[A] = Reader[ScriptAPI, A]
-  protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
+trait Script extends UseScalaz with ReaderOps {
 
   val name: String = {
     val className = getClass.getSimpleName

@@ -1,14 +1,12 @@
 package monika.server.script
 
 import monika.server.Constants.Locations
-import monika.server.proxy.ProxyServer
-import monika.server.script.library.Restrictions
-import monika.server.{Configuration, Hibernate}
+import monika.server.script.library.RestrictionOps
 
-object SetProfile extends Script with RequireRoot {
+object SetProfile extends Script with RequireRoot with RestrictionOps {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
-    val profiles = Configuration.readProfileDefinitions()
+    val profiles = api.activeProfiles()
     lazy val name = args.head
     if (args.isEmpty) {
       api.println("usage: set-profile <profile>")
@@ -16,11 +14,11 @@ object SetProfile extends Script with RequireRoot {
       api.println(s"cannot find profile $name, please check ${Locations.ProfileRoot}")
     } else {
       val profile = profiles(name)
-      ProxyServer.startOrRestart(profile.filter)
-      Restrictions.removeFromWheelGroup()
-      Restrictions.restrictProgramsExcept(profile.programs)
-      Restrictions.restrictProjectsExcept(profile.projects)
-      Hibernate.transaction(state => (state.copy(filter = profile.filter), Unit))
+      api.restartProxy(profile.filter)
+      removeFromWheelGroup()(api)
+      restrictProgramsExcept(profile.programs)(api)
+      restrictProjectsExcept(profile.projects)(api)
+      api.transaction(state => (state.copy(filter = profile.filter), Unit))
       api.println("set-profile success")
     }
   }

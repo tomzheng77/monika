@@ -48,6 +48,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     private val writer = new PrintWriter(message)
     private val newFutureActions = mutable.Buffer[FutureAction]()
 
+    override def activeProfiles(): Map[String, Structs.Profile] = Configuration.readProfileDefinitions()
     override def nowTime(): LocalDateTime = initialTime
     override def println(str: String): Unit = writer.println(str)
     override def enqueue(at: LocalDateTime, script: Script, args: List[String]): Unit = {

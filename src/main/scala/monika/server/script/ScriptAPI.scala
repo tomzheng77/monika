@@ -3,12 +3,14 @@ package monika.server.script
 import java.time.LocalDateTime
 
 import monika.Primitives.FileName
-import monika.server.Structs.MonikaState
+import monika.server.Structs.{MonikaState, Profile}
 import monika.server.Subprocess.CommandOutput
 import monika.server.proxy.Filter
 import scalaz.@@
 
 trait ScriptAPI {
+
+  def activeProfiles(): Map[String, Profile]
 
   def nowTime(): LocalDateTime
 

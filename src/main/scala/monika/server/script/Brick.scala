@@ -2,11 +2,11 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
-import monika.server.script.library.Restrictions
+import monika.server.script.library.RestrictionOps
 
 import scala.util.Try
 
-object Brick extends Script with RequireRoot {
+object Brick extends Script with RequireRoot with RestrictionOps {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     Try(args.head.toInt).toOption match {
@@ -19,7 +19,7 @@ object Brick extends Script with RequireRoot {
   private def brickFor(minutes: Int): SC[Unit] = (api: ScriptAPI) => {
     val now = LocalDateTime.now()
     val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
-    Restrictions.restrictLogin()
+    restrictLogin()(api)
     api.enqueue(timeToUnlock, Unlock)
   }
 

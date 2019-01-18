@@ -84,6 +84,7 @@ object Bootstrap extends UseLogger {
     Logger.getLogger("spark.route").setLevel(Level.ERROR)
     Logger.getLogger("org.eclipse.jetty").setLevel(Level.ERROR)
     Logger.getLogger("io.netty").setLevel(Level.ERROR)
+    Logger.getLogger("org.littleshoot.proxy").setLevel(Level.ERROR)
   }
 
 }

@@ -32,16 +32,8 @@ object Subprocess extends UseLogger {
     */
   private def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
                     workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
-    // resolve the program within customized PATH (incl. Constants.PathAdd)
-    val resolvedProgram: String = {
-      if (program.startsWith("/")) program
-      else findExecutableInPath(FileName(program)).map(Tag.unwrap).getOrElse {
-        throw new RuntimeException(s"cannot resolve program '$program' in PATH")
-      }
-    }
-
-    LOGGER.debug(s"run: $program ($resolvedProgram) ${args.mkString(" ")}")
-    val cmd = new CommandLine(resolvedProgram)
+    LOGGER.debug(s"run: $program ${args.mkString(" ")}")
+    val cmd = new CommandLine(program)
     cmd.addArguments(args)
     cmd.toString
 

@@ -31,6 +31,7 @@ object LockSite extends Script with RequireRoot with RestrictionOps {
       removeFromWheelGroup(),
       restrictProgramsExcept(Vector.empty),
       restrictProjectsExcept(Vector.empty),
+      enqueue(time.plusSeconds(10), ForceOut),
       enqueue(time.plusMinutes(minutes), Unlock),
       setAsNonRoot(),
       println("locked onto site for $minutes minutes")

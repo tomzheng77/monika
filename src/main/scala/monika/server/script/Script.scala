@@ -5,7 +5,8 @@ import monika.server.script.library.ReaderOps
 
 import scala.language.implicitConversions
 
-trait Script extends UseScalaz with ReaderOps {
+trait Script extends UseScalaz
+  with ReaderOps {
 
   val name: String = {
     val className = getClass.getSimpleName

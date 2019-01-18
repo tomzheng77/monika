@@ -29,6 +29,11 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     api.call(usermod, "-G", newGroups.mkString(","), User)
   })
 
+  def forceLogout(): SC[Unit] = SC(api => {
+    api.call(killall, "-u", User, "i3")
+    api.call(killall, "-u", User, "gnome-session-binary")
+  })
+
   def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
     val programs = Constants.Restricted.Programs
       .filterNot(except.contains)

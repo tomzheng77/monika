@@ -9,8 +9,8 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("========== [Commands] ==========")
     for (script <- Script.allScripts) {
       script match {
-        case _: RequireRoot => api.printLine(s"\t- ${script.name} (root)")
-        case _ => api.printLine(s"\t- ${script.name}")
+        case _: RequireRoot => api.printLine(s"\t- ${script.name} (requires root)")
+        case _ => api.printLine(s"- ${script.name}")
       }
     }
     api.printLine("")
@@ -18,6 +18,14 @@ object Status extends Script with UseScalaz with UseDateTime {
     val state = api.query()
     for (FutureAction(at, script, args) <- state.queue) {
       api.printLine(s"- ${at.format(DefaultFormatter)}: ${script.name} ${args.mkString(" ")}")
+    }
+
+    api.printLine("")
+    api.printLine("========== [Account] ==========")
+    if (state.root) {
+      api.printLine("- You have root access")
+    } else {
+      api.printLine("- You do not have root access")
     }
   }
 

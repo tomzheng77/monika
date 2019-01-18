@@ -9,7 +9,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("========== [Commands] ==========")
     for (script <- Script.allScripts) {
       script match {
-        case _: RequireRoot => api.printLine(s"\t- ${script.name} (requires root)")
+        case _: RequireRoot => api.printLine(s"- ${script.name} (requires root)")
         case _ => api.printLine(s"- ${script.name}")
       }
     }

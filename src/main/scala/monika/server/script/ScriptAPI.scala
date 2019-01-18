@@ -35,6 +35,7 @@ trait ScriptAPI {
     * - restarts the proxy with the given filter
     */
   def restartProxy(filter: Filter): Unit
+  def rewriteCertificates(): Unit
 
   def findExecutableInPath(name: String @@ FileName): Option[String @@ FilePath]
 

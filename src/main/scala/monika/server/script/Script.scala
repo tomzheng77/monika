@@ -22,6 +22,6 @@ trait Script extends UseScalaz
 }
 
 object Script extends UseScalaz {
-  val allScripts = Vector(Brick, ForceOut, LockSite, SetProfile, Status, Unlock)
+  val allScripts = Vector(Brick, ForceOut, LockSite, SetProfile, Status, Unlock, RewriteCerts)
   val allScriptsByName: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
 }

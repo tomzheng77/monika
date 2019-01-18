@@ -20,7 +20,6 @@ object Bootstrap extends UseLogger {
       rejectOutgoingHttp()
 
       val initialState: MonikaState = Hibernate.readStateOrDefault()
-      ProxyServer.writeCertificatesToFiles()
       ProxyServer.startOrRestart(initialState.filter)
       ScriptServer.startPoll()
       ScriptServer.startListener()

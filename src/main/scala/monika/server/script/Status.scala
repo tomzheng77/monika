@@ -27,6 +27,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     } else {
       api.printLine("- You do not have root access")
     }
+    api.printLine(s"- The proxy is set to ${state.filter.getClass.getSimpleName}")
   }
 
 }

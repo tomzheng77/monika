@@ -34,7 +34,7 @@ object LockSite extends Script with RequireRoot with RestrictionOps {
       enqueue(time.plusSeconds(10), ForceOut),
       enqueue(time.plusMinutes(minutes), Unlock),
       setAsNonRoot(),
-      println("locked onto site for $minutes minutes")
+      printLine(s"locked onto site for $minutes minutes")
     ))
   } yield {}
 

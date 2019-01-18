@@ -8,9 +8,9 @@ object Brick extends Script with RequireRoot with RestrictionOps {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     Try(args.head.toInt).toOption match {
-      case None => api println "usage: brick <minutes>"
-      case Some(m) if m <= 0 => api println "minutes must be greater than zero"
-      case Some(m) => brickFor(m)(api); api println "bricked successfully"
+      case None => api printLine "usage: brick <minutes>"
+      case Some(m) if m <= 0 => api printLine "minutes must be greater than zero"
+      case Some(m) => brickFor(m)(api); api printLine "bricked successfully"
     }
   }
 

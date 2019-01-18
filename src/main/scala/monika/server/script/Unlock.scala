@@ -9,7 +9,7 @@ object Unlock extends Script with RequireRoot with RestrictionOps {
     api.restartProxy(TransparentFilter)
     api.transaction(state => (state.copy(filter = TransparentFilter, root = true), Unit))
     clearAllRestrictions()
-    api.println("unlock success")
+    api.printLine("unlock success")
   }
 
 }

@@ -23,9 +23,10 @@ case class HTMLPrefixFilter(allow: Set[String]) extends Filter with UseLogger {
     val host = requestHeaders("Host")
     val uri = request.getUri
     val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
-    if (allow.exists(str => url.startsWith(str))) true
+    val urlWithoutHTTP = url.replaceFirst("^https?://", "")
+    if (allow.exists(str => urlWithoutHTTP.startsWith(str))) true
     else {
-      LOGGER.debug(s"intercepted request to $url"); false
+      LOGGER.debug(s"intercepted request to $urlWithoutHTTP"); false
     }
   }
 }

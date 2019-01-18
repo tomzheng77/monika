@@ -12,11 +12,9 @@ import org.json4s.{CustomSerializer, DefaultFormats, DoubleMode, Formats, JsonDS
 
 trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
 
-  protected implicit val defaultFormats: Formats = DefaultFormats
-  protected type JValue = org.json4s.JValue
+  private implicit val defaultFormats: Formats = DefaultFormats
+  private type JValue = org.json4s.JValue
   protected type JsonInput = org.json4s.JsonInput
-  protected def parseJSON(input: JsonInput): JValue = JsonMethods.parse(input)
-  protected def parseOptJSON(input: JsonInput): Option[JValue] = JsonMethods.parseOpt(input)
 
   private val classes: List[Class[_]] = List(
     classOf[HTMLPrefixFilter],

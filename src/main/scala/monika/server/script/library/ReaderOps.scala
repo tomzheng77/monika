@@ -8,4 +8,6 @@ trait ReaderOps extends UseScalaz {
   type SC[A] = Reader[ScriptAPI, A]
   protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
 
+  def printLine(text: String): SC[Unit] = SC(api => api.println(text))
+
 }

@@ -17,7 +17,7 @@ object Brick extends Script with RequireRoot with RestrictionOps {
   }
 
   private def brickFor(minutes: Int): SC[Unit] = (api: ScriptAPI) => {
-    val now = LocalDateTime.now()
+    val now = api.nowTime()
     val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
     restrictLogin()(api)
     api.enqueue(timeToUnlock, Unlock)

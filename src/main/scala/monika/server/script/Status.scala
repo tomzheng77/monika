@@ -1,16 +1,14 @@
 package monika.server.script
 
-import java.io.PrintWriter
-
 import monika.server.Structs.FutureAction
-import monika.server.{Hibernate, UseDateTime, UseScalaz}
+import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
 
-  override def run(args: Vector[String], out: PrintWriter): Unit = {
-    val state = Hibernate.readStateOrDefault()
+  override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
+    val state = api.query()
     for (FutureAction(at, script, args) <- state.queue) {
-      out.println(s"${at.format(DefaultFormatter)}}: ${script.name} ${args.mkString(" ")}")
+      api.println(s"${at.format(DefaultFormatter)}}: ${script.name} ${args.mkString(" ")}")
     }
   }
 

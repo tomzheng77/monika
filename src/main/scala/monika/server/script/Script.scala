@@ -1,12 +1,13 @@
 package monika.server.script
 
-import java.io.PrintWriter
-
 import monika.server.UseScalaz
 
 import scala.language.implicitConversions
 
 trait Script extends UseScalaz {
+
+  type SC[A] = Reader[ScriptAPI, A]
+  protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
 
   val name: String = {
     val className = getClass.getSimpleName
@@ -17,11 +18,11 @@ trait Script extends UseScalaz {
     } |> (s => s.dropWhile(_ == '-'))
   }
 
-  def run(args: Vector[String], out: PrintWriter): Unit
+  def run(args: Vector[String]): SC[Unit]
 
 }
 
-object Script {
+object Script extends UseScalaz {
   val allScripts = Vector(Brick, SetProfile, Status, Unlock)
   val allScriptsByName: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
 }

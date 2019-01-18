@@ -10,6 +10,8 @@ import scalaz.@@
 
 trait ScriptAPI {
 
+  def nowTime(): LocalDateTime
+
   def println(str: String): Unit
 
   /**
@@ -22,7 +24,6 @@ trait ScriptAPI {
     * - executes a shell command and returns the output
     */
   def call(command: String @@ FileName, args: String*): CommandOutput
-
   def query(): MonikaState
   def update(fn: MonikaState => MonikaState): Unit = transaction(state => (fn(state), Unit))
   def transaction[A](fn: MonikaState => (MonikaState, A)): A

@@ -1,28 +1,26 @@
 package monika.server.script
 
-import java.io.PrintWriter
 import java.time.LocalDateTime
 
 import monika.server.Restrictions
-import monika.server.Structs._
 
 import scala.util.Try
 
 object Brick extends Script with RequireRoot {
 
-  override def run(args: Vector[String], out: PrintWriter): Unit = {
+  override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     Try(args.head.toInt).toOption match {
-      case None => out println "usage: brick <minutes>"
-      case Some(m) if m <= 0 => out println "minutes must be greater than zero"
-      case Some(m) => brickFor(m); out println "bricked successfully"
+      case None => api println "usage: brick <minutes>"
+      case Some(m) if m <= 0 => api println "minutes must be greater than zero"
+      case Some(m) => brickFor(m)(api); api println "bricked successfully"
     }
   }
 
-  private def brickFor(minutes: Int): Unit = {
+  private def brickFor(minutes: Int): SC[Unit] = (api: ScriptAPI) => {
     val now = LocalDateTime.now()
     val timeToUnlock = now.plusMinutes(minutes).withSecond(0).withNano(0)
     Restrictions.restrictLogin()
-    ScriptServer.enqueue(FutureAction(timeToUnlock, Unlock))
+    api.enqueue(timeToUnlock, Unlock)
   }
 
 }

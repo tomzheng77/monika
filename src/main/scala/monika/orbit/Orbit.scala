@@ -2,8 +2,6 @@ package monika.orbit
 
 import java.io.File
 
-import com.google.common.util.concurrent.FutureCallback
-import monika.server.Constants.Locations
 import org.apache.log4j._
 import org.bitcoinj.core._
 import org.bitcoinj.kits.WalletAppKit

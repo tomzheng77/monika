@@ -1,7 +1,5 @@
 package monika.server.script
 
-import java.time.LocalDateTime
-
 import monika.server.script.library.RestrictionOps
 
 import scala.util.Try

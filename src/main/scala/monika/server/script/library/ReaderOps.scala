@@ -17,8 +17,6 @@ trait ReaderOps extends UseScalaz {
   type SC[A] = Reader[ScriptAPI, A]
   protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
 
-
-
   def activeProfiles(): SC[Map[String, Profile]] = SC(api => api.activeProfiles())
   def nowTime(): SC[LocalDateTime] = SC(api => api.nowTime())
   def printLine(text: String): SC[Unit] = SC(api => api.printLine(text))

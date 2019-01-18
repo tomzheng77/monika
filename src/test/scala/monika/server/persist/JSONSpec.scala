@@ -10,6 +10,7 @@ import monika.server.script.Script
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}
+import org.scalatest.{FlatSpec, Matchers}
 
 object JSONSpec extends Properties("JSON") with UseJSON {
 

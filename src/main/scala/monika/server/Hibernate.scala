@@ -1,6 +1,6 @@
 package monika.server
 
-import java.io.{ByteArrayOutputStream, File, OutputStreamWriter}
+import java.io.{ByteArrayOutputStream, File, OutputStreamWriter, StringWriter}
 
 import monika.Primitives._
 import monika.server.Constants.Locations
@@ -32,11 +32,9 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
         } else MonikaState()
       }
       val (newState, returnValue) = fn(state)
-
-      val output = new ByteArrayOutputStream()
-      val writer = new OutputStreamWriter(output)
+      val writer = new StringWriter()
       writeItemAsJSON(newState, writer)
-      FileUtils.writeByteArrayToFile(stateDBFile, output.toByteArray); returnValue
+      FileUtils.writeStringToFile(stateDBFile, writer.toString, "UTF-8"); returnValue
     }
   }
 

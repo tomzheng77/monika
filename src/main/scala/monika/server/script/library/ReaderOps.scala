@@ -9,6 +9,8 @@ import monika.server.script.Script
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess.CommandOutput
 
+import scala.collection.{GenIterable, mutable}
+
 trait ReaderOps extends UseScalaz {
 
   type ScriptAPI = monika.server.script.ScriptAPI
@@ -29,5 +31,13 @@ trait ReaderOps extends UseScalaz {
 
   def printLine(text: String): SC[Unit] = SC(api => api.println(text))
   def setAsNonRoot(): SC[Unit] = SC(api => api.update(state => state.copy(root = false)))
+
+  def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {
+    var buffer = mutable.Buffer[A]()
+    for (sc <- scs) {
+      buffer += sc(api)
+    }
+    buffer.toVector
+  })
 
 }

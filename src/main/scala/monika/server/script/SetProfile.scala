@@ -2,8 +2,9 @@ package monika.server.script
 
 import java.io.PrintWriter
 
-import monika.server.{Configuration, Hibernate, LittleProxy, Restrictions}
+import monika.server.{Configuration, Hibernate, Restrictions}
 import monika.server.Constants.Locations
+import monika.server.proxy.ProxyServer
 
 object SetProfile extends Script with RequireRoot {
 
@@ -16,11 +17,11 @@ object SetProfile extends Script with RequireRoot {
       out.println(s"cannot find profile $name, please check ${Locations.ProfileRoot}")
     } else {
       val profile = profiles(name)
-      LittleProxy.startOrRestart(profile.proxy)
+      ProxyServer.startOrRestart(profile.filter)
       Restrictions.removeFromWheelGroup()
       Restrictions.restrictProgramsExcept(profile.programs)
       Restrictions.restrictProjectsExcept(profile.projects)
-      Hibernate.transaction(state => (state.copy(proxy = profile.proxy), Unit))
+      Hibernate.transaction(state => (state.copy(filter = profile.filter), Unit))
       out.println("set-profile success")
     }
   }

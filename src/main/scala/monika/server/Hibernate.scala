@@ -5,7 +5,6 @@ import java.time.LocalDateTime
 
 import monika.Primitives._
 import monika.server.Constants.Locations
-import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs._
 import monika.server.script.Script
 import org.apache.commons.io.FileUtils

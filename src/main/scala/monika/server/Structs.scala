@@ -3,7 +3,7 @@ package monika.server
 import java.time.LocalDateTime
 
 import monika.Primitives.FileName
-import monika.server.LittleProxy.ProxySettings
+import monika.server.proxy.{Filter, TransparentFilter}
 import monika.server.script.Script
 import scalaz.@@
 
@@ -17,14 +17,14 @@ object Structs {
     * @param programs names of programs allowed when this mode is active
     * @param projects names of projects allowed when this mode is active
     * @param bookmarks bookmarks to display inside the browser for convenience
-    * @param proxy restricts which websites can be accessed
+    * @param filter restricts which websites can be accessed
     */
   case class Profile(
     name: String,
     programs: Vector[String @@ FileName],
     projects: Vector[String @@ FileName],
     bookmarks: Vector[Bookmark],
-    proxy: ProxySettings
+    filter: Filter
   )
 
   /**
@@ -36,7 +36,7 @@ object Structs {
   case class MonikaState(
     root: Boolean = true,
     queue: Vector[FutureAction] = Vector.empty,
-    proxy: ProxySettings = ProxySettings()
+    filter: Filter = TransparentFilter
   )
 
   case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)

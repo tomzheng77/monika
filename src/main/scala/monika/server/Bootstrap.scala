@@ -4,6 +4,7 @@ import monika.server.Constants.UtilityPrograms._
 import monika.server.Constants._
 import monika.server.Structs._
 import monika.server.Subprocess._
+import monika.server.proxy.ProxyServer
 import monika.server.script._
 import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j._
@@ -19,8 +20,8 @@ object Bootstrap extends UseLogger with UseJSON {
       rejectOutgoingHttp()
 
       val initialState: MonikaState = Hibernate.readStateOrDefault()
-      LittleProxy.writeCertificatesToFiles()
-      LittleProxy.startOrRestart(initialState.proxy)
+      ProxyServer.writeCertificatesToFiles()
+      ProxyServer.startOrRestart(initialState.filter)
       ScriptServer.startPoll()
       ScriptServer.startListener()
     }

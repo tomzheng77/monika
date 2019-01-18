@@ -4,7 +4,6 @@ import java.io.File
 
 import monika.Primitives.FileName
 import monika.server.Constants.Locations
-import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.{Bookmark, Profile}
 import org.apache.commons.io.FileUtils
 

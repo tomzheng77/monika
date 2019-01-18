@@ -3,7 +3,7 @@ package monika.server.persist
 import java.time.{LocalDate, LocalDateTime}
 
 import monika.Primitives._
-import monika.server.LittleProxy.ProxySettings
+import monika.server.proxy.ProxyServer.ProxySettings
 import monika.server.Hibernate
 import monika.server.Structs._
 import monika.server.script.Script

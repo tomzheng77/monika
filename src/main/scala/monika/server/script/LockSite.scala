@@ -3,9 +3,8 @@ package monika.server.script
 import java.io.PrintWriter
 import java.time.LocalDateTime
 
-import monika.server.LittleProxy
-import monika.server.LittleProxy.ProxySettings
 import monika.server.Structs.FutureAction
+import monika.server.proxy.{HTMLPrefixFilter, ProxyServer}
 
 import scala.util.Try
 
@@ -24,10 +23,7 @@ object LockSite extends Script with RequireRoot {
     } else {
       val site = args(0)
       val minutes = args(1).toInt
-      LittleProxy.startOrRestart(ProxySettings(
-        transparent = false,
-        allow = Vector(site)
-      ))
+      ProxyServer.startOrRestart(HTMLPrefixFilter(Set(site)))
       val nowTime = LocalDateTime.now()
       FutureAction(nowTime.plusMinutes(minutes), Unlock)
       out.println(s"locked onto site for $minutes minutes")

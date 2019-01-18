@@ -1,10 +1,11 @@
-package monika.server
+package monika.server.proxy
 
 import java.io.File
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
 import monika.server.Constants.{Locations, ProxyPort}
+import monika.server.UseLogger
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
 import org.littleshoot.proxy._
@@ -18,32 +19,18 @@ import org.littleshoot.proxy.impl.DefaultHttpProxyServer
   * - can provide MITM proxy, which can filter based on the URL of the requested page as well
   *   as the content of the page. an SSL certificate must be imported to use this proxy
   */
-object LittleProxy extends UseLogger {
-
-  /**
-    * configures the behaviour of the HTTP/HTTPS proxy, which all requests of the profile user must pass through
-    * @param transparent whether the proxy should not perform filtering at all
-    *                    if this is set to true, allow/reject properties will be ignored
-    *                    in addition, no certificate will be required
-    * @param allow which text/html responses should be allowed through if the url starts with a prefix
-    * @param reject which text/html responses should be rejected if they contain one of the keywords
-    */
-  case class ProxySettings(
-    transparent: Boolean = true,
-    allow: Vector[String] = Vector.empty,
-    reject: Vector[String] = Vector.empty
-  )
-
-  val Transparent = ProxySettings()
+object ProxyServer extends UseLogger {
 
   private var server: HttpProxyServer = _
 
-  def startOrRestart(settings: ProxySettings): Unit = {
+  def startOrRestart(filter: Filter): Unit = {
     this.synchronized {
-      LOGGER.info(s"restarting proxy server (transparent: ${settings.transparent}")
+      LOGGER.info(s"restarting proxy server")
       stop()
-      if (settings.transparent) serveTransparently()
-      else serveWithFilter(settings)
+      filter match {
+        case TransparentFilter => serveTransparently()
+        case _ => serveWithFilter(filter)
+      }
       LOGGER.info("proxy server successfully started")
     }
   }
@@ -89,36 +76,12 @@ object LittleProxy extends UseLogger {
     }
   }
 
-  private def serveWithFilter(settings: ProxySettings): Unit = {
-    def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
-      def mkHeaders(msg: HttpMessage): Map[String, String] = {
-        import scala.collection.JavaConverters._
-        msg.headers().asScala.map(entry => entry.getKey -> entry.getValue).toMap
-      }
-      val requestHeaders = mkHeaders(request)
-      if (!requestHeaders.contains("Host")) return false // block all requests without host specified
-
-      // filter only if the response is of type text/html
-      // i.e. images, audio, JS, CSS will not be filtered
-      // this will emulate filtering based on the URL bar
-      val responseHeaders = mkHeaders(response)
-      val contentType = responseHeaders.getOrElse("Content-Type", "")
-      if (!contentType.startsWith("text/html")) return true
-
-      // github.com
-      // github.com/netty/netty/issues/2185
-      val host = requestHeaders("Host")
-      val uri = request.getUri
-      val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
-      settings.allow.exists(str => url.startsWith(str))
-    }
-
+  private def serveWithFilter(filter: Filter): Unit = {
     def allowOrRejectHttp(request: HttpRequest, response: HttpResponse): HttpResponse = {
-      if (shouldAllow(request, response)) response
+      if (filter.shouldAllow(request, response)) response
       else new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN)
     }
-
-    val filter: HttpFiltersSource = new HttpFiltersSourceAdapter() {
+    val filterObj: HttpFiltersSource = new HttpFiltersSourceAdapter() {
       override def filterRequest(request: HttpRequest, ctx: ChannelHandlerContext): HttpFilters = {
         new HttpFiltersAdapter(request) {
           override def serverToProxyResponse(httpObject: HttpObject): HttpObject = {
@@ -130,7 +93,6 @@ object LittleProxy extends UseLogger {
         }
       }
     }
-
     def startProxyWithKeyStore(file: File): Unit = {
       val source = new KeyStoreFileCertificateSource("PKCS12", file, "private-key", "123456")
       val mitmManager = ImpersonatingMitmManager.builder.rootCertificateSource(source).build
@@ -138,10 +100,9 @@ object LittleProxy extends UseLogger {
         .withPort(ProxyPort)
         .withAllowLocalOnly(true)
         .withManInTheMiddle(mitmManager)
-        .withFiltersSource(filter)
+        .withFiltersSource(filterObj)
         .start()
     }
-
     this.synchronized {
       assert(server == null)
       // https://github.com/lightbody/browsermob-proxy/tree/master/mitm

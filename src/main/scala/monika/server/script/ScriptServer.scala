@@ -59,7 +59,10 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = Hibernate.transaction(fn)
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
 
-    def consoleOutput(): String = writer.toString
+    def consoleOutput(): String = {
+      writer.flush()
+      message.toString
+    }
     def futureActions(): Vector[FutureAction] = newFutureActions.toVector
 
   }

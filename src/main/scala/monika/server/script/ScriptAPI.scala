@@ -13,7 +13,7 @@ trait ScriptAPI {
 
   def nowTime(): LocalDateTime
 
-  def println(str: String): Unit
+  def println(text: String): Unit
 
   /**
     * - runs another script at the specified time

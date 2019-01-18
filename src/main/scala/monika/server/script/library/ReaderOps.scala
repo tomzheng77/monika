@@ -27,6 +27,11 @@ trait ReaderOps extends UseScalaz {
   def transaction[A](fn: MonikaState => (MonikaState, A)): SC[A] = SC(api => api.transaction(fn))
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
 
+  def setNewProxy(filter: Filter): SC[Unit] = SC(api => {
+    api.restartProxy(filter)
+    api.update(state => state.copy(filter = filter))
+  })
+
   def setAsNonRoot(): SC[Unit] = SC(api => api.update(state => state.copy(root = false)))
 
   def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {

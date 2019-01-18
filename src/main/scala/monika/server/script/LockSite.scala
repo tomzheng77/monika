@@ -27,7 +27,7 @@ object LockSite extends Script with RequireRoot with RestrictionOps {
   private def lockSiteInternal(site: String, minutes: Int): SC[Unit] = for {
     time <- nowTime()
     _ <- sequence(Vector(
-      restartProxy(HTMLPrefixFilter(Set(site))),
+      setNewProxy(HTMLPrefixFilter(Set(site))),
       removeFromWheelGroup(),
       restrictProgramsExcept(Vector.empty),
       restrictProjectsExcept(Vector.empty),

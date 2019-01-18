@@ -53,10 +53,11 @@ object Bootstrap extends UseLogger {
 
   private def rejectOutgoingHttp(): Unit = {
     val forUser: String = MonikaUser
-    val out1 = call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
+    // NOTE: extra 'iptables' argument passed in case of xtables-legacy-multi
+    val out1 = call(iptables, s"iptables -w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 80 -j REJECT".split(' '): _*)
     LOGGER.debug(new String(out1.stdout, "UTF-8"))
     LOGGER.debug(new String(out1.stderr, "UTF-8"))
-    val out2 = call(iptables, s"-w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '): _*)
+    val out2 = call(iptables, s"iptables -w 10 -A OUTPUT -p tcp -m owner --uid-owner $forUser --dport 443 -j REJECT".split(' '): _*)
     LOGGER.debug(new String(out2.stdout, "UTF-8"))
     LOGGER.debug(new String(out2.stderr, "UTF-8"))
   }

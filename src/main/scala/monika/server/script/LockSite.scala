@@ -4,6 +4,7 @@ import monika.server.proxy.HTMLPrefixFilter
 import monika.server.script.library.RestrictionOps
 
 import scala.util.Try
+import monika.Primitives._
 
 /**
   * - locks onto the specified website for a fixed amount of time
@@ -29,7 +30,7 @@ object LockSite extends Script with RequireRoot with RestrictionOps {
     _ <- sequence(Vector(
       setNewProxy(HTMLPrefixFilter(Set(site))),
       removeFromWheelGroup(),
-      restrictProgramsExcept(Vector.empty),
+      restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
       restrictProjectsExcept(Vector.empty),
       enqueue(time.plusSeconds(10), ForceOut),
       enqueue(time.plusMinutes(minutes), Unlock),

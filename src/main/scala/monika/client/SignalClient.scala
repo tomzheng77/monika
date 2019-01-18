@@ -31,17 +31,21 @@ object SignalClient {
   def main(args: Array[String]): Unit = {
     setupLogger()
     while (true) {
-      val line: String = StdIn.readLine("M1-1> ").trim
-      if (line == "exit") System.exit(0)
-
-      val parts: JValue = seq2jvalue(line.split(' ').toVector)
-      val partsJson: String = pretty(render(parts))
-      val response: String = {
-        Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-          .queryString("cmd", partsJson)
-          .asString().getBody
+      val optLine: Option[String] = Option(StdIn.readLine("M1-1> ")).map(_.trim)
+      optLine match {
+        case None => System.exit(0)
+        case Some("exit") => System.exit(0)
+        case Some(line) =>
+          val parts: JValue = seq2jvalue(line.split(' ').toVector)
+          val partsJson: String = pretty(render(parts))
+          val response: String = {
+            Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
+              .queryString("cmd", partsJson)
+              .asString().getBody
+          }
+          println(response)
       }
-      println(response)
+
     }
   }
 

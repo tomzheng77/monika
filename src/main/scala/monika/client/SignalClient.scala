@@ -35,6 +35,7 @@ object SignalClient {
       optLine match {
         case None => System.exit(0)
         case Some("exit") => System.exit(0)
+        case Some("") =>
         case Some(line) =>
           val parts: JValue = seq2jvalue(line.split(' ').toVector)
           val partsJson: String = pretty(render(parts))

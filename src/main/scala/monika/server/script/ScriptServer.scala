@@ -127,7 +127,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
   }
 
   private def pollQueue(): Unit = {
-    LOGGER.debug("poll queue")
+    LOGGER.trace("poll queue")
     // pop items from the head of the queue, save the updated state
     val maybeRun: Vector[FutureAction] = Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()

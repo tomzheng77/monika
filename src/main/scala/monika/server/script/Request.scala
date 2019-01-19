@@ -29,24 +29,25 @@ object Request extends Script with UseDateTime {
     * - otherwise, the unlock is delayed
     */
   def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = SC(api => {
-    val state = api.query()
-    if (state.queue.isEmpty) {
-      script.run(args)(api)
-    }
     val now = api.nowTime()
     api.transaction(state => {
-      state.queue.lastOption match {
-        case None => api.printLine("the queue is empty"); (state.copy(queue = Vector(
-          FutureAction(now, script),
-          FutureAction(now.plusMinutes(minutes), Unlock)
-        )), Unit)
-        case Some(future) if future.script != Unlock => api.printLine("queue does not end with an unlock"); (state, Unit)
-        case Some(FutureAction(at, Unlock, _)) => {
+      state.queue.indexWhere(act => act.script == Unlock) match {
+        case -1 => {
+          api.printLine("the queue is empty")
+          (state.copy(queue = Vector(
+            FutureAction(now, script),
+            FutureAction(now.plusMinutes(minutes), Unlock)
+          )), Unit)
+        }
+        case index => {
+          val oldScriptAct = state.queue(index)
+          val at = oldScriptAct.at
           val scriptAct = FutureAction(at, script, args)
           val unlockAct = FutureAction(at.plusMinutes(minutes), Unlock)
           api.printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}")
           api.printLine(s"unlock moved to ${unlockAct.at.format(DefaultFormatter)}")
-          (state.copy(queue = state.queue.dropRight(1) :+ scriptAct :+ unlockAct), Unit)
+          val newQueue = state.queue |> removeAt(index) |> addItems(scriptAct, unlockAct)
+          (state.copy(queue = newQueue), Unit)
         }
       }
     })

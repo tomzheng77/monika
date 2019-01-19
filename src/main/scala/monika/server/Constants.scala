@@ -42,7 +42,8 @@ object Constants {
       "wine",
       "libreoffice",
       "ssh",
-      "assistant.jar"
+      "assistant.jar",
+      "arduino"
     ).map(FileName)
 
     val Projects: Vector[String @@ FilePath] = Vector(

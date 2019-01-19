@@ -9,7 +9,7 @@ import shapeless.Typeable
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
-abstract class Script(props: Property*) extends UseScalaz
+abstract class Script(val props: Property*) extends UseScalaz
   with ReaderOps
   with RestrictionOps {
 

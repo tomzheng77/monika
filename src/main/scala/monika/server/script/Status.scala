@@ -1,7 +1,6 @@
 package monika.server.script
 
 import monika.server.Structs.FutureAction
-import monika.server.script.property.{Internal, RootOnly}
 import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
@@ -9,11 +8,8 @@ object Status extends Script with UseScalaz with UseDateTime {
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     api.printLine("========== [Commands] ==========")
     for (script <- Script.allScripts) {
-      script match {
-        case c if c.hasProperty(RootOnly) => api.printLine(s"- ${script.name} (requires root)")
-        case c if c.hasProperty(Internal) => api.printLine(s"- ${script.name} (internal)")
-        case _ => api.printLine(s"- ${script.name}")
-      }
+      if (script.props.isEmpty) api.printLine(s"- ${script.name}")
+      else api.printLine(s"- ${script.name} (props: ${script.props.mkString(",")})")
     }
     api.printLine("")
     api.printLine("========== [Queue] ==========")

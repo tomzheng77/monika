@@ -27,10 +27,6 @@ object Request extends Script with UseDateTime {
   /**
     * - if the queue is empty, the script is run immediately and an unlock is added afterwards
     * - otherwise, the unlock is delayed
-    * @param minutes
-    * @param script
-    * @param args
-    * @return
     */
   def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = SC(api => {
     val state = api.query()

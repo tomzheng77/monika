@@ -4,7 +4,6 @@ import java.io.{PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.Primitives
 import monika.Primitives.{FileName, FilePath}
 import monika.server.Structs.FutureAction
 import monika.server._
@@ -80,7 +79,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     val hasRoot = Hibernate.readStateOrDefault().root
     PublicScripts.get(script) match {
       case None => s"unknown command '$script'"
-      case Some(_: RootOnly) if !hasRoot => "this command requires root"
+      case Some(c) if c.hasProperty(RootOnly) && !hasRoot => "this command requires root"
       case Some(c) =>
         val api = new DefaultScriptAPI()
         c.run(args)(api)

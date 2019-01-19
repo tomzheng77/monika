@@ -5,7 +5,7 @@ import monika.server.script.Script
 import monika.server.script.library.RestrictionOps
 import monika.server.script.property.Internal
 
-object Unlock extends Script with Internal with RestrictionOps {
+object Unlock extends Script(Internal) with RestrictionOps {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     api.restartProxy(TransparentFilter)

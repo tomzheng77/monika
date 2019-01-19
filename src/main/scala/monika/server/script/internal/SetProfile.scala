@@ -3,9 +3,9 @@ package monika.server.script.internal
 import monika.server.Constants.Locations
 import monika.server.script.Script
 import monika.server.script.library.RestrictionOps
-import monika.server.script.property.RootOnly
+import monika.server.script.property.Internal
 
-object SetProfile extends Script with RootOnly with RestrictionOps {
+object SetProfile extends Script(Internal) with RestrictionOps {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     val profiles = api.activeProfiles()

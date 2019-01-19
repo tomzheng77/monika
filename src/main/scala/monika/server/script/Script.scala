@@ -2,12 +2,18 @@ package monika.server.script
 
 import monika.server.UseScalaz
 import monika.server.script.internal._
-import monika.server.script.library.ReaderOps
+import monika.server.script.library.{ReaderOps, RestrictionOps}
+import monika.server.script.property.Property
 
 import scala.language.implicitConversions
 
-trait Script extends UseScalaz
-  with ReaderOps {
+abstract class Script(props: Property*) extends UseScalaz
+  with ReaderOps
+  with RestrictionOps {
+
+  def hasProperty(property: Property): Boolean = {
+    props.contains(property)
+  }
 
   val name: String = {
     val className = getClass.getSimpleName

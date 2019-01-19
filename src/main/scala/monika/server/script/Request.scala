@@ -33,7 +33,7 @@ object Request extends Script with UseDateTime {
     api.transaction(state => {
       state.queue.indexWhere(act => act.script == Unlock) match {
         case -1 => {
-          api.printLine(s"script '${script.name} will run immediately")
+          api.printLine(s"script '${script.name}' will run immediately")
           (state.copy(queue = Vector(
             FutureAction(now, script),
             FutureAction(now.plusMinutes(minutes), Unlock)

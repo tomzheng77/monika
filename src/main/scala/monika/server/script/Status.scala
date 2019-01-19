@@ -9,7 +9,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("========== [Commands] ==========")
     for (script <- Script.allScripts) {
       if (script.props.isEmpty) api.printLine(s"- ${script.name}")
-      else api.printLine(s"- ${script.name} (props: ${script.props.mkString(",")})")
+      else api.printLine(s"- ${script.name} (props: ${script.props.map(_.name).mkString(",")})")
     }
     api.printLine("")
     api.printLine("========== [Queue] ==========")

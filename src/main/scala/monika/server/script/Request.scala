@@ -46,7 +46,6 @@ object Request extends Script with UseDateTime {
         )), Unit)
         case Some(future) if future.script != Unlock => api.printLine("queue does not end with an unlock"); (state, Unit)
         case Some(FutureAction(at, Unlock, _)) => {
-
           val scriptAct = FutureAction(at, script, args)
           val unlockAct = FutureAction(at.plusMinutes(minutes), Unlock)
           api.printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}")

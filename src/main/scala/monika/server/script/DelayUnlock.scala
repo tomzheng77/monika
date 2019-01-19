@@ -15,14 +15,13 @@ object DelayUnlock extends Script with UseDateTime {
       val minutes = args(0).toInt
       SC(api => {
         api.transaction(state => {
-          state.queue.lastOption match {
-            case None => api.printLine("the queue is empty"); (state, Unit)
-            case Some(future) if future.script != Unlock => api.printLine("queue does not end with an unlock"); (state, Unit)
-            case Some(FutureAction(at, Unlock, scriptArgs)) => {
-              val newAt = at.plusMinutes(minutes)
-              val act = FutureAction(newAt, Unlock, scriptArgs)
-              api.printLine(s"unlock moved to ${newAt.format(DefaultFormatter)}")
-              (state.copy(queue = state.queue.dropRight(1) :+ act), Unit)
+          state.queue.indexWhere(act => act.script == Unlock) match {
+            case -1 => api.printLine("no unlock found"); (state, Unit)
+            case index => {
+              val oldAct = state.queue(index)
+              val newAct = FutureAction(oldAct.at.plusMinutes(minutes), Unlock)
+              api.printLine(s"unlock moved to ${newAct.at.format(DefaultFormatter)}")
+              (state.copy(queue = state.queue |> removeAt(index) |> addItems(newAct)), Unit)
             }
           }
         })

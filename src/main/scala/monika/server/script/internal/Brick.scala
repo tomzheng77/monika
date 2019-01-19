@@ -5,6 +5,9 @@ import monika.server.script.property.{CanRequest, Internal}
 
 object Brick extends Script(Internal, CanRequest) {
 
-  override def run(args: Vector[String]): SC[Unit] = restrictLogin()
+  override def run(args: Vector[String]): SC[Unit] = steps(
+    restrictLogin(),
+    enqueueNextStep(ForceOut)
+  ).map(_ => Unit)
 
 }

@@ -1,7 +1,7 @@
 package monika.server.script
 
 import monika.server.Structs.FutureAction
-import monika.server.script.property.RootOnly
+import monika.server.script.property.{Internal, RootOnly}
 import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
@@ -11,6 +11,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     for (script <- Script.allScripts) {
       script match {
         case c if c.hasProperty(RootOnly) => api.printLine(s"- ${script.name} (requires root)")
+        case c if c.hasProperty(Internal) => api.printLine(s"- ${script.name} (internal)")
         case _ => api.printLine(s"- ${script.name}")
       }
     }

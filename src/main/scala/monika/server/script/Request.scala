@@ -35,7 +35,7 @@ object Request extends Script with UseDateTime {
         case -1 => {
           api.printLine(s"script '${script.name}' will run immediately")
           (state.copy(queue = state.queue |> addItems(
-            FutureAction(now, script),
+            FutureAction(now, script, args),
             FutureAction(now.plusMinutes(minutes), Unlock)
           )), Unit)
         }

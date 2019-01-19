@@ -1,8 +1,5 @@
 package monika.server.script.property
 
-/**
-  * - tag interface
-  * - indicates a script can only be run from the internal queue
-  * - script cannot be called directly
-  */
+// the script cannot be called directly by the user
+// instead, it must be initiated by an internal component
 case object Internal extends Property

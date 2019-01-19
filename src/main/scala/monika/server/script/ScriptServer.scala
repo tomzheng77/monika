@@ -8,7 +8,7 @@ import monika.Primitives.{FileName, FilePath}
 import monika.server.Structs.FutureAction
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
-import monika.server.script.property.RootOnly
+import monika.server.script.property.{Internal, RootOnly}
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess
 import monika.server.subprocess.Subprocess.CommandOutput
@@ -79,16 +79,12 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     val hasRoot = Hibernate.readStateOrDefault().root
     PublicScripts.get(script) match {
       case None => s"unknown command '$script'"
+      case Some(c) if c.hasProperty(Internal) => "this is an internal command"
       case Some(c) if c.hasProperty(RootOnly) && !hasRoot => "this command requires root"
       case Some(c) =>
         val api = new DefaultScriptAPI()
         c.run(args)(api)
-        val nowTime = LocalDateTime.now()
-        val (runLater, runNow) = api.futureActions().sortBy(f => f.at).partition(f => f.at.isAfter(nowTime))
-        enqueueAll(runLater)
-        for (item <- runNow) {
-          runScriptInternal(item.script, item.args)
-        }
+        enqueueAll(api.futureActions())
         api.consoleOutput()
     }
   }
@@ -96,6 +92,8 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
   private def runScriptInternal(script: Script, args: Vector[String]): Unit = {
     val api = new DefaultScriptAPI()
     script.run(args)(api)
+    enqueueAll(api.futureActions())
+    LOGGER.trace(s"from internal script: ${api.consoleOutput()}")
   }
 
   private val timer = new Timer()

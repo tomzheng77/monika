@@ -1,8 +1,4 @@
 package monika.server.script.property
 
-/**
-  * - tag interface
-  * - indicates a script can only be run by the user if they have root access
-  * - all scripts can be run internally at any time
-  */
+// the script can be called by the user only if they have ROOT access
 case object RootOnly extends Property

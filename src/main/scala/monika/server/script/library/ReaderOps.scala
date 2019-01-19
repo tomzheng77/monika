@@ -30,6 +30,11 @@ trait ReaderOps extends UseScalaz {
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
   def findExecutableInPath(name: String @@ FileName): SC[Option[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
 
+  def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => {
+    val time = nowTime()(api)
+    enqueue(time, script, args)(api)
+  })
+
   def setNewProxy(filter: Filter): SC[Unit] = SC(api => {
     api.restartProxy(filter)
     api.update(state => state.copy(filter = filter))
@@ -37,6 +42,7 @@ trait ReaderOps extends UseScalaz {
 
   def setAsNonRoot(): SC[Unit] = SC(api => api.update(state => state.copy(root = false)))
 
+  def steps[A](scs: SC[A]*): SC[Vector[A]] = sequence(scs)
   def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {
     var buffer = mutable.Buffer[A]()
     for (sc <- scs) {

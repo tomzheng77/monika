@@ -90,10 +90,11 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
   }
 
   private def runScriptInternal(script: Script, args: Vector[String]): Unit = {
+    LOGGER.debug(s"run internal: $script ${args.mkString(" ")}")
     val api = new DefaultScriptAPI()
     script.run(args)(api)
     enqueueAll(api.futureActions())
-    LOGGER.trace(s"from internal script: ${api.consoleOutput()}")
+    LOGGER.debug(api.consoleOutput())
   }
 
   private val timer = new Timer()

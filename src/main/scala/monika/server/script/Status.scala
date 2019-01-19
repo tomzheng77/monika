@@ -1,6 +1,7 @@
 package monika.server.script
 
 import monika.server.Structs.FutureAction
+import monika.server.script.property.RootOnly
 import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
@@ -9,7 +10,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("========== [Commands] ==========")
     for (script <- Script.allScripts) {
       script match {
-        case _: RequireRoot => api.printLine(s"- ${script.name} (requires root)")
+        case _: RootOnly => api.printLine(s"- ${script.name} (requires root)")
         case _ => api.printLine(s"- ${script.name}")
       }
     }

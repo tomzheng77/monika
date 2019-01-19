@@ -1,6 +1,8 @@
 package monika.server.script
 
-object RewriteCerts extends Script with RequireRoot {
+import monika.server.script.property.RootOnly
+
+object RewriteCerts extends Script with RootOnly {
 
   override def run(args: Vector[String]): SC[Unit] = SC(api => api.rewriteCertificates())
 

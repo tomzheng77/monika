@@ -9,6 +9,7 @@ import monika.Primitives.{FileName, FilePath}
 import monika.server.Structs.FutureAction
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
+import monika.server.script.property.RootOnly
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess
 import monika.server.subprocess.Subprocess.CommandOutput
@@ -79,7 +80,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     val hasRoot = Hibernate.readStateOrDefault().root
     PublicScripts.get(script) match {
       case None => s"unknown command '$script'"
-      case Some(_: RequireRoot) if !hasRoot => "this command requires root"
+      case Some(_: RootOnly) if !hasRoot => "this command requires root"
       case Some(c) =>
         val api = new DefaultScriptAPI()
         c.run(args)(api)

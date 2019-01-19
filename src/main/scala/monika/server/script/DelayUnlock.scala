@@ -20,9 +20,9 @@ object DelayUnlock extends Script with UseDateTime {
             case Some(future) if future.script != Unlock => api.printLine("queue does not end with an unlock"); (state, Unit)
             case Some(FutureAction(at, Unlock, scriptArgs)) => {
               val newAt = at.plusMinutes(minutes)
-              api.enqueue(newAt, Unlock, scriptArgs)
+              val act = FutureAction(newAt, Unlock, scriptArgs)
               api.printLine(s"unlock moved to ${newAt.format(DefaultFormatter)}")
-              (state.copy(queue = state.queue.dropRight(1)), Unit)
+              (state.copy(queue = state.queue.dropRight(1) :+ act), Unit)
             }
           }
         })

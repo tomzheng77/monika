@@ -17,12 +17,11 @@ object LockSite extends Script(Internal, CanRequest) {
       printLine("usage: lock-site <sites>")
     } else {
       val sites = args(0).split(',').toSet
-      val minutes = args(1).toInt
-      lockSiteInternal(sites, minutes)
+      lockSiteInternal(sites)
     }
   }
 
-  private def lockSiteInternal(sites: Set[String], minutes: Int): SC[Unit] = {
+  private def lockSiteInternal(sites: Set[String]): SC[Unit] = {
     steps(
       setNewProxy(HTMLPrefixFilter(sites)),
       removeFromWheelGroup(),
@@ -30,7 +29,7 @@ object LockSite extends Script(Internal, CanRequest) {
       restrictProjectsExcept(Vector.empty),
       enqueueNextStep(ForceOut),
       setAsNonRoot(),
-      printLine(s"locked onto site for $minutes minutes")
+      printLine(s"locked onto ${sites.size} sites")
     ).map(_ => Unit)
   }
 

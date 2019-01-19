@@ -21,6 +21,8 @@ libraryDependencies += "co.fs2" %% "fs2-core" % "1.0.2"
 libraryDependencies += "com.mashape.unirest" % "unirest-java" % "1.4.9" exclude("commons-logging", "commons-logging")
 libraryDependencies += "com.storm-enroute" %% "scalameter-core" % "0.10.1"
 libraryDependencies += "org.bitcoinj" % "bitcoinj-core" % "0.14.7"
+libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3"
+libraryDependencies += "org.reflections" % "reflections" % "0.9.11"
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-SNAP10" % Test
 

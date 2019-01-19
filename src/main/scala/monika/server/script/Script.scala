@@ -1,10 +1,12 @@
 package monika.server.script
 
 import monika.server.UseScalaz
-import monika.server.script.internal._
 import monika.server.script.library.{ReaderOps, RestrictionOps}
 import monika.server.script.property.Property
+import org.reflections.Reflections
+import shapeless.Typeable
 
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 
 abstract class Script(props: Property*) extends UseScalaz
@@ -29,6 +31,10 @@ abstract class Script(props: Property*) extends UseScalaz
 }
 
 object Script extends UseScalaz {
-  val allScripts = Vector(Brick, DelayUnlock, ForceOut, LockSite, SetProfile, Status, Unlock, RewriteCerts)
+  private val reflections = new Reflections("monika.server.script")
+  private def findAllObjects[T](cl: Class[T])(implicit t: Typeable[T]): Vector[T] = {
+    reflections.getSubTypesOf(cl).asScala.toVector.map(cl => cl.getField("MODULE$").get(null).asInstanceOf[T])
+  }
+  val allScripts: Vector[Script] = findAllObjects(classOf[Script])
   val allScriptsByName: Map[String, Script] = allScripts.map(s => s.name -> s).toMap
 }

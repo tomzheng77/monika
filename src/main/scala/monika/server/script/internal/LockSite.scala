@@ -3,7 +3,7 @@ package monika.server.script.internal
 import monika.Primitives.FileName
 import monika.server.proxy.HTMLPrefixFilter
 import monika.server.script.Script
-import monika.server.script.property.Internal
+import monika.server.script.property.{CanRequest, Internal}
 
 import scala.util.Try
 
@@ -12,7 +12,7 @@ import scala.util.Try
   * - HTTP pages will be intercepted unless starting with the provided prefix
   * - will call "unlock" after time has expired
   */
-object LockSite extends Script(Internal) {
+object LockSite extends Script(Internal, CanRequest) {
 
   override def run(args: Vector[String]): SC[Unit] = {
     if (args.size != 2) {

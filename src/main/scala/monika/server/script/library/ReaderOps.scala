@@ -22,7 +22,6 @@ trait ReaderOps extends UseScalaz {
   def activeProfiles(): SC[Map[String, Profile]] = SC(api => api.activeProfiles())
   def nowTime(): SC[LocalDateTime] = SC(api => api.nowTime())
   def printLine(text: String): SC[Unit] = SC(api => api.printLine(text))
-  def enqueue(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => api.enqueue(at, script, args))
   def call(command: Command, args: String*): SC[CommandOutput] = SC(api => api.call(command, args: _*))
   def query(): SC[MonikaState] = SC(api => api.query())
   def update(fn: MonikaState => MonikaState): SC[Unit] = transaction(state => (fn(state), Unit))
@@ -30,9 +29,12 @@ trait ReaderOps extends UseScalaz {
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
   def findExecutableInPath(name: String @@ FileName): SC[Option[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
 
+  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] =
+    SC(api => api.enqueueAfter(at, script, args))
+
   def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => {
     val time = nowTime()(api)
-    enqueue(time, script, args)(api)
+    enqueueAfter(time, script, args)(api)
   })
 
   def setNewProxy(filter: Filter): SC[Unit] = SC(api => {

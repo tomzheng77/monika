@@ -54,7 +54,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def activeProfiles(): Map[String, Structs.Profile] = Configuration.readProfileDefinitions()
     override def nowTime(): LocalDateTime = initialTime
     override def printLine(str: String): Unit = writer.println(str)
-    override def enqueue(at: LocalDateTime, script: Script, args: Vector[String]): Unit = {
+    override def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String]): Unit = {
       newFutureActions += FutureAction(at, script, args)
     }
     override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)

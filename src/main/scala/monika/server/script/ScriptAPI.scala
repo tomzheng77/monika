@@ -28,7 +28,6 @@ trait ScriptAPI {
     */
   def call(command: Command, args: String*): CommandOutput
   def query(): MonikaState
-  def update(fn: MonikaState => MonikaState): Unit = transaction(state => (fn(state), Unit))
   def transaction[A](fn: MonikaState => (MonikaState, A)): A
 
   /**

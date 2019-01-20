@@ -12,6 +12,7 @@ import monika.server.subprocess.Subprocess.CommandOutput
 import scalaz.@@
 
 import scala.collection.{GenIterable, mutable}
+import scala.language.implicitConversions
 
 trait ReaderOps extends UseScalaz {
 
@@ -29,20 +30,23 @@ trait ReaderOps extends UseScalaz {
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
   def findExecutableInPath(name: String @@ FileName): SC[Option[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
 
-  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] =
+  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = {
     SC(api => api.enqueueAfter(at, script, args))
+  }
 
   def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => {
     val time = nowTime()(api)
     enqueueAfter(time, script, args)(api)
   })
 
-  def setNewProxy(filter: Filter): SC[Unit] = SC(api => {
-    api.restartProxy(filter)
-    api.update(state => state.copy(filter = filter))
-  })
+  def setNewProxy(filter: Filter): SC[Unit] = steps(
+    restartProxy(filter),
+    update(state => state.copy(filter = filter))
+  )
 
-  def setAsNonRoot(): SC[Unit] = SC(api => api.update(state => state.copy(root = false)))
+  implicit def anyAsUnit[A](sc: SC[A]): SC[Unit] = sc.map(_ => Unit)
+
+  def setAsNonRoot(): SC[Unit] = update(state => state.copy(root = false))
 
   def steps[A](scs: SC[A]*): SC[Vector[A]] = sequence(scs)
   def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {

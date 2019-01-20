@@ -1,13 +1,17 @@
 package monika
 
+import monika.`super`.Super
 import monika.client.SignalClient
 import monika.server.Bootstrap
 
 object Monika {
 
   def main(args: Array[String]): Unit = {
-    if (args.contains("--server")) Bootstrap.main(args)
-    else SignalClient.main(args)
+    args.headOption match {
+      case None => SignalClient.main(args)
+      case Some("--server") => Bootstrap.main(args)
+      case Some("--super") => Super.main(args.drop(1))
+    }
   }
 
 }

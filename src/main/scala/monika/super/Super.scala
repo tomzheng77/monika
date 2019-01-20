@@ -20,6 +20,7 @@ object Super {
 
       val reader = new BufferedReader(new InputStreamReader(input))
       val command = reader.readLine()
+      println(command)
       val args = command.split(' ')
 
       val cmd = new CommandLine(args.head)

@@ -3,7 +3,7 @@ package monika.server.script.library
 import java.time.LocalDateTime
 
 import monika.Primitives._
-import monika.server.Structs.{MonikaState, Profile}
+import monika.server.Structs.MonikaState
 import monika.server.UseScalaz
 import monika.server.proxy.Filter
 import monika.server.script.Script
@@ -20,7 +20,6 @@ trait ReaderOps extends UseScalaz {
   type SC[A] = Reader[ScriptAPI, A]
   protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
 
-  def activeProfiles(): SC[Map[String, Profile]] = SC(api => api.activeProfiles())
   def nowTime(): SC[LocalDateTime] = SC(api => api.nowTime())
   def printLine(text: String): SC[Unit] = SC(api => api.printLine(text))
   def call(command: Command, args: String*): SC[CommandOutput] = SC(api => api.call(command, args: _*))

@@ -11,6 +11,7 @@ object Monika {
       case None => SignalClient.main(args)
       case Some("--server") => Bootstrap.main(args)
       case Some("--super") => Super.main(args.drop(1))
+      case Some(other) => println(s"unknown mode $other")
     }
   }
 

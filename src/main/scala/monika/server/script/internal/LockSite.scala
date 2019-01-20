@@ -21,17 +21,15 @@ object LockSite extends Script(Internal, CanRequest) {
     }
   }
 
-  private def lockSiteInternal(sites: Set[String]): SC[Unit] = {
-    steps(
-      clearAllRestrictions(),
-      setNewProxy(HTMLPrefixFilter(sites)),
-      removeFromWheelGroup(),
-      setAsNonRoot(),
-      restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
-      restrictProjectsExcept(Vector.empty),
-      enqueueNextStep(ForceOut),
-      printLine(s"locked onto ${sites.size} sites")
-    ).map(_ => Unit)
-  }
+  private def lockSiteInternal(sites: Set[String]): SC[Unit] = steps(
+    clearAllRestrictions(),
+    setNewProxy(HTMLPrefixFilter(sites)),
+    removeFromWheelGroup(),
+    setAsNonRoot(),
+    restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
+    restrictProjectsExcept(Vector.empty),
+    enqueueNextStep(ForceOut),
+    printLine(s"locked onto ${sites.size} sites")
+  )
 
 }

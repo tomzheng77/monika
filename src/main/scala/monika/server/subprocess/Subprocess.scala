@@ -16,7 +16,7 @@ object Subprocess extends UseLogger {
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
 
   def call(command: Command, args: String*): CommandOutput = {
-    callWithInput(Tag.unwrap(command.name), args.toArray, Array.empty, None)
+    callUnsafely(Tag.unwrap(command.name), args.toArray, Array.empty, None)
   }
 
   /**
@@ -30,8 +30,8 @@ object Subprocess extends UseLogger {
     * @param workingDirectory directory where the program will be run
     * @return an object containing exit value, stdout and stderr
     */
-  private def callWithInput(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
-                    workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
+  def callUnsafely(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.empty,
+                   workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
     // resolve the program within customized PATH (incl. Constants.PathAdd)
     val resolvedProgram: String = {
       if (program.startsWith("/")) program

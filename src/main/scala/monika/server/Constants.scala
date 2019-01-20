@@ -1,6 +1,7 @@
 package monika.server
 
 import java.io.File
+import java.nio.charset.Charset
 
 import monika.Primitives._
 import scalaz.@@
@@ -23,6 +24,8 @@ object Constants {
   val PathList: Vector[String] = Path.split(File.pathSeparatorChar).toVector
 
   val GlobalEncoding = "UTF-8"
+  val GlobalCharset: Charset = Charset.forName("UTF-8")
+
   val ProxyPort = 9000
   val InterpreterPort = 9001
   val MaxQueueSize = 3

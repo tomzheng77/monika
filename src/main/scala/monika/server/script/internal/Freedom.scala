@@ -10,6 +10,6 @@ object Freedom extends Script(Internal, CanRequest) {
     removeFromWheelGroup(),
     setAsNonRoot(),
     enqueueNextStep(ForceOut)
-  ).map(_ => Unit)
+  )
 
 }

@@ -44,22 +44,12 @@ object Admin {
   }
 
   def useSTTYRaw(): Unit = {
-    val builder = new ProcessBuilder()
-    builder.command("stty", "raw")
-    builder.inheritIO()
-    builder.start()
+    val cmd = Array("/bin/sh", "-c", "stty raw </dev/tty")
+    Runtime.getRuntime.exec(cmd)
   }
 
   def main(args: Array[String]): Unit = {
     useSTTYRaw()
-//    val input = new DataInputStream(System.in)
-//    while (true) {
-//      if (input.available() > 0) {
-//        val char = input.readByte().toChar
-//        println(char)
-//      }
-//    }
-
     startSocketServer()
     val socket = new Socket("127.0.0.1", 9002)
     val input = socket.getInputStream

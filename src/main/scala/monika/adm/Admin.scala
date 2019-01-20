@@ -37,6 +37,7 @@ object Admin {
           case Failure(ex: ExecuteException) => ex.getExitValue
           case Failure(ex) => throw new RuntimeException(ex)
         }
+        println(stderr.size())
       }
     }).start()
   }

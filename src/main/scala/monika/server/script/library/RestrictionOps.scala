@@ -17,17 +17,6 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     api.call(passwd, "-l", User)
   })
 
-  /**
-    * - disassociates the user from the "wheel" secondary group
-    * - this takes effect upon next login
-    */
-  def removeFromWheelGroup(): SC[Unit] = SC(api => {
-    val primaryGroup = api.call(id, "-gn", User).stdout |> decode
-    val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
-    val newGroups = oldGroups.filter(g => g != primaryGroup && g!= "wheel")
-    api.call(usermod, "-G", newGroups.mkString(","), User)
-  })
-
   def forceLogout(): SC[Unit] = SC(api => {
     api.call(killall, "-u", User, "i3")
     api.call(killall, "-u", User, "gnome-session-binary")
@@ -76,11 +65,6 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     */
   def clearAllRestrictions(): SC[Unit] = SC(api => {
     api.call(passwd, "-u", User)
-
-    val primaryGroup = api.call(id, "-gn", User).stdout |> decode
-    val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
-    val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
-    api.call(usermod, "-G", newGroups.mkString(","), User)
 
     val programs = Constants.Restricted.Programs.flatMap(api.findExecutableInPath)
     for (program <- programs) {

@@ -7,7 +7,6 @@ object Freedom extends Script(Internal, CanRequest) {
 
   override def run(args: Vector[String]): SC[Unit] = steps(
     clearAllRestrictions(),
-    removeFromWheelGroup(),
     setAsNonRoot()
   )
 

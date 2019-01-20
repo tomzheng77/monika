@@ -9,6 +9,6 @@ object Brick extends Script(Internal, CanRequest) {
     clearAllRestrictions(),
     restrictLogin(),
     enqueueNextStep(ForceOut)
-  ).map(_ => Unit)
+  )
 
 }

@@ -75,26 +75,30 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
   }
 
   private def runScript(script: String, args: Vector[String]): String = {
-    LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
-    val hasRoot = Hibernate.readStateOrDefault().root
-    PublicScripts.get(script) match {
-      case None => s"unknown command '$script'"
-      case Some(c) if c.hasProperty(Internal) => "this is an internal command"
-      case Some(c) if c.hasProperty(RootOnly) && !hasRoot => "this command requires root"
-      case Some(c) =>
-        val api = new DefaultScriptAPI()
-        c.run(args)(api)
-        enqueueAll(api.futureActions())
-        api.consoleOutput()
+    this.synchronized {
+      LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
+      val hasRoot = Hibernate.readStateOrDefault().root
+      PublicScripts.get(script) match {
+        case None => s"unknown command '$script'"
+        case Some(c) if c.hasProperty(Internal) => "this is an internal command"
+        case Some(c) if c.hasProperty(RootOnly) && !hasRoot => "this command requires root"
+        case Some(c) =>
+          val api = new DefaultScriptAPI()
+          c.run(args)(api)
+          enqueueAll(api.futureActions())
+          api.consoleOutput()
+      }
     }
   }
 
-  private def runScriptInternal(script: Script, args: Vector[String]): Unit = {
-    LOGGER.debug(s"run internal: $script ${args.mkString(" ")}")
-    val api = new DefaultScriptAPI()
-    script.run(args)(api)
-    enqueueAll(api.futureActions())
-    LOGGER.debug(api.consoleOutput())
+  private def runScriptInternal(script: Script, args: Vector[String]): Unit = this.synchronized {
+    this.synchronized {
+      LOGGER.debug(s"run internal: $script ${args.mkString(" ")}")
+      val api = new DefaultScriptAPI()
+      script.run(args)(api)
+      enqueueAll(api.futureActions())
+      LOGGER.debug(api.consoleOutput())
+    }
   }
 
   private val timer = new Timer()

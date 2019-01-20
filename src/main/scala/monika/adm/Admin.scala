@@ -21,7 +21,6 @@ object Admin {
 
         val reader = new BufferedReader(new InputStreamReader(input))
         val command = reader.readLine()
-        println(command)
         val args = command.split(' ')
 
         val cmd = new CommandLine(args.head)
@@ -49,7 +48,8 @@ object Admin {
     val output = socket.getOutputStream
 
     val writer = new PrintWriter(new OutputStreamWriter(output))
-    writer.write(args.mkString(" "))
+    writer.println(args.mkString(" "))
+    writer.flush()
 
     val handler = new PumpStreamHandler(System.out, System.err, System.in)
     handler.setProcessOutputStream(input)

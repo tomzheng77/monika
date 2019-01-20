@@ -45,6 +45,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       api.call(chown, "root:root", Tag.unwrap(program))
     }
     for (program <- toLock) {
+      api.call(killall, "-u", User, Tag.unwrap(program))
       api.call(chmod, "700", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))
     }
@@ -61,7 +62,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
     for (project <- toUnlock) {
       api.call(chmod, "755", project.getCanonicalPath)
-      api.call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", project.getCanonicalPath)
+      api.call(chown, s"$User:$User", project.getCanonicalPath)
     }
     for (project <- toLock) {
       api.call(chmod, "700", project.getCanonicalPath)
@@ -88,13 +89,13 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
 
     for (projectLocation <- Constants.Restricted.Projects) {
-      api.call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", Tag.unwrap(projectLocation))
+      api.call(chown, s"$User:$User", Tag.unwrap(projectLocation))
       api.call(chmod, "755", Tag.unwrap(projectLocation))
     }
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     for (project <- projects) {
       api.call(chmod, "755", project.getCanonicalPath)
-      api.call(chown, s"${Constants.MonikaUser}:${Constants.MonikaUser}", project.getCanonicalPath)
+      api.call(chown, s"$User:$User", project.getCanonicalPath)
     }
   })
 

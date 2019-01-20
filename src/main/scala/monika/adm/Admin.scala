@@ -19,12 +19,12 @@ object Admin {
         val input = socket.getInputStream
         val output = socket.getOutputStream
 
-        val reader = new BufferedReader(new InputStreamReader(input))
-        val command = reader.readLine()
-        val args = command.split(' ')
+        val reader = new DataInputStream(input)
+        val argc = reader.readInt()
+        val argv = Array.fill(argc)(reader.readUTF())
 
-        val cmd = new CommandLine(args.head)
-        cmd.addArguments(args.tail)
+        val cmd = new CommandLine(argv.head)
+        cmd.addArguments(argv.tail)
 
         val executor = new DefaultExecutor()
         val stderr = new ByteArrayOutputStream()
@@ -47,9 +47,9 @@ object Admin {
     val input = socket.getInputStream
     val output = socket.getOutputStream
 
-    val writer = new PrintWriter(new OutputStreamWriter(output))
-    writer.println(args.mkString(" "))
-    writer.flush()
+    val writer = new DataOutputStream(output)
+    writer.writeInt(args.length)
+    args.foreach(writer.writeUTF)
 
     val handler = new PumpStreamHandler(System.out, System.err, System.in)
     handler.setProcessOutputStream(input)

@@ -78,7 +78,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
       val hasRoot = Hibernate.readStateOrDefault().root
       if (script == "sudo") {
-        if (!hasRoot) "user does not have sudo access"
+        if (!hasRoot) "user does not have root access"
         else if (args.isEmpty) "please provide a command to sudo"
         else {
           Subprocess.callUnsafely(args.head, args.tail.toArray) |>

@@ -43,7 +43,6 @@ object Subprocess extends UseLogger {
     LOGGER.debug(s"run: $program ($resolvedProgram) ${args.mkString(" ")}")
     val cmd = new CommandLine(resolvedProgram)
     cmd.addArguments(args)
-    cmd.toString
 
     val executor = new DefaultExecutor()
     val stdin = new ByteArrayInputStream(input)

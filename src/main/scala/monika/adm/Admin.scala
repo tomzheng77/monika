@@ -4,6 +4,7 @@ import java.io._
 import java.net.{ServerSocket, Socket}
 
 import monika.server.Constants
+import monika.server.subprocess.{Commands, Subprocess}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 
 import scala.collection.JavaConverters._
@@ -42,7 +43,23 @@ object Admin {
     }).start()
   }
 
+  def useSTTYRaw(): Unit = {
+    val builder = new ProcessBuilder()
+    builder.command("stty", "raw")
+    builder.inheritIO()
+    builder.start()
+  }
+
   def main(args: Array[String]): Unit = {
+    useSTTYRaw()
+//    val input = new DataInputStream(System.in)
+//    while (true) {
+//      if (input.available() > 0) {
+//        val char = input.readByte().toChar
+//        println(char)
+//      }
+//    }
+
     startSocketServer()
     val socket = new Socket("127.0.0.1", 9002)
     val input = socket.getInputStream

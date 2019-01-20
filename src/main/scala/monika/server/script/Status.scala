@@ -7,9 +7,9 @@ object Status extends Script with UseScalaz with UseDateTime {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     api.printLine("========== [Commands] ==========")
-    for (script <- Script.allScripts) {
+    for (script <- Script.allScripts.sortBy(_.name)) {
       if (script.props.isEmpty) api.printLine(s"- ${script.name}")
-      else api.printLine(s"- ${script.name} (props: ${script.props.map(_.name).mkString(", ")})")
+      else api.printLine(s"- ${script.name} (${script.props.map(_.name).mkString(", ")})")
     }
     api.printLine("")
     api.printLine("========== [Queue] ==========")

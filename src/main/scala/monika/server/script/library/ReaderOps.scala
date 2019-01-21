@@ -38,7 +38,7 @@ trait ReaderOps extends UseScalaz {
     enqueueAfter(time, script, args)(api)
   })
 
-  def setNewProxy(filter: Filter): SC[Unit] = steps(
+  def setNewFilter(filter: Filter): SC[Unit] = steps(
     restartProxy(filter),
     update(state => state.copy(filter = filter))
   )

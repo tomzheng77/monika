@@ -7,9 +7,16 @@ object Status extends Script with UseScalaz with UseDateTime {
 
   override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
     api.printLine("========== [Commands] ==========")
+    val maxNameLength = Script.allScripts.map(_.name.length).max
     for (script <- Script.allScripts.sortBy(_.name)) {
-      if (script.props.isEmpty) api.printLine(s"- ${script.name}")
-      else api.printLine(s"- ${script.name} (${script.props.map(_.name).mkString(", ")})")
+      val name = script.name
+      val padLength = maxNameLength - name.length
+      val pad = Vector.fill(padLength)(' ').mkString
+      if (script.props.isEmpty) api.printLine(s"- ${script.name}$pad")
+      else {
+        val sortedProps = script.props.map(_.name).sorted
+        api.printLine(s"- ${script.name}$pad (${sortedProps.mkString(", ")})")
+      }
     }
     api.printLine("")
     api.printLine("========== [Queue] ==========")

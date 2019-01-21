@@ -16,7 +16,7 @@ case class KeywordRejectFilter(keywords: Set[String]) extends Filter with UseLog
   private def getContent(response: HttpResponse): Option[String] = {
     val responseHeaders = mkHeaders(response)
     val contentType = responseHeaders.getOrElse("Content-Type", "")
-    if (!contentType.startsWith("text/html")) return true
+    if (!contentType.startsWith("text/html")) return None
     response match {
       case full: FullHttpResponse => Some(full.content().toString(Constants.GlobalCharset))
       case _ => None

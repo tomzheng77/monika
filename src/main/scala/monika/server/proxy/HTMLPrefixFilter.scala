@@ -8,8 +8,6 @@ case class HTMLPrefixFilter(allow: Set[String]) extends Filter with UseLogger {
       import scala.collection.JavaConverters._
       msg.headers().asScala.map(entry => entry.getKey -> entry.getValue).toMap
     }
-    val requestHeaders = mkHeaders(request)
-    if (!requestHeaders.contains("Host")) return false // block all requests without host specified
 
     // filter only if the response is of type text/html
     // i.e. images, audio, JS, CSS will not be filtered
@@ -20,7 +18,8 @@ case class HTMLPrefixFilter(allow: Set[String]) extends Filter with UseLogger {
 
     // github.com
     // github.com/netty/netty/issues/2185
-    val host = requestHeaders("Host")
+    val requestHeaders = mkHeaders(request)
+    val host = requestHeaders.getOrElse("Host", "")
     val uri = request.getUri
     val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
     val urlWithoutHTTP = url.replaceFirst("^https?://", "")

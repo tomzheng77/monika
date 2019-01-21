@@ -1,6 +1,7 @@
 package monika.client
 
 import com.mashape.unirest.http.Unirest
+import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
 import org.json4s.JValue
 import org.json4s.JsonDSL._
@@ -37,11 +38,12 @@ object SignalClient {
         case Some("exit") => System.exit(0)
         case Some("") =>
         case Some(line) =>
-          val parts: JValue = seq2jvalue(line.split(' ').toVector)
-          val partsJson: String = pretty(render(parts))
+          val cmd: CommandLine = CommandLine.parse(line)
+          val vec: Vector[String] = cmd.getExecutable +: cmd.getArguments.toVector
+          val vecJson: String = pretty(render(seq2jvalue(vec)))
           val response: String = {
             Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-              .queryString("cmd", partsJson)
+              .queryString("cmd", vecJson)
               .asString().getBody
           }
           println(response)

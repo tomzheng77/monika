@@ -27,7 +27,8 @@ object LockSite extends Script(Internal, CanRequest) {
     setAsNonRoot(),
     restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
     restrictProjectsExcept(Vector.empty),
-    printLine(s"locked onto ${sites.size} sites")
+    printLine(s"locked onto ${sites.size} sites"),
+    enqueueNextStep(ForceOut)
   )
 
 }

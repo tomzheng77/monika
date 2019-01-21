@@ -54,6 +54,14 @@ object JSONSpec extends Properties("JSON") with UseJSON {
     })
   }
 
+  property("serialize filter") = {
+    forAll(arbitrary[Filter])(a => {
+      val writer = new StringWriter()
+      writeItemAsJSON(a, writer)
+      readJSONToItem[Filter](writer.toString) == a
+    })
+  }
+
   property("serialize") = {
     forAll(arbitrary[MonikaState])(a => {
       val writer = new StringWriter()

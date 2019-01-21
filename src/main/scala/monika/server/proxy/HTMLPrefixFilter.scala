@@ -2,7 +2,8 @@ package monika.server.proxy
 import io.netty.handler.codec.http.{HttpMessage, HttpRequest, HttpResponse}
 import monika.server.UseLogger
 
-case class HTMLPrefixFilter(allow: Set[String]) extends Filter with UseLogger {
+case class HTMLPrefixFilter(allow: Set[String], reject: Set[String]) extends Filter with UseLogger {
+
   override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
     def mkHeaders(msg: HttpMessage): Map[String, String] = {
       import scala.collection.JavaConverters._
@@ -23,9 +24,16 @@ case class HTMLPrefixFilter(allow: Set[String]) extends Filter with UseLogger {
     val uri = request.getUri
     val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
     val urlWithoutHTTP = url.replaceFirst("^https?://", "")
-    if (allow.exists(str => urlWithoutHTTP.startsWith(str))) true
-    else {
-      LOGGER.debug(s"intercepted request to $urlWithoutHTTP"); false
+
+    val result: Boolean = {
+      if (!allow.exists(str => urlWithoutHTTP.startsWith(str))) false
+      else if (reject.exists(str => urlWithoutHTTP.startsWith(str))) false
+      else true
     }
+    if (!result) {
+      LOGGER.debug(s"intercepted request to $urlWithoutHTTP")
+    }
+    result
   }
+
 }

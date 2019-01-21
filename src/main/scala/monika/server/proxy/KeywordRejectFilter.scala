@@ -4,13 +4,13 @@ import io.netty.handler.codec.http.{FullHttpResponse, HttpMessage, HttpRequest, 
 import monika.server.{Constants, UseLogger}
 
 case class KeywordRejectFilter(keywords: Set[String]) extends Filter with UseLogger {
-  override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
 
+  override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
     // reject if keyword found in header
     val url = getURL(request)
     val content = getContent(response)
     val regexes = keywords.map(_.r)
-    regexes.exists(r => r.findFirstMatchIn("").nonEmpty)
+    !regexes.exists(r => r.findFirstMatchIn("").nonEmpty)
   }
 
   private def getContent(response: HttpResponse): Option[String] = {

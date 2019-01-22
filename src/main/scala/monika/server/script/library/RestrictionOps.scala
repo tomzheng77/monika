@@ -26,8 +26,8 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     val (toUnlock, toLock) = Constants.Restricted.Programs
       .partition(pair => except.contains(pair._1)) |>
       (pair => (
-        pair._1.flatMap(x => api.findExecutableInPath(x._1) :+ x._2),
-        pair._2.flatMap(x => api.findExecutableInPath(x._1) :+ x._2)
+        pair._1.flatMap(x => api.findExecutableInPath(x._1) ++ x._2),
+        pair._2.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)
       ))
 
     for (program <- toUnlock) {
@@ -67,7 +67,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   def clearAllRestrictions(): SC[Unit] = SC(api => {
     api.call(passwd, "-u", User)
 
-    val programsToUnlock = Constants.Restricted.Programs.flatMap(x => api.findExecutableInPath(x._1) :+ x._2)
+    val programsToUnlock = Constants.Restricted.Programs.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)
     for (program <- programsToUnlock) {
       api.call(chmod, "755", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))

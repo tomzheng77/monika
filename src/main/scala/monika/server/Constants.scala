@@ -41,27 +41,27 @@ object Constants {
       * - killall will be run on the resolved location
       * - this should be referred to when sending commands
       *
-      * the core-file path is the path to a file required by the ongoing process
-      * once the program has been launched. it should be part of the "process" name
-      * when launched via the corresponding launcher (hence killall can work)
+      * the core-file path is the path of the ongoing process
+      * once the program has been launched. it should only be set when it
+      * is a separate file from the launcher
       * - upon lock, it will be set to root:root 700
       * - upon unlock, it will be set to root:root 755
       * - killall will be run on this path
       */
-    val Programs: Map[String @@ FileName, String @@ FilePath] = Vector(
-      "studio" -> "/opt/android-studio/jre/bin/java",
-      "subl" -> "/opt/sublime_text/sublime_text",
-      "idea" -> "/opt/JetBrains/Toolbox/apps/IDEA-U/ch-0/182.4892.20/jre64/bin/java",
-      "firefox" -> "/usr/lib64/firefox/firefox",
-      "google-chrome" -> "/opt/google/chrome/chrome",
-      "steam" -> "/usr/bin/steam",
-      "virtualbox" -> "/usr/lib/virtualbox/VirtualBox",
-      "wine" -> "/usr/bin/wine64-preloader",
-      "libreoffice" -> "/usr/lib64/libreoffice/program/soffice.bin",
-      "ssh" -> "/usr/bin/ssh",
-      "assistant.jar" -> "/usr/local/bin/assistant.jar",
-      "arduino" -> "/usr/bin/arduino"
-    ).map(pair => FileName(pair._1) -> FilePath(pair._2)).toMap
+    val Programs: Map[String @@ FileName, Option[String @@ FilePath]] = Vector(
+      "studio" -> Some("/opt/android-studio/jre/bin/java"),
+      "subl" -> Some("/opt/sublime_text/sublime_text"),
+      "idea" -> Some("/opt/JetBrains/Toolbox/apps/IDEA-U/ch-0/182.4892.20/jre64/bin/java"),
+      "firefox" -> Some("/usr/lib64/firefox/firefox"),
+      "google-chrome" -> Some("/opt/google/chrome/chrome"),
+      "steam" -> None,
+      "virtualbox" -> Some("/usr/lib/virtualbox/VirtualBox"),
+      "wine" -> Some("/usr/bin/wine64-preloader"),
+      "libreoffice" -> Some("/usr/lib64/libreoffice/program/soffice.bin"),
+      "ssh" -> None,
+      "assistant.jar" -> None,
+      "arduino" -> None
+    ).map(pair => FileName(pair._1) -> pair._2.map(FilePath)).toMap
 
     val Projects: Vector[String @@ FilePath] = Vector(
       Locations.ProjectRoot,

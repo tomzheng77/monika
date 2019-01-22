@@ -42,7 +42,8 @@ object Constants {
       * - this should be referred to when sending commands
       *
       * the core-file path is the path to a file required by the ongoing process
-      * once the program has been launched
+      * once the program has been launched. it should be part of the "process" name
+      * when launched via the corresponding launcher (hence killall can work)
       * - upon lock, it will be set to root:root 700
       * - upon unlock, it will be set to root:root 755
       * - killall will be run on this path

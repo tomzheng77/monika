@@ -21,12 +21,12 @@ trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
     TransparentFilter.getClass,
   ) ++ Script.allScripts.map(_.getClass)
 
-  object ScriptSerializer extends CustomSerializer[Script](_ => (
+  protected object ScriptSerializer extends CustomSerializer[Script](_ => (
     { case JString(name) => Script.allScriptsByName(name) },
     { case s: Script => JString(s.name) }
   ))
 
-  object LocalDateTimeSerializer extends CustomSerializer[LocalDateTime](_ => (
+  protected object LocalDateTimeSerializer extends CustomSerializer[LocalDateTime](_ => (
     { case JString(str) => LocalDateTime.parse(str, DefaultFormatter) },
     { case s: LocalDateTime => JString(s.format(DefaultFormatter)) }
   ))

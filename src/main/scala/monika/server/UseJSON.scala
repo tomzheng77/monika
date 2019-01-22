@@ -3,7 +3,7 @@ package monika.server
 import java.io.Writer
 import java.time.LocalDateTime
 
-import monika.server.proxy.{HTMLPrefixFilter, TransparentFilter}
+import monika.server.proxy.{URLFilter, TransparentFilter}
 import monika.server.script.Script
 import org.json4s.JsonAST.JString
 import org.json4s.jackson.JsonMethods
@@ -17,7 +17,7 @@ trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
   protected type JsonInput = org.json4s.JsonInput
 
   private val classes: List[Class[_]] = List(
-    classOf[HTMLPrefixFilter],
+    classOf[URLFilter],
     TransparentFilter.getClass,
   ) ++ Script.allScripts.map(_.getClass)
 

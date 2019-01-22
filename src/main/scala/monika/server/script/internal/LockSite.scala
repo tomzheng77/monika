@@ -1,7 +1,7 @@
 package monika.server.script.internal
 
 import monika.Primitives.FileName
-import monika.server.proxy.HTMLPrefixFilter
+import monika.server.proxy.URLFilter
 import monika.server.script.Script
 import monika.server.script.property.{CanRequest, Internal}
 
@@ -23,7 +23,7 @@ object LockSite extends Script(Internal, CanRequest) {
 
   private def lockSiteInternal(sites: Set[String]): SC[Unit] = steps(
     clearAllRestrictions(),
-    setNewFilter(HTMLPrefixFilter(sites, Set.empty)),
+    setNewFilter(URLFilter(sites, Set.empty)),
     setAsNonRoot(),
     restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
     restrictProjectsExcept(Vector.empty),

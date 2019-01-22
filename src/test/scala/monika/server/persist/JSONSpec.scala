@@ -5,7 +5,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.server.Structs._
 import monika.server.UseJSON
-import monika.server.proxy.{Filter, HTMLPrefixFilter, TransparentFilter}
+import monika.server.proxy.{Filter, URLFilter, TransparentFilter}
 import monika.server.script.Script
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop.forAll
@@ -26,7 +26,7 @@ object JSONSpec extends Properties("JSON") with UseJSON {
   implicit def VectorGenArb[A: Arbitrary]: Arbitrary[Vector[A]] = Arbitrary(Gen.listOf(arbitrary[A]).map(l => l.toVector))
   implicit val FilterGenArb: Arbitrary[Filter] = Arbitrary(Gen.oneOf(
     Gen.const(TransparentFilter),
-    Gen.resultOf(HTMLPrefixFilter)
+    Gen.resultOf(URLFilter)
   ))
   implicit val MonikaGenArb: Arbitrary[MonikaState] = Arbitrary(Gen.resultOf(MonikaState))
 

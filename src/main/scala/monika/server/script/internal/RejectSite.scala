@@ -22,8 +22,7 @@ object RejectSite extends Script(Internal, CanRequest) {
     setAsNonRoot(),
     restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
     restrictProjectsExcept(Vector.empty),
-    printLine(s"rejected ${sites.size} sites"),
-    enqueueNextStep(ForceOut)
+    printLine(s"rejected ${sites.size} sites")
   )
 
 }

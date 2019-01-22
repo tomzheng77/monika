@@ -29,8 +29,7 @@ object LockProfile extends Script(Internal, CanRequest) {
     setNewFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
     restrictProgramsExcept(programs.map(FileName).toVector),
-    restrictProjectsExcept(projects.map(FileName).toVector),
-    enqueueNextStep(ForceOut)
+    restrictProjectsExcept(projects.map(FileName).toVector)
   )
 
 }

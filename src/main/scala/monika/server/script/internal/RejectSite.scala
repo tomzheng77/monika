@@ -11,7 +11,7 @@ object RejectSite extends Script(Internal, CanRequest) {
     if (args.size != 1) {
       printLine("usage: reject-site <sites>")
     } else {
-      val sites = args(0).split(',').toSet
+      val sites = args(0) |> toSet
       rejectSiteInternal(sites)
     }
   }

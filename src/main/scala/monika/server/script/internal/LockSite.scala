@@ -16,7 +16,7 @@ object LockSite extends Script(Internal, CanRequest) {
     if (args.size != 1) {
       printLine("usage: lock-site <sites>")
     } else {
-      val sites = args(0).split(',').toSet
+      val sites = args(0) |> toSet
       lockSiteInternal(sites)
     }
   }

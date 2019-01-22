@@ -11,10 +11,10 @@ object LockProfile extends Script(Internal, CanRequest) {
     if (args.size != 4) {
       printLine("usage: lock-profile <url-allow> <url-reject> <programs> <projects>")
     } else {
-      val urlAllow = args(0).split(',').toSet
-      val urlReject = args(1).split(',').toSet
-      val programs = args(2).split(',').toSet
-      val projects = args(3).split(',').toSet
+      val urlAllow = args(0) |> toSet
+      val urlReject = args(1) |> toSet
+      val programs = args(2) |> toSet
+      val projects = args(3) |> toSet
       lockProfileInternal(urlAllow, urlReject, programs, projects)
     }
   }

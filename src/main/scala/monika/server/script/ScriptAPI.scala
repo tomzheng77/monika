@@ -19,6 +19,6 @@ trait ScriptAPI {
   def transaction[A](fn: MonikaState => (MonikaState, A)): A
   def restartProxy(filter: Filter): Unit
   def rewriteCertificates(): Unit
-  def findExecutableInPath(name: String @@ FileName): Option[String @@ FilePath]
+  def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath]
 
 }

@@ -61,7 +61,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = Hibernate.transaction(fn)
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
     override def rewriteCertificates(): Unit = ProxyServer.writeCertificatesToFiles()
-    override def findExecutableInPath(name: String @@ FileName): Option[String @@ FilePath] = {
+    override def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath] = {
       Subprocess.findExecutableInPath(name)
     }
 

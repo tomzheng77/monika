@@ -27,7 +27,7 @@ trait ReaderOps extends UseScalaz {
   def update(fn: MonikaState => MonikaState): SC[Unit] = transaction(state => (fn(state), Unit))
   def transaction[A](fn: MonikaState => (MonikaState, A)): SC[A] = SC(api => api.transaction(fn))
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
-  def findExecutableInPath(name: String @@ FileName): SC[Option[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
+  def findExecutableInPath(name: String @@ FileName): SC[Vector[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
 
   def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = {
     SC(api => api.enqueueAfter(at, script, args))

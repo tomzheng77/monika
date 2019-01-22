@@ -23,7 +23,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   })
 
   def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
-    val (toUnlock, toLock) = Constants.Restricted.Programs
+    val (toUnlock, toLock) = Constants.Restricted.Programs.keySet.toVector
       .partition(except.contains) |> (pair => (
         pair._1.flatMap(api.findExecutableInPath),
         pair._2.flatMap(api.findExecutableInPath)
@@ -66,7 +66,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   def clearAllRestrictions(): SC[Unit] = SC(api => {
     api.call(passwd, "-u", User)
 
-    val programs = Constants.Restricted.Programs.flatMap(api.findExecutableInPath)
+    val programs = Constants.Restricted.Programs.keySet.toVector.flatMap(api.findExecutableInPath)
     for (program <- programs) {
       api.call(chmod, "755", Tag.unwrap(program))
       api.call(chown, "root:root", Tag.unwrap(program))

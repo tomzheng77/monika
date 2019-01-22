@@ -33,21 +33,33 @@ object Constants {
 
   object Restricted {
 
-    val Programs: Vector[String @@ FileName] = Vector(
-      "studio",
-      "subl",
-      "idea",
-      "firefox",
-      "google-chrome",
-      "steam",
-      "virtualbox",
-      "jetbrains-toolbox",
-      "wine",
-      "libreoffice",
-      "ssh",
-      "assistant.jar",
-      "arduino"
-    ).map(FileName)
+    /**
+      * programs organised by launcher name and core-file path
+      * the launcher name is the name of the script inside PATH
+      * - upon lock, it will be set to root:root 700
+      * - upon unlock, it will be set to root:root 755
+      * - killall will be run on the resolved location
+      *
+      * the core-file path is the path to a file required by the ongoing process
+      * once the program has been launched
+      * - upon lock, it will be set to root:root 700
+      * - upon unlock, it will be set to root:root 755
+      * - killall will be run on this path
+      */
+    val Programs: Map[String @@ FileName, String @@ FilePath] = Vector(
+      "studio" -> "/opt/android-studio/jre/bin/java",
+      "subl" -> "/opt/sublime_text/sublime_text",
+      "idea" -> "/opt/JetBrains/Toolbox/apps/IDEA-U/ch-0/182.4892.20/jre64/bin/java",
+      "firefox" -> "/usr/lib64/firefox/firefox",
+      "google-chrome" -> "/opt/google/chrome/chrome",
+      "steam" -> "/usr/bin/steam",
+      "virtualbox" -> "/usr/lib/virtualbox/VirtualBox",
+      "wine" -> "/usr/bin/wine64-preloader",
+      "libreoffice" -> "/usr/lib64/libreoffice/program/soffice.bin",
+      "ssh" -> "/usr/bin/ssh",
+      "assistant.jar" -> "/usr/local/bin/assistant.jar",
+      "arduino" -> "/usr/bin/arduino"
+    ).map(pair => FileName(pair._1) -> FilePath(pair._2)).toMap
 
     val Projects: Vector[String @@ FilePath] = Vector(
       Locations.ProjectRoot,

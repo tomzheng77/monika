@@ -35,7 +35,7 @@ object Subprocess extends UseLogger {
     // resolve the program within customized PATH (incl. Constants.PathAdd)
     val resolvedProgram: String = {
       if (program.startsWith("/")) program
-      else findExecutableInPath(FileName(program)).map(Tag.unwrap).getOrElse {
+      else findExecutableInPath(FileName(program)).map(Tag.unwrap).headOption.getOrElse {
         throw new RuntimeException(s"cannot resolve program '$program' in PATH")
       }
     }
@@ -65,11 +65,11 @@ object Subprocess extends UseLogger {
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
     */
-  def findExecutableInPath(program: String @@ FileName): Option[String @@ FilePath] = {
+  def findExecutableInPath(program: String @@ FileName): Vector[String @@ FilePath] = {
     val programName = Tag.unwrap(program)
     Constants.PathList
       .map(path => new File(path + File.separator + programName))
-      .find(file => file.exists && file.isFile && file.canExecute)
+      .filter(file => file.exists && file.isFile && file.canExecute)
       .map(file => FilePath(file.getCanonicalPath))
   }
 

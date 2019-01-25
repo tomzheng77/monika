@@ -3,7 +3,6 @@ package monika.client
 import com.mashape.unirest.http.Unirest
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
-import org.json4s.JValue
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 

@@ -47,8 +47,8 @@ object Morning {
     get("/list", (req, resp) => {
       Morning.this.synchronized {
         deposits.toVector.sortBy(_._1).map {
-          case (id, bytes) => id
-        }
+          case (id, message) => s"$id: $message"
+        }.mkString("\n")
       }
     })
     get("/obtain", (req, resp) => {

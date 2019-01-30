@@ -18,7 +18,8 @@ object Structs {
   case class MonikaState(
     root: Boolean = true,
     queue: Vector[FutureAction] = Vector.empty,
-    filter: Filter = TransparentFilter
+    filter: Filter = TransparentFilter,
+    solves: Vector[LocalDateTime] = Vector.empty
   )
 
   case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)

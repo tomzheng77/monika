@@ -2,9 +2,11 @@ package monika.morning
 
 import java.time.LocalDateTime
 
-import monika.server.Constants
 import scalaz.{@@, Tag}
 import spark.Spark.{get, port}
+import scalaz.syntax.id._
+
+import scala.language.implicitConversions
 
 object Morning {
 
@@ -15,34 +17,47 @@ object Morning {
   //   all notes will be deleted
   // - notes cannot be viewed from 11 PM until 7 AM
 
+  // - is there any benefit in allowing binary notes?
 
-  sealed trait ItemID
-  def ItemID[A](a: A): A @@ ItemID = Tag[A, ItemID](a)
+  sealed trait NoteID
+  def NoteID[A <: Int](a: A): A @@ NoteID = Tag[A, NoteID](a)
 
-  private var nextID: Int @@ ItemID = ItemID(0)
+  sealed trait Message
+  def Message[A <: Int](a: A): A @@ Message = Tag[A, Message](a)
+
+//  sealed trait NoteID
+//  def NoteID[A](a: A): A @@ NoteID = Tag[A, NoteID](a)
+
+  private var nextID: Int @@ NoteID = NoteID(0)
   private var solves: Vector[LocalDateTime] = Vector.empty
-  private var deposits: Map[Int @@ ItemID, Array[Byte]] = Map.empty
+  private var deposits: Map[Int @@ NoteID, String @@ Message] = Map.empty
 
   def main(args: Array[String]): Unit = {
-    port(Constants.InterpreterPort)
+    port(3000)
     get("/captcha", (req, resp) => {
       Morning.this.synchronized {
-        // TODO: provide a CAPTCHA image for the user to solve
         solves :+= LocalDateTime.now()
-        ""
+        "the captcha has been solved"
       }
     })
     get("/deposit", (req, resp) => {
       Morning.this.synchronized {
-        deposits = deposits.updated(nextID, req.bodyAsBytes())
-        nextID = ItemID(Tag.unwrap(nextID) + 1)
-        "the item has been successfully deposited"
+        deposits = deposits.updated(nextID, Message(req.body()))
+        nextID = NoteID(Tag.unwrap(nextID) + 1)
+        "the note has been successfully deposited"
+      }
+    })
+    get("/list", (req, resp) => {
+      Morning.this.synchronized {
+        deposits.toVector.sortBy(_._1).map {
+          case (id, bytes) => id
+        }
       }
     })
     get("/obtain", (req, resp) => {
       Morning.this.synchronized {
         val id = req.queryParams("id").toInt
-        deposits.get(ItemID(id))
+        deposits.get(NoteID(id)).map(Tag.unwrap).getOrElse(s"the ID $id does not exist")
       }
     })
     get("/delete", (req, resp) => {

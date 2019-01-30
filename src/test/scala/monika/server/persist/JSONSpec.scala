@@ -5,12 +5,12 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.server.Structs._
 import monika.server.UseJSON
-import monika.server.proxy.{Filter, URLFilter, TransparentFilter}
-import monika.server.script.Script
+import monika.server.proxy.{Filter, TransparentFilter, URLFilter}
+import monika.server.script.{Request, Script}
+import monika.server.script.internal.Unlock
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}
-import org.scalatest.{FlatSpec, Matchers}
 
 object JSONSpec extends Properties("JSON") with UseJSON {
 

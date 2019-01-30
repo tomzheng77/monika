@@ -39,7 +39,7 @@ object Morning {
         // TODO: remember the note
         deposits = deposits.updated(nextID, req.bodyAsBytes())
         nextID = ItemID(Tag.unwrap(nextID) + 1)
-        ""
+        "the item has been successfully deposited"
       }
     })
     get("/obtain", (req, resp) => {

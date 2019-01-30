@@ -1,7 +1,12 @@
 package monika.morning
 
+import java.time.LocalDateTime
+
+import monika.Primitives.FileName
 import monika.server.Constants
+import scalaz.{@@, Tag}
 import spark.Spark
+import spark.Spark.{get, port}
 
 object Morning {
 
@@ -12,23 +17,42 @@ object Morning {
   //   all notes will be deleted
   // - notes cannot be viewed from 11 PM until 7 AM
 
+
+  sealed trait ItemID
+  def ItemID[A](a: A): A @@ ItemID = Tag[A, ItemID](a)
+
+  private var nextID: Int @@ ItemID = ItemID(0)
+  private var solves: Vector[LocalDateTime] = Vector.empty
+  private var deposits: Map[Int @@ ItemID, Array[Byte]] = Map.empty
+
   def main(args: Array[String]): Unit = {
-    Spark.port(Constants.InterpreterPort)
-    Spark.get("/captcha", (req, resp) => {
-      // TODO: provide a CAPTCHA image for the user to solve
-      ""
+    port(Constants.InterpreterPort)
+    get("/captcha", (req, resp) => {
+      Morning.this.synchronized {
+        // TODO: provide a CAPTCHA image for the user to solve
+        solves :+= LocalDateTime.now()
+        ""
+      }
     })
-    Spark.get("/add-note", (req, resp) => {
-      // TODO: remember the note
-      ""
+    get("/deposit", (req, resp) => {
+      Morning.this.synchronized {
+        // TODO: remember the note
+        deposits = deposits.updated(nextID, req.bodyAsBytes())
+        nextID = ItemID(Tag.unwrap(nextID) + 1)
+        ""
+      }
     })
-    Spark.get("/view-notes", (req, resp) => {
-      // TODO: print out all notes
-      ""
+    get("/obtain", (req, resp) => {
+      Morning.this.synchronized {
+        // TODO: print out all notes
+        ""
+      }
     })
-    Spark.get("/remove-note", (req, resp) => {
-      // TODO: remove the note
-      ""
+    get("/delete", (req, resp) => {
+      Morning.this.synchronized {
+        // TODO: remove the note
+        ""
+      }
     })
   }
 

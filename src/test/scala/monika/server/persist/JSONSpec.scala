@@ -6,8 +6,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 import monika.server.Structs._
 import monika.server.UseJSON
 import monika.server.proxy.{Filter, TransparentFilter, URLFilter}
-import monika.server.script.{Request, Script}
-import monika.server.script.internal.Unlock
+import monika.server.script.Script
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Properties}

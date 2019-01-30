@@ -17,8 +17,6 @@ object Morning {
   //   all notes will be deleted
   // - notes cannot be viewed from 11 PM until 7 AM
 
-  // - is there any benefit in allowing binary notes?
-
   sealed trait NoteID
   def NoteID[A <: Int](a: A): A @@ NoteID = Tag[A, NoteID](a)
 

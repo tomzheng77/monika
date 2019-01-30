@@ -1,6 +1,7 @@
 package monika.morning
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, LocalTime}
+import java.util.{Timer, TimerTask}
 
 import scalaz.{@@, Tag}
 import spark.Spark.{get, port}
@@ -78,8 +79,21 @@ object Morning {
     })
   }
 
-  def main(args: Array[String]): Unit = {
+  def runTomorrow(time: LocalTime, task: () => Unit, repeat: Boolean = true): Unit = {
+    val timer = new Timer()
+    val now = LocalDateTime.now()
+    val tomorrow = now.toLocalDate.plusDays(1)
+    val tomorrowTime = LocalDateTime.of(tomorrow, time)
+    val firstDelay = 0 // TODO: calculate first delay
+    val interval = 24 * 60 * 60 * 1000
+    timer.schedule(new TimerTask {
+      override def run(): Unit = task()
+    }, firstDelay, interval)
+  }
 
+  def main(args: Array[String]): Unit = {
+    startHttpServer()
+    runTomorrow(LocalTime.of(7, 0), () => ())
   }
 
 }

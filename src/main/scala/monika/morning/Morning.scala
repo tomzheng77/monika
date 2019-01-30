@@ -2,10 +2,8 @@ package monika.morning
 
 import java.time.LocalDateTime
 
-import monika.Primitives.FileName
 import monika.server.Constants
 import scalaz.{@@, Tag}
-import spark.Spark
 import spark.Spark.{get, port}
 
 object Morning {
@@ -36,7 +34,6 @@ object Morning {
     })
     get("/deposit", (req, resp) => {
       Morning.this.synchronized {
-        // TODO: remember the note
         deposits = deposits.updated(nextID, req.bodyAsBytes())
         nextID = ItemID(Tag.unwrap(nextID) + 1)
         "the item has been successfully deposited"
@@ -44,14 +41,14 @@ object Morning {
     })
     get("/obtain", (req, resp) => {
       Morning.this.synchronized {
-        // TODO: print out all notes
-        ""
+        val id = req.queryParams("id").toInt
+        deposits.get(ItemID(id))
       }
     })
     get("/delete", (req, resp) => {
       Morning.this.synchronized {
-        // TODO: remove the note
-        ""
+        deposits -= nextID
+        "the item has been successfully deleted"
       }
     })
   }

@@ -13,7 +13,7 @@ object Structs {
     * Things Monika must remember across multiple sessions
     * @param root whether the user can run privileged scripts
     * @param queue actions to perform in the future
-    * @param proxy settings which the proxy was last set to
+    * @param filter settings which the proxy was last set to
     */
   case class MonikaState(
     root: Boolean = true,

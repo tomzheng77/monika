@@ -1,11 +1,9 @@
 package monika.server
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
-import monika.Primitives.FileName
 import monika.server.proxy.{Filter, TransparentFilter}
 import monika.server.script.Script
-import scalaz.@@
 
 object Structs {
 
@@ -19,7 +17,7 @@ object Structs {
     root: Boolean = true,
     queue: Vector[FutureAction] = Vector.empty,
     filter: Filter = TransparentFilter,
-    solves: Vector[LocalDateTime] = Vector.empty
+    passwords: Map[LocalDate, String] = Map.empty
   )
 
   case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)

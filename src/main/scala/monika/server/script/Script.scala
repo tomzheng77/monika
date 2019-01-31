@@ -1,7 +1,7 @@
 package monika.server.script
 
 import monika.server.UseScalaz
-import monika.server.script.library.{InputOps, QueueOps, ReaderOps, RestrictionOps}
+import monika.server.script.library._
 import monika.server.script.property.Property
 import org.reflections.Reflections
 import shapeless.Typeable
@@ -13,7 +13,8 @@ abstract class Script(val props: Property*) extends UseScalaz
   with ReaderOps
   with RestrictionOps
   with QueueOps
-  with InputOps {
+  with InputOps
+  with RandomOps {
 
   def hasProperty(property: Property): Boolean = {
     props.contains(property)

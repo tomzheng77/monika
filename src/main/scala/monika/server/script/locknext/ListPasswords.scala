@@ -3,6 +3,7 @@ package monika.server.script.locknext
 import monika.server.script.Script
 
 object ListPasswords extends Script {
+
   override def run(args: Vector[String]): SC[Unit] = SC(api => {
     val state = api.query()
     val today = api.nowTime().toLocalDate
@@ -19,4 +20,5 @@ object ListPasswords extends Script {
       }
     }
   })
+
 }

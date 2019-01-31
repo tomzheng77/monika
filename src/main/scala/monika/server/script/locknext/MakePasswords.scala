@@ -16,7 +16,7 @@ object MakePasswords extends Script {
     val seed = now.toInstant(ZoneOffset.UTC).toEpochMilli.hashCode()
     val nextPassword: R[String] = nextString(PasswordLength)(Dictionary)
     val nextPasswords: R[Map[LocalDate, String]] = {
-      rands(100)(nextPassword).map(pwds => {
+      rands(PasswordsToGenerate)(nextPassword).map(pwds => {
         pwds.zipWithIndex.map(pair => today.plusDays(pair._2) -> pair._1).toMap
       })
     }

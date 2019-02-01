@@ -49,6 +49,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
     for ((program, coreOpt) <- toLock) {
       for (path <- api.findExecutableInPath(program)) {
+        api.call(killall, "-u", User, unwrap(path))
         api.call(chmod, "700", unwrap(path))
         api.call(chown, "root:root", unwrap(path))
       }

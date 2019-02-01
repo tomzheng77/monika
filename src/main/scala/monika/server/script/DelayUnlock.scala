@@ -11,23 +11,26 @@ object DelayUnlock extends Script with UseDateTime {
   override def run(args: Vector[String]): SC[Unit] = {
     if (args.isEmpty) printLine("usage: delay-unlock <minutes>")
     else if (Try(args(0).toInt).filter(_ > 0).isFailure) printLine("minutes must be a positive integer")
-    else delayUnlockForMinutes(minutes = args(0).toInt)
+    else getState().flatMap(st => delayUnlockForMinutes(state = st, minutes = args(0).toInt))
   }
 
-  private def delayUnlockForMinutes(minutes: Int): SC[Unit] = for {
-    state <- getState()
-    _ <- state.queue.indexWhere(_.script == Unlock) match {
+  private def delayUnlockForMinutes(state: MonikaState, minutes: Int): SC[Unit] = {
+    state |> indexOfUnlock match {
       case -1 => printLine("no unlock found")
       case index => delayUnlockAtIndexForMinutes(state, index, minutes)
     }
-  } yield Unit
+  }
+
+  private def indexOfUnlock(state: MonikaState): Int = {
+    state.queue.indexWhere(_.script == Unlock)
+  }
 
   private def delayUnlockAtIndexForMinutes(state: MonikaState, index: Int, minutes: Int): SC[Unit] = {
-    val oldAct = state.queue(index)
-    val newAct = FutureAction(oldAct.at.plusMinutes(minutes), Unlock)
-    val newQueue = state.queue |> removeAt(index) |> addItems(newAct)
+    val oldAction = state.queue(index)
+    val newAction = FutureAction(oldAction.at.plusMinutes(minutes), Unlock)
+    val newQueue = state.queue |> removeAt(index) |> addItems(newAction)
     steps(
-      printLine(s"unlock moved to ${newAct.at.format(DefaultFormatter)}"),
+      printLine(s"unlock moved to ${newAction.at.format(DefaultFormatter)}"),
       setState(state.copy(queue = newQueue))
     )
   }

@@ -64,6 +64,10 @@ object Constants {
       "arduino" -> None
     ).map(pair => Filename(pair._1) -> pair._2.map(CanonicalPath)).toMap
 
+    val Browsers: Map[String @@ Filename, Option[String @@ CanonicalPath]] = Programs.filterKeys(k ⇒ {
+      k == "google-chrome" || k == "firefox"
+    })
+
     val ProjectFolders: Vector[String @@ CanonicalPath] = Vector(
       "/home/tomzheng/Documents/Projects"
     ).map(CanonicalPath)

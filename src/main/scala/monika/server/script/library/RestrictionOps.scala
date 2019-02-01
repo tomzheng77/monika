@@ -37,6 +37,17 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     api.call(usermod, "-G", newGroups.mkString(","), User)
   })
 
+  def closeAllBrowsers(): IOS[Unit] = IOS(api ⇒ {
+    for ((program, coreOpt) <- Constants.Restricted.Browsers) {
+      for (path <- api.findExecutableInPath(program)) {
+        api.call(killall, "-u", User, unwrap(path))
+      }
+      for (core ← coreOpt) {
+        api.call(killall, "-u", User, unwrap(core))
+      }
+    }
+  })
+
   def restrictProgramsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
     val (toUnlock, toLock) = Constants.Restricted.Programs
       .partition(pair => except.contains(pair._1))

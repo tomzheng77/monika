@@ -22,6 +22,20 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     api.call(killall, "-u", User, "gnome-session-binary")
   })
 
+  def removeFromWheelGroup(): SC[Unit] = SC(api => {
+    val primaryGroup = api.call(id, "-gn", User).stdout |> decode
+    val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
+    val newGroups = oldGroups.filter(g => g != primaryGroup && g!= "wheel")
+    api.call(usermod, "-G", newGroups.mkString(","), User)
+  })
+
+  def addToWheelGroup(): SC[Unit] = SC(api => {
+    val primaryGroup = api.call(id, "-gn", User).stdout |> decode
+    val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
+    val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
+    api.call(usermod, "-G", newGroups.mkString(","), User)
+  })
+
   def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
     val (toUnlock, toLock) = Constants.Restricted.Programs
       .partition(pair => except.contains(pair._1)) |>

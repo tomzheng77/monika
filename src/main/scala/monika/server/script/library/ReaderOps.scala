@@ -24,6 +24,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   def nowTime(): IOS[LocalDateTime] = IOS(api => api.nowTime())
   def printLine(text: String): IOS[Unit] = IOS(api => api.printLine(text))
   def call(command: Command, args: String*): IOS[CommandOutput] = IOS(api => api.call(command, args: _*))
+  def callWithInput(command: Command, args: Array[String], input: Array[Byte]): IOS[CommandOutput] = IOS(api => api.callWithInput(command, args, input))
   def getState(): IOS[MonikaState] = IOS(api => api.getState())
   def setState(state: MonikaState): IOS[Unit] = IOS(api => api.setState(state))
   def restartProxy(filter: Filter): IOS[Unit] = IOS(api => api.restartProxy(filter))

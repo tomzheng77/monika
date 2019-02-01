@@ -12,7 +12,7 @@ import monika.server.script.property.{Internal, RootOnly}
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess
 import monika.server.subprocess.Subprocess.CommandOutput
-import scalaz.@@
+import scalaz.{@@, Tag}
 import spark.Spark
 
 import scala.collection.{GenIterable, mutable}
@@ -55,7 +55,9 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def nowTime(): LocalDateTime = initialTime
     override def printLine(str: String): Unit = writer.println(str)
 
-    override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)
+    override def callWithInput(command: Command, args: Array[String], input: Array[Byte]): CommandOutput = {
+      Subprocess.callUnsafely(Tag.unwrap(command.name), args, input)
+    }
 
     override def getState(): Structs.MonikaState = state
     override def setState(newState: MonikaState): Unit = state = newState

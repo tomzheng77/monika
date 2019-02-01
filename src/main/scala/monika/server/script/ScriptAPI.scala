@@ -13,7 +13,8 @@ trait ScriptAPI {
 
   def nowTime(): LocalDateTime
   def printLine(text: String): Unit
-  def call(command: Command, args: String*): CommandOutput
+  def call(command: Command, args: String*): CommandOutput = callWithInput(command, args.toArray, Array.emptyByteArray)
+  def callWithInput(command: Command, args: Array[String], input: Array[Byte]): CommandOutput
   def getState(): MonikaState
   def setState(state: MonikaState): Unit
   def restartProxy(filter: Filter): Unit

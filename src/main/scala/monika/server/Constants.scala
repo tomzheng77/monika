@@ -30,6 +30,7 @@ object Constants {
   val InterpreterPort = 9001
   val MaxQueueSize = 3
   val MonikaUser = "tomzheng"
+  val UnlockerUser = "unlocker"
 
   object Restricted {
 

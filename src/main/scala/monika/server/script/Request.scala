@@ -30,23 +30,12 @@ object Request extends Script with UseDateTime {
     * - if the queue is empty, the script is run immediately and an unlock is added afterwards
     * - otherwise, the unlock is delayed
     */
-  def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = for {
+  private def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = for {
     time <- nowTime()
     state <- getState()
     _ <- state |> indexOfUnlock match {
       case -1 => runScriptImmediatelyAndUnlockAfterMinutes(time, script, args, minutes)
-      case index => {
-        val oldScriptAction = state.queue(index)
-        val at = oldScriptAction.at
-        val scriptAction = FutureAction(at, script, args)
-        val unlockAction = FutureAction(at.plusMinutes(minutes), Unlock)
-        val newQueue = state.queue |> removeAt(index) |> addItems(scriptAction, unlockAction)
-        steps(
-          printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-          printLine(s"unlock moved to ${unlockAction.at.format(DefaultFormatter)}"),
-          setState(state.copy(queue = newQueue))
-        )
-      }
+      case index => replaceUnlockWithScriptAndAddUnlockAfterIt(state, script, args, minutes, index)
     }
   } yield Unit
 
@@ -57,6 +46,19 @@ object Request extends Script with UseDateTime {
       FutureAction(time.plusMinutes(minutes), Unlock)
     )
   )
+
+  private def replaceUnlockWithScriptAndAddUnlockAfterIt(state: MonikaState, script: Script, args: Vector[String], minutes: Int, index: Int): SC[Unit] = {
+    val oldScriptAction = state.queue(index)
+    val at = oldScriptAction.at
+    val scriptAction = FutureAction(at, script, args)
+    val unlockAction = FutureAction(at.plusMinutes(minutes), Unlock)
+    val newQueue = state.queue |> removeAt(index) |> addItems(scriptAction, unlockAction)
+    steps(
+      printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
+      printLine(s"unlock moved to ${unlockAction.at.format(DefaultFormatter)}"),
+      setState(state.copy(queue = newQueue))
+    )
+  }
 
   private def indexOfUnlock(state: MonikaState): Int = {
     state.queue.indexWhere(_.script == Unlock)

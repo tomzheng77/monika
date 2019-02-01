@@ -34,18 +34,14 @@ object Request extends Script with UseDateTime {
     time <- nowTime()
     state <- getState()
     _ <- state |> indexOfUnlock match {
-      case -1 => runScriptImmediatelyAndUnlockAfterMinutes(time, script, args, minutes)
+      case -1 => steps(
+        printLine(s"script '${script.name}' will run immediately"),
+        addActionToQueue(time, script, args),
+        addActionToQueue(time.plusMinutes(minutes), Unlock)
+      )
       case index => replaceUnlockWithScriptAndAddUnlockAfterMinutes(state, script, args, minutes, index)
     }
   } yield Unit
-
-  private def runScriptImmediatelyAndUnlockAfterMinutes(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): IOS[Unit] = steps(
-    printLine(s"script '${script.name}' will run immediately"),
-    addItemsToQueue(
-      FutureAction(time, script, args),
-      FutureAction(time.plusMinutes(minutes), Unlock)
-    )
-  )
 
   private def replaceUnlockWithScriptAndAddUnlockAfterMinutes(
     state: MonikaState,

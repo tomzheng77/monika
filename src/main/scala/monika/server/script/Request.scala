@@ -1,7 +1,5 @@
 package monika.server.script
 
-import java.time.LocalDateTime
-
 import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
@@ -32,42 +30,24 @@ object Request extends Script with UseDateTime {
     */
   private def requestInternal(minutes: Int, script: Script, args: Vector[String]): IOS[Unit] = for {
     time <- nowTime()
-    state <- getState()
-    _ <- state |> indexOfUnlock match {
-      case -1 => steps(
+    _ <- findScriptInQueue(Unlock).flatMap {
+      case None => steps(
         printLine(s"script '${script.name}' will run immediately"),
         addActionToQueue(time, script, args),
         addActionToQueue(time.plusMinutes(minutes), Unlock)
       )
-      case index => replaceUnlockWithScriptAndAddUnlockAfterMinutes(state, script, args, minutes, index)
+      case Some((FutureAction(at, _, _), index)) => steps(
+        printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
+        printLine(s"unlock moved to ${at.format(DefaultFormatter)}"),
+        removeActionFromQueue(index),
+        addActionToQueue(at, script, args),
+        addActionToQueue(at.plusMinutes(minutes), Unlock)
+      )
     }
   } yield Unit
 
-  private def replaceUnlockWithScriptAndAddUnlockAfterMinutes(
-    state: MonikaState,
-    script: Script,
-    args: Vector[String],
-    minutes: Int,
-    index: Int
-  ): IOS[Unit] = {
-    val oldScriptAction = state.queue(index)
-    val at = oldScriptAction.at
-    val scriptAction = FutureAction(at, script, args)
-    val unlockAction = FutureAction(at.plusMinutes(minutes), Unlock)
-    val newQueue = state.queue |> removeAt(index) |> addItems(scriptAction, unlockAction)
-    steps(
-      printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-      printLine(s"unlock moved to ${unlockAction.at.format(DefaultFormatter)}"),
-      setState(state.copy(queue = newQueue))
-    )
-  }
-
   private def indexOfUnlock(state: MonikaState): Int = {
     state.queue.indexWhere(_.script == Unlock)
-  }
-
-  private def addItemsToQueue(items: FutureAction*): IOS[Unit] = {
-    transformState(state => state.copy(queue = state.queue |> addItems(items:_*)))
   }
 
 }

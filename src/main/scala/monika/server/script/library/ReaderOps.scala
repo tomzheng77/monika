@@ -35,6 +35,27 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     _ <- setState(fn(state))
   } yield Unit
 
+  def removeActionFromQueue(index: Int): IOS[Unit] = {
+    def removeAt[A](index: Int)(queue: Vector[A]): Vector[A] = {
+      if (!queue.indices.contains(index)) queue
+      else queue.take(index) ++ queue.drop(index + 1)
+    }
+    IOS(api => {
+      val state = api.getState()
+      api.setState(state.copy(queue = removeAt(index)(state.queue)))
+    })
+  }
+
+  def findScriptInQueue[A <: Script](script: A): IOS[Option[(FutureAction, Int)]] = {
+    IOS(api ⇒ {
+      val state = api.getState()
+      state.queue.indexWhere(_.script == script) match {
+        case -1 ⇒ None
+        case index ⇒ Some(state.queue(index) -> index)
+      }
+    })
+  }
+
   def addActionToQueue(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = {
     IOS(api => {
       val state = api.getState()

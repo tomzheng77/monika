@@ -3,7 +3,7 @@ package monika.server.script
 import monika.server.Structs.FutureAction
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
-import monika.server.script.property.CanRequest
+import monika.server.script.property.Requestable
 
 import scala.util.Try
 
@@ -18,7 +18,7 @@ object Request extends Script with UseDateTime {
       val scriptName = args(1).trim
       Script.allScriptsByName.get(scriptName) match {
         case None => printLine(s"script '$scriptName' does not exist")
-        case Some(sc) if !sc.hasProperty(CanRequest) => printLine(s"script '$scriptName' cannot be requested")
+        case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
         case Some(sc) => requestInternal(minutes, sc, args.drop(2))
       }
     }

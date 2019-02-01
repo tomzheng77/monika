@@ -3,14 +3,14 @@ package monika.server.script.internal
 import monika.Primitives.FileName
 import monika.server.proxy.URLFilter
 import monika.server.script.Script
-import monika.server.script.property.{CanRequest, Internal}
+import monika.server.script.property.{Requestable, Internal}
 
 /**
   * - locks onto the specified website for a fixed amount of time
   * - HTTP pages will be intercepted unless starting with the provided prefix
   * - will call "unlock" after time has expired
   */
-object LockSite extends Script(Internal, CanRequest) {
+object LockSite extends Script(Internal, Requestable) {
 
   override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 1) {

@@ -22,7 +22,7 @@ object Morning {
   def NoteID[A <: Int](a: A): A @@ NoteID = Tag[A, NoteID](a)
 
   sealed trait Message
-  def Message[A <: Int](a: A): A @@ Message = Tag[A, Message](a)
+  def Message[A <: String](a: A): A @@ Message = Tag[A, Message](a)
 
   private var nextID: Int @@ NoteID = NoteID(0)
   private var solves: Vector[LocalDateTime] = Vector.empty

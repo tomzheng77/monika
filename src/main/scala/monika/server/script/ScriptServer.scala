@@ -56,7 +56,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def printLine(str: String): Unit = writer.println(str)
 
     override def callWithInput(command: Command, args: Array[String], input: Array[Byte]): CommandOutput = {
-      Subprocess.callUnsafely(Tag.unwrap(command.name), args, input)
+      Subprocess.callUnsafe(Tag.unwrap(command.name), args, input)
     }
 
     override def getState(): Structs.MonikaState = state
@@ -85,7 +85,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         if (!hasRoot) "user does not have root access"
         else if (args.isEmpty) "please provide a command to sudo"
         else {
-          Subprocess.callUnsafely(args.head, args.tail.toArray) |>
+          Subprocess.callUnsafe(args.head, args.tail.toArray) |>
             (_.stdout) |>
             (new String(_, "UTF-8"))
         }

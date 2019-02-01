@@ -23,7 +23,7 @@ object LockNext extends Script(RootOnly) {
     passwdOpt ← popPasswordFor(date = tomorrow)
     _ <- passwdOpt match {
       case None => printLine(s"there is no password for $tomorrow")
-      case Some(password) => steps(
+      case Some(password) => steps[Unit](
         call(passwd, "-l", Constants.MonikaUser),
         call(passwd, "-u", Constants.UnlockerUser),
         callWithInput(passwd, Array(Constants.UnlockerUser, "--stdin"), password.getBytes(Constants.GlobalCharset)),

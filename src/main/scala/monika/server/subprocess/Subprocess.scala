@@ -26,8 +26,8 @@ object Subprocess extends UseLogger {
     * @param workingDirectory directory where the program will be run
     * @return an object containing exit value, stdout and stderr
     */
-  def callUnsafely(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.emptyByteArray,
-                   workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
+  def callUnsafe(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.emptyByteArray,
+                 workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
     // resolve the program within customized PATH (incl. Constants.PathAdd)
     val resolvedProgram: String = {
       if (program.startsWith("/")) program

@@ -1,5 +1,6 @@
 package monika.morning
 
+import java.time.temporal.{ChronoUnit, TemporalUnit}
 import java.time.{LocalDateTime, LocalTime}
 import java.util.{Timer, TimerTask}
 
@@ -84,7 +85,7 @@ object Morning {
     val now = LocalDateTime.now()
     val tomorrow = now.toLocalDate.plusDays(1)
     val tomorrowTime = LocalDateTime.of(tomorrow, time)
-    val firstDelay = 0 // TODO: calculate first delay
+    val firstDelay = now.until(tomorrowTime, ChronoUnit.MILLIS)
     val interval = 24 * 60 * 60 * 1000
     timer.schedule(new TimerTask {
       override def run(): Unit = task()

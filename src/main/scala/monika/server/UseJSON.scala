@@ -8,7 +8,7 @@ import monika.server.script.Script
 import org.json4s.JsonAST.JString
 import org.json4s.jackson.JsonMethods
 import org.json4s.native.Serialization
-import org.json4s.{CustomSerializer, DefaultFormats, DoubleMode, Formats, JsonDSL, ShortTypeHints}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, DoubleMode, Formats, JsonDSL, ShortTypeHints}
 
 trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
 
@@ -31,8 +31,8 @@ trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
     { case s: LocalDateTime => JString(s.format(DefaultFormatter)) }
   ))
 
-  private object LocalDateSerializer extends CustomSerializer[LocalDate](_ => (
-    { case JString(str) => LocalDate.parse(str) },
+  private object LocalDateSerializer extends CustomKeySerializer[LocalDate](_ => (
+    { case str => LocalDate.parse(str) },
     { case s: LocalDate => s.toString }
   ))
 

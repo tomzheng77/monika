@@ -39,20 +39,22 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
   def restrictProgramsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
     val (toUnlock, toLock) = Constants.Restricted.Programs
-      .partition(pair => except.contains(pair._1)) |>
-      (pair => (
-        pair._1.flatMap(x => api.findExecutableInPath(x._1) ++ x._2),
-        pair._2.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)
-      ))
+      .partition(pair => except.contains(pair._1))
 
-    for (program <- toUnlock) {
-      api.call(chmod, "755", unwrap(program))
-      api.call(chown, "root:root", unwrap(program))
+    for ((program, _) <- toUnlock) {
+      for (path <- api.findExecutableInPath(program)) {
+        api.call(chmod, "755", unwrap(path))
+        api.call(chown, "root:root", unwrap(path))
+      }
     }
-    for (program <- toLock) {
-      api.call(killall, "-u", User, unwrap(program))
-      api.call(chmod, "700", unwrap(program))
-      api.call(chown, "root:root", unwrap(program))
+    for ((program, coreOpt) <- toLock) {
+      for (path <- api.findExecutableInPath(program)) {
+        api.call(chmod, "700", unwrap(path))
+        api.call(chown, "root:root", unwrap(path))
+      }
+      for (core ← coreOpt) {
+        api.call(killall, "-u", User, unwrap(core))
+      }
     }
   })
 
@@ -82,7 +84,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   def clearAllRestrictions(): IOS[Unit] = IOS(api => {
     api.call(passwd, "-u", User)
 
-    val programsToUnlock = Constants.Restricted.Programs.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)
+    val programsToUnlock = Constants.Restricted.Programs.keys.flatMap(api.findExecutableInPath)
     for (program <- programsToUnlock) {
       api.call(chmod, "755", unwrap(program))
       api.call(chown, "root:root", unwrap(program))

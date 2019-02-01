@@ -7,8 +7,8 @@ import monika.server.script.property.Internal
 object Unlock extends Script(Internal) {
 
   override def run(args: Vector[String]): IOS[Unit] = steps(
-    restartProxy(TransparentFilter),
-    transformState(state => state.copy(filter = TransparentFilter, root = true)),
+    setFilter(TransparentFilter),
+    setAsRoot(),
     clearAllRestrictions(),
     printLine("unlock success")
   )

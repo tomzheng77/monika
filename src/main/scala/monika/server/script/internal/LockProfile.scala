@@ -26,7 +26,7 @@ object LockProfile extends Script(Internal, CanRequest) {
     projects: Set[String]
   ): IOS[Unit] = steps(
     clearAllRestrictions(),
-    setNewFilter(URLFilter(urlAllow, urlReject)),
+    setFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
     restrictProgramsExcept(programs.map(FileName).toVector),
     restrictProjectsExcept(projects.map(FileName).toVector)

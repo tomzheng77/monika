@@ -23,7 +23,7 @@ object LockSite extends Script(Internal, CanRequest) {
 
   private def lockSiteInternal(sites: Set[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
-    setNewFilter(URLFilter(sites, Set.empty)),
+    setFilter(URLFilter(sites, Set.empty)),
     setAsNonRoot(),
     restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
     restrictProjectsExcept(Vector.empty),

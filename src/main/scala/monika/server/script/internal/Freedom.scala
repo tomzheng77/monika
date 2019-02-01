@@ -8,7 +8,7 @@ object Freedom extends Script(Internal, CanRequest) {
 
   override def run(args: Vector[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
-    setNewFilter(TransparentFilter),
+    setFilter(TransparentFilter),
     setAsNonRoot()
   )
 

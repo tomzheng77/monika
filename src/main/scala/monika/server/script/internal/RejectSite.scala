@@ -18,7 +18,7 @@ object RejectSite extends Script(Internal, CanRequest) {
 
   private def rejectSiteInternal(sites: Set[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
-    setNewFilter(URLFilter(Set("/.*/"), sites)),
+    setFilter(URLFilter(Set("/.*/"), sites)),
     setAsNonRoot(),
     restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
     restrictProjectsExcept(Vector.empty),

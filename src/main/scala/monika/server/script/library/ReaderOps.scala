@@ -34,7 +34,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     _ <- setState(fn(state))
   } yield Unit
 
-  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = {
+  def addActionToQueue(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = {
     IOS(api => {
       val state = api.getState()
       val action = FutureAction(at, script, args)
@@ -42,12 +42,12 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     })
   }
 
-  def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = IOS(api => {
-    val time = nowTime()(api)
-    enqueueAfter(time, script, args)(api)
-  })
+  def addActionToQueueAtNow(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = for {
+    time <- nowTime()
+    _ <- addActionToQueue(time, script, args)
+  } yield Unit
 
-  def setNewFilter(filter: Filter): IOS[Unit] = steps(
+  def setFilter(filter: Filter): IOS[Unit] = steps(
     restartProxy(filter),
     transformState(state => state.copy(filter = filter))
   )
@@ -55,6 +55,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   implicit def anyAsUnit[A](sc: IOS[A]): IOS[Unit] = sc.map(_ => Unit)
 
   def setAsNonRoot(): IOS[Unit] = transformState(state => state.copy(root = false))
+  def setAsRoot(): IOS[Unit] = transformState(state => state.copy(root = true))
 
   def steps[A](scs: IOS[A]*): IOS[Vector[A]] = sequence(scs)
   def sequence[A](scs: GenIterable[IOS[A]]): IOS[Vector[A]] = IOS(api => {

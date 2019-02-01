@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
 import monika.Primitives.{FileName, FilePath}
-import monika.server.Structs.FutureAction
+import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
 import monika.server.script.property.{Internal, RootOnly}
@@ -21,6 +21,7 @@ import scala.util.Try
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {
 
   private val PublicScripts: Map[String, Script] = Script.allScriptsByName
+  private val ScriptExecutionLock = new Object()
 
   /**
     * - receives commands from the SimpleHttpClient
@@ -39,26 +40,33 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
           Try(readJSONToItem[List[String]](cmd)).getOrElse(Nil)
         }
         if (parts.isEmpty) "please provide a command (cmd) in JSON format"
-        else runScript(parts.head, parts.tail.toVector)
+        else runScriptFromRequest(parts.head, parts.tail.toVector)
       })
     }
   }
 
-  private class DefaultScriptAPI() extends ScriptAPI {
+  private class DefaultScriptAPI(initialState: MonikaState) extends ScriptAPI {
 
     private val initialTime = LocalDateTime.now()
     private val message = new StringWriter()
     private val writer = new PrintWriter(message)
     private val newFutureActions = mutable.Buffer[FutureAction]()
+    private var state = initialState
 
     override def nowTime(): LocalDateTime = initialTime
     override def printLine(str: String): Unit = writer.println(str)
     override def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String]): Unit = {
       newFutureActions += FutureAction(at, script, args)
     }
+
     override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)
-    override def query(): Structs.MonikaState = Hibernate.readStateOrDefault()
-    override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = Hibernate.transaction(fn)
+
+    override def query(): Structs.MonikaState = state
+    override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = {
+      val (newState, result) = fn(state)
+      state = newState; result
+    }
+
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
     override def rewriteCertificates(): Unit = ProxyServer.writeCertificatesToFiles()
     override def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath] = {
@@ -70,11 +78,12 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       message.toString
     }
     def futureActions(): Vector[FutureAction] = newFutureActions.toVector
+    def newState(): MonikaState = state
 
   }
 
-  private def runScript(script: String, args: Vector[String]): String = {
-    this.synchronized {
+  private def runScriptFromRequest(script: String, args: Vector[String]): String = {
+    ScriptExecutionLock.synchronized {
       LOGGER.debug(s"received command request: $script ${args.mkString(" ")}")
       val hasRoot = Hibernate.readStateOrDefault().root
       if (script == "sudo") {
@@ -90,19 +99,25 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         case Some(c) if c.hasProperty(Internal) => "this is an internal command"
         case Some(c) if c.hasProperty(RootOnly) && !hasRoot => "this command requires root"
         case Some(c) =>
-          val api = new DefaultScriptAPI()
-          c.run(args)(api)
+          val api = Hibernate.transaction(state => {
+            val api = new DefaultScriptAPI(state)
+            c.run(args)(api)
+            api.newState() -> api
+          })
           enqueueAll(api.futureActions())
           api.consoleOutput()
       }
     }
   }
 
-  private def runScriptInternal(script: Script, args: Vector[String]): Unit = this.synchronized {
-    this.synchronized {
+  private def runScriptInternal(script: Script, args: Vector[String]): Unit = {
+    ScriptExecutionLock.synchronized {
       LOGGER.debug(s"run internal: $script ${args.mkString(" ")}")
-      val api = new DefaultScriptAPI()
-      script.run(args)(api)
+      val api = Hibernate.transaction(state => {
+        val api = new DefaultScriptAPI(state)
+        script.run(args)(api)
+        api.newState() -> api
+      })
       enqueueAll(api.futureActions())
       LOGGER.debug(api.consoleOutput())
     }

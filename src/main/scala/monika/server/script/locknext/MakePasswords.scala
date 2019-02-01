@@ -3,11 +3,12 @@ package monika.server.script.locknext
 import java.time.{LocalDate, ZoneOffset}
 
 import monika.server.script.Script
+import monika.server.script.property.RootOnly
 
-object MakePasswords extends Script {
+object MakePasswords extends Script(RootOnly) {
 
   private val Dictionary = ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
-  private val PasswordLength = 10
+  private val PasswordLength = 16
   private val PasswordsToGenerate = 100
 
   override def run(args: Vector[String]): SC[Unit] = SC(api => {

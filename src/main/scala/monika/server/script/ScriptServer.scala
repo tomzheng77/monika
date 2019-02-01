@@ -50,14 +50,10 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     private val initialTime = LocalDateTime.now()
     private val message = new StringWriter()
     private val writer = new PrintWriter(message)
-    private val newFutureActions = mutable.Buffer[FutureAction]()
     private var state = initialState
 
     override def nowTime(): LocalDateTime = initialTime
     override def printLine(str: String): Unit = writer.println(str)
-    override def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String]): Unit = {
-      newFutureActions += FutureAction(at, script, args)
-    }
 
     override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)
 
@@ -74,7 +70,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       writer.flush()
       message.toString
     }
-    def futureActions(): Vector[FutureAction] = newFutureActions.toVector
+
     def newState(): MonikaState = state
 
   }
@@ -101,7 +97,6 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
             c.run(args)(api)
             api.newState() -> api
           })
-          enqueueAll(api.futureActions())
           api.consoleOutput()
       }
     }
@@ -115,19 +110,12 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         script.run(args)(api)
         api.newState() -> api
       })
-      enqueueAll(api.futureActions())
       LOGGER.debug(api.consoleOutput())
     }
   }
 
   private val timer = new Timer()
   private var hasPollStarted = false
-
-  private def enqueueAll(actions: GenIterable[FutureAction]): Unit = {
-    Hibernate.transaction(state => {
-      (state.copy(queue = (state.queue ++ actions).sortBy(a => a.at)), Unit)
-    })
-  }
 
   def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {

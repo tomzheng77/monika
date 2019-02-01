@@ -3,7 +3,7 @@ package monika.server.script.library
 import java.time.LocalDateTime
 
 import monika.Primitives._
-import monika.server.Structs.MonikaState
+import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server.UseScalaz
 import monika.server.proxy.Filter
 import monika.server.script.Script
@@ -34,7 +34,11 @@ trait ReaderOps extends UseScalaz {
   } yield Unit
 
   def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = {
-    SC(api => api.enqueueAfter(at, script, args))
+    SC(api => {
+      val state = api.getState()
+      val action = FutureAction(at, script, args)
+      api.setState(state.copy(queue = (state.queue :+ action).sortBy(_.at)))
+    })
   }
 
   def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => {

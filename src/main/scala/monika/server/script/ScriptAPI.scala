@@ -13,7 +13,6 @@ trait ScriptAPI {
 
   def nowTime(): LocalDateTime
   def printLine(text: String): Unit
-  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
   def call(command: Command, args: String*): CommandOutput
   def getState(): MonikaState
   def setState(state: MonikaState): Unit

@@ -34,7 +34,7 @@ object Request extends Script with UseDateTime {
     time <- nowTime()
     state <- getState()
     _ <- state |> indexOfUnlock match {
-      case -1 => runScriptImmediately(time, script, args, minutes)
+      case -1 => runScriptImmediatelyAndUnlockAfterMinutes(time, script, args, minutes)
       case index => {
         val oldScriptAction = state.queue(index)
         val at = oldScriptAction.at
@@ -50,7 +50,7 @@ object Request extends Script with UseDateTime {
     }
   } yield Unit
 
-  private def runScriptImmediately(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): SC[Unit] = steps(
+  private def runScriptImmediatelyAndUnlockAfterMinutes(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): SC[Unit] = steps(
     printLine(s"script '${script.name}' will run immediately"),
     addItemsToQueue(
       FutureAction(time, script, args),

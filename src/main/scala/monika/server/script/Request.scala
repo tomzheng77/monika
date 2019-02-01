@@ -46,8 +46,4 @@ object Request extends Script with UseDateTime {
     }
   } yield Unit
 
-  private def indexOfUnlock(state: MonikaState): Int = {
-    state.queue.indexWhere(_.script == Unlock)
-  }
-
 }

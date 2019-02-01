@@ -15,17 +15,17 @@ object DelayUnlock extends Script with UseDateTime {
   }
 
   private def delayUnlockForMinutes(minutes: Int): SC[Unit] = SC(api => {
-    api.transaction(state => {
+    transformState(state => {
       state.queue.indexWhere(act => act.script == Unlock) match {
-        case -1 => api.printLine("no unlock found"); (state, Unit)
+        case -1 => api.printLine("no unlock found"); state
         case index => {
           val oldAct = state.queue(index)
           val newAct = FutureAction(oldAct.at.plusMinutes(minutes), Unlock)
           api.printLine(s"unlock moved to ${newAct.at.format(DefaultFormatter)}")
-          (state.copy(queue = state.queue |> removeAt(index) |> addItems(newAct)), Unit)
+          state.copy(queue = state.queue |> removeAt(index) |> addItems(newAct))
         }
       }
-    })
+    })(api)
   })
 
 }

@@ -30,14 +30,14 @@ object Request extends Script with UseDateTime {
     */
   def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = SC(api => {
     val now = api.nowTime()
-    api.transaction(state => {
+    transformState(state => {
       state.queue.indexWhere(act => act.script == Unlock) match {
         case -1 => {
           api.printLine(s"script '${script.name}' will run immediately")
-          (state.copy(queue = state.queue |> addItems(
+          state.copy(queue = state.queue |> addItems(
             FutureAction(now, script, args),
             FutureAction(now.plusMinutes(minutes), Unlock)
-          )), Unit)
+          ))
         }
         case index => {
           val oldScriptAct = state.queue(index)
@@ -47,10 +47,10 @@ object Request extends Script with UseDateTime {
           api.printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}")
           api.printLine(s"unlock moved to ${unlockAct.at.format(DefaultFormatter)}")
           val newQueue = state.queue |> removeAt(index) |> addItems(scriptAct, unlockAct)
-          (state.copy(queue = newQueue), Unit)
+          state.copy(queue = newQueue)
         }
       }
-    })
+    })(api)
   })
 
 }

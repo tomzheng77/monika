@@ -23,11 +23,15 @@ trait ReaderOps extends UseScalaz {
   def nowTime(): SC[LocalDateTime] = SC(api => api.nowTime())
   def printLine(text: String): SC[Unit] = SC(api => api.printLine(text))
   def call(command: Command, args: String*): SC[CommandOutput] = SC(api => api.call(command, args: _*))
-  def query(): SC[MonikaState] = SC(api => api.query())
-  def update(fn: MonikaState => MonikaState): SC[Unit] = transaction(state => (fn(state), Unit))
-  def transaction[A](fn: MonikaState => (MonikaState, A)): SC[A] = SC(api => api.transaction(fn))
+  def getState(): SC[MonikaState] = SC(api => api.getState())
+  def setState(state: MonikaState): SC[Unit] = SC(api => api.setState(state))
   def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
   def findExecutableInPath(name: String @@ FileName): SC[Vector[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
+
+  def transformState(fn: MonikaState => MonikaState): SC[Unit] = for {
+    state <- getState()
+    _ <- setState(fn(state))
+  } yield Unit
 
   def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = {
     SC(api => api.enqueueAfter(at, script, args))
@@ -40,12 +44,12 @@ trait ReaderOps extends UseScalaz {
 
   def setNewFilter(filter: Filter): SC[Unit] = steps(
     restartProxy(filter),
-    update(state => state.copy(filter = filter))
+    transformState(state => state.copy(filter = filter))
   )
 
   implicit def anyAsUnit[A](sc: SC[A]): SC[Unit] = sc.map(_ => Unit)
 
-  def setAsNonRoot(): SC[Unit] = update(state => state.copy(root = false))
+  def setAsNonRoot(): SC[Unit] = transformState(state => state.copy(root = false))
 
   def steps[A](scs: SC[A]*): SC[Vector[A]] = sequence(scs)
   def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {

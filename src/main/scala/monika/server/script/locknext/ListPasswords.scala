@@ -5,7 +5,7 @@ import monika.server.script.Script
 object ListPasswords extends Script {
 
   override def run(args: Vector[String]): SC[Unit] = SC(api => {
-    val state = api.query()
+    val state = api.getState()
     val today = api.nowTime().toLocalDate
     for (i <- 0 until 100) {
       val date = today.plusDays(i)

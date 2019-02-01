@@ -15,8 +15,8 @@ trait ScriptAPI {
   def printLine(text: String): Unit
   def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
   def call(command: Command, args: String*): CommandOutput
-  def query(): MonikaState
-  def transaction[A](fn: MonikaState => (MonikaState, A)): A
+  def getState(): MonikaState
+  def setState(state: MonikaState): Unit
   def restartProxy(filter: Filter): Unit
   def rewriteCertificates(): Unit
   def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath]

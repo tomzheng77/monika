@@ -61,11 +61,8 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
 
     override def call(command: Command, args: String*): CommandOutput = Subprocess.call(command, args: _*)
 
-    override def query(): Structs.MonikaState = state
-    override def transaction[A](fn: Structs.MonikaState => (Structs.MonikaState, A)): A = {
-      val (newState, result) = fn(state)
-      state = newState; result
-    }
+    override def getState(): Structs.MonikaState = state
+    override def setState(newState: MonikaState): Unit = state = newState
 
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
     override def rewriteCertificates(): Unit = ProxyServer.writeCertificatesToFiles()

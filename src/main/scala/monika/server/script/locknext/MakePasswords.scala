@@ -13,7 +13,7 @@ object MakePasswords extends Script(RootOnly) {
 
   override def run(args: Vector[String]): SC[Unit] = for {
     time <- nowTime()
-    _ <- update(state => state.copy(passwords = makePasswords(time)))
+    _ <- transformState(state => state.copy(passwords = makePasswords(time)))
     _ <- printLine(s"the next $PasswordsToGenerate passwords have been generated")
   } yield Unit
 

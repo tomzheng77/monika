@@ -1,6 +1,8 @@
 package monika.server.script
 
-import monika.server.Structs.FutureAction
+import java.time.LocalDateTime
+
+import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 import monika.server.script.property.CanRequest
@@ -28,29 +30,40 @@ object Request extends Script with UseDateTime {
     * - if the queue is empty, the script is run immediately and an unlock is added afterwards
     * - otherwise, the unlock is delayed
     */
-  def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = SC(api => {
-    val now = api.nowTime()
-    transformState(state => {
-      state.queue.indexWhere(act => act.script == Unlock) match {
-        case -1 => {
-          api.printLine(s"script '${script.name}' will run immediately")
-          state.copy(queue = state.queue |> addItems(
-            FutureAction(now, script, args),
-            FutureAction(now.plusMinutes(minutes), Unlock)
-          ))
-        }
-        case index => {
-          val oldScriptAct = state.queue(index)
-          val at = oldScriptAct.at
-          val scriptAct = FutureAction(at, script, args)
-          val unlockAct = FutureAction(at.plusMinutes(minutes), Unlock)
-          api.printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}")
-          api.printLine(s"unlock moved to ${unlockAct.at.format(DefaultFormatter)}")
-          val newQueue = state.queue |> removeAt(index) |> addItems(scriptAct, unlockAct)
-          state.copy(queue = newQueue)
-        }
+  def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = for {
+    time <- nowTime()
+    state <- getState()
+    _ <- state |> indexOfUnlock match {
+      case -1 => runScriptImmediately(time, script, args, minutes)
+      case index => {
+        val oldScriptAction = state.queue(index)
+        val at = oldScriptAction.at
+        val scriptAction = FutureAction(at, script, args)
+        val unlockAction = FutureAction(at.plusMinutes(minutes), Unlock)
+        val newQueue = state.queue |> removeAt(index) |> addItems(scriptAction, unlockAction)
+        steps(
+          printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
+          printLine(s"unlock moved to ${unlockAction.at.format(DefaultFormatter)}"),
+          setState(state.copy(queue = newQueue))
+        )
       }
-    })(api)
-  })
+    }
+  } yield Unit
+
+  private def runScriptImmediately(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): SC[Unit] = steps(
+    printLine(s"script '${script.name}' will run immediately"),
+    addItemsToQueue(
+      FutureAction(time, script, args),
+      FutureAction(time.plusMinutes(minutes), Unlock)
+    )
+  )
+
+  private def indexOfUnlock(state: MonikaState): Int = {
+    state.queue.indexWhere(_.script == Unlock)
+  }
+
+  private def addItemsToQueue(items: FutureAction*): SC[Unit] = {
+    transformState(state => state.copy(queue = state.queue |> addItems(items:_*)))
+  }
 
 }

@@ -6,18 +6,11 @@ import scala.util.Try
 
 object Primitives {
 
-  /**
-    * - the canonical path of a file or folder
-    * - by definition, a canonical path is both absolute and unique
-    */
-  sealed trait FilePath
-  def FilePath[A](a: A): A @@ FilePath = Tag[A, FilePath](a)
+  sealed trait CanonicalPath
+  def CanonicalPath[A](a: A): A @@ CanonicalPath = Tag[A, CanonicalPath](a)
 
-  /**
-    * - the name of a file or folder relative to it's parent
-    */
-  sealed trait FileName
-  def FileName[A](a: A): A @@ FileName = Tag[A, FileName](a)
+  sealed trait Filename
+  def Filename[A](a: A): A @@ Filename = Tag[A, Filename](a)
 
   implicit class TryExt[T](val t: Try[T]) extends AnyVal {
     def orElseX[U >: T](fn: Throwable => U): U = t.fold(fn, i => i)

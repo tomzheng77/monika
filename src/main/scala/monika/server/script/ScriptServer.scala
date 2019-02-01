@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.Primitives.{FileName, FilePath}
+import monika.Primitives.{Filename, CanonicalPath}
 import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
@@ -64,17 +64,17 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
 
     override def restartProxy(filter: Filter): Unit = ProxyServer.startOrRestart(filter)
     override def rewriteCertificates(): Unit = ProxyServer.writeCertificatesToFiles()
-    override def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath] = {
+    override def findExecutableInPath(name: String @@ Filename): Vector[String @@ CanonicalPath] = {
       Subprocess.findExecutableInPath(name)
     }
 
-    override def listFiles(folder: String @@ FilePath): Vector[String @@ FilePath] = {
+    override def listFiles(folder: String @@ CanonicalPath): Vector[String @@ CanonicalPath] = {
       val file = new File(Tag.unwrap(folder))
       Option(file.listFiles())
         .getOrElse(Array.empty)
         .toVector
         .map(_.getCanonicalPath)
-        .map(FilePath)
+        .map(CanonicalPath)
     }
 
     def consoleOutput(): String = {

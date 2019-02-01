@@ -2,7 +2,7 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
-import monika.Primitives.{FileName, FilePath}
+import monika.Primitives.{Filename, CanonicalPath}
 import monika.server.Structs.MonikaState
 import monika.server.proxy.Filter
 import monika.server.subprocess.Commands.Command
@@ -19,7 +19,7 @@ trait ScriptAPI {
   def setState(state: MonikaState): Unit
   def restartProxy(filter: Filter): Unit
   def rewriteCertificates(): Unit
-  def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath]
-  def listFiles(folder: String @@ FilePath): Vector[String @@ FilePath]
+  def findExecutableInPath(name: String @@ Filename): Vector[String @@ CanonicalPath]
+  def listFiles(folder: String @@ CanonicalPath): Vector[String @@ CanonicalPath]
 
 }

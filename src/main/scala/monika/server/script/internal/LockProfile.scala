@@ -1,6 +1,6 @@
 package monika.server.script.internal
 
-import monika.Primitives.FileName
+import monika.Primitives.Filename
 import monika.server.proxy.URLFilter
 import monika.server.script.Script
 import monika.server.script.property.{Requestable, Internal}
@@ -28,8 +28,8 @@ object LockProfile extends Script(Internal, Requestable) {
     clearAllRestrictions(),
     setFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
-    restrictProgramsExcept(programs.map(FileName).toVector),
-    restrictProjectsExcept(projects.map(FileName).toVector)
+    restrictProgramsExcept(programs.map(Filename).toVector),
+    restrictProjectsExcept(projects.map(Filename).toVector)
   )
 
 }

@@ -2,7 +2,7 @@ package monika.server.script.library
 
 import java.io.File
 
-import monika.Primitives.FileName
+import monika.Primitives.Filename
 import monika.server.script.Script
 import monika.server.subprocess.Commands._
 import monika.server.{Constants, UseScalaz}
@@ -37,7 +37,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     api.call(usermod, "-G", newGroups.mkString(","), User)
   })
 
-  def restrictProgramsExcept(except: Vector[String @@ FileName]): IOS[Unit] = IOS(api => {
+  def restrictProgramsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
     val (toUnlock, toLock) = Constants.Restricted.Programs
       .partition(pair => except.contains(pair._1)) |>
       (pair => (
@@ -56,12 +56,12 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
   })
 
-  def restrictProjectsExcept(except: Vector[String @@ FileName]): IOS[Unit] = IOS(api => {
+  def restrictProjectsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
     val projectNameSet = except.map(unwrap).toSet
-    val projects = Constants.Restricted.Projects.map(unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
+    val projects = Constants.Restricted.ProjectFolders.map(unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
 
-    for (projectLocation <- Constants.Restricted.Projects) {
+    for (projectLocation <- Constants.Restricted.ProjectFolders) {
       api.call(chown, "root:root", unwrap(projectLocation))
       api.call(chmod, "777", unwrap(projectLocation))
     }
@@ -88,11 +88,11 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       api.call(chown, "root:root", unwrap(program))
     }
 
-    for (projectLocation <- Constants.Restricted.Projects) {
+    for (projectLocation <- Constants.Restricted.ProjectFolders) {
       api.call(chown, s"$User:$User", unwrap(projectLocation))
       api.call(chmod, "755", unwrap(projectLocation))
     }
-    val projects = Constants.Restricted.Projects.flatMap(api.listFiles)
+    val projects = Constants.Restricted.ProjectFolders.flatMap(api.listFiles)
     for (project <- projects) {
       api.call(chmod, "755", project |> unwrap)
       api.call(chown, s"$User:$User", project |> unwrap)

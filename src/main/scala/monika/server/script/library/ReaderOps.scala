@@ -28,7 +28,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   def getState(): IOS[MonikaState] = IOS(api => api.getState())
   def setState(state: MonikaState): IOS[Unit] = IOS(api => api.setState(state))
   def restartProxy(filter: Filter): IOS[Unit] = IOS(api => api.restartProxy(filter))
-  def findExecutableInPath(name: String @@ FileName): IOS[Vector[String @@ FilePath]] = IOS(api => api.findExecutableInPath(name))
+  def findExecutableInPath(name: String @@ Filename): IOS[Vector[String @@ CanonicalPath]] = IOS(api => api.findExecutableInPath(name))
 
   def transformState(fn: MonikaState => MonikaState): IOS[Unit] = for {
     state <- getState()

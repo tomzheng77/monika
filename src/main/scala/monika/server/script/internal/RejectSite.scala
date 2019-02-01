@@ -1,6 +1,6 @@
 package monika.server.script.internal
 
-import monika.Primitives.FileName
+import monika.Primitives.Filename
 import monika.server.proxy.URLFilter
 import monika.server.script.Script
 import monika.server.script.property.{Requestable, Internal}
@@ -20,7 +20,7 @@ object RejectSite extends Script(Internal, Requestable) {
     clearAllRestrictions(),
     setFilter(URLFilter(Set("/.*/"), sites)),
     setAsNonRoot(),
-    restrictProgramsExcept(Vector("google-chrome", "firefox").map(FileName)),
+    restrictProgramsExcept(Vector("google-chrome", "firefox").map(Filename)),
     restrictProjectsExcept(Vector.empty),
     printLine(s"rejected ${sites.size} sites")
   )

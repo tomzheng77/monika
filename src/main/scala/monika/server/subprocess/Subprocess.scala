@@ -2,7 +2,7 @@ package monika.server.subprocess
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
-import monika.Primitives.{FileName, FilePath}
+import monika.Primitives.{Filename, CanonicalPath}
 import monika.server.subprocess.Commands.Command
 import monika.server.{Constants, UseLogger}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
@@ -27,11 +27,11 @@ object Subprocess extends UseLogger {
     * @return an object containing exit value, stdout and stderr
     */
   def callUnsafe(program: String, args: Array[String] = Array.empty, input: Array[Byte] = Array.emptyByteArray,
-                 workingDirectory: Option[String @@ FilePath] = None): CommandOutput = {
+                 workingDirectory: Option[String @@ CanonicalPath] = None): CommandOutput = {
     // resolve the program within customized PATH (incl. Constants.PathAdd)
     val resolvedProgram: String = {
       if (program.startsWith("/")) program
-      else findExecutableInPath(FileName(program)).map(Tag.unwrap).headOption.getOrElse {
+      else findExecutableInPath(Filename(program)).map(Tag.unwrap).headOption.getOrElse {
         throw new RuntimeException(s"cannot resolve program '$program' in PATH")
       }
     }
@@ -61,12 +61,12 @@ object Subprocess extends UseLogger {
     * - checks whether a program can be located within PATH by name
     * - it must exists as a file and monika must have exec permissions
     */
-  def findExecutableInPath(program: String @@ FileName): Vector[String @@ FilePath] = {
+  def findExecutableInPath(program: String @@ Filename): Vector[String @@ CanonicalPath] = {
     val programName = Tag.unwrap(program)
     Constants.PathList
       .map(path => new File(path + File.separator + programName))
       .filter(file => file.exists && file.isFile && file.canExecute)
-      .map(file => FilePath(file.getCanonicalPath))
+      .map(file => CanonicalPath(file.getCanonicalPath))
   }
 
   // potential issues:

@@ -1,12 +1,12 @@
 package monika.server.subprocess
 
-import monika.Primitives.FileName
+import monika.Primitives.Filename
 import scalaz.@@
 
 object Commands {
 
   sealed trait Command extends Product {
-    val name: String @@ FileName = FileName(productPrefix)
+    val name: String @@ Filename = Filename(productPrefix)
   }
   case object id extends Command
   case object groups extends Command

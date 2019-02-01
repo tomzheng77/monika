@@ -13,11 +13,11 @@ object Constants {
     * in order to locate programs required by the profile
     * and monika itself
     */
-  val PathAdd: Vector[String @@ FilePath] = Vector(
+  val PathAdd: Vector[String @@ CanonicalPath] = Vector(
     "/usr/bin",
     "/usr/sbin",
     "/usr/local/bin"
-  ).map(FilePath)
+  ).map(CanonicalPath)
 
   val PathOriginal: String = System.getenv("PATH")
   val Path: String = PathAdd.mkString(File.pathSeparator) + File.pathSeparator + PathOriginal
@@ -49,7 +49,7 @@ object Constants {
       * - upon unlock, it will be set to root:root 755
       * - killall will be run on this path
       */
-    val Programs: Map[String @@ FileName, Option[String @@ FilePath]] = Vector(
+    val Programs: Map[String @@ Filename, Option[String @@ CanonicalPath]] = Vector(
       "studio" -> Some("/opt/android-studio/jre/bin/java"),
       "subl" -> Some("/opt/sublime_text/sublime_text"),
       "idea" -> Some("/opt/JetBrains/Toolbox/apps/IDEA-U/ch-0/182.4892.20/jre64/bin/java"),
@@ -62,12 +62,11 @@ object Constants {
       "ssh" -> None,
       "assistant.jar" -> None,
       "arduino" -> None
-    ).map(pair => FileName(pair._1) -> pair._2.map(FilePath)).toMap
+    ).map(pair => Filename(pair._1) -> pair._2.map(CanonicalPath)).toMap
 
-    val Projects: Vector[String @@ FilePath] = Vector(
-      Locations.ProjectRoot,
+    val ProjectFolders: Vector[String @@ CanonicalPath] = Vector(
       "/home/tomzheng/Documents/Projects"
-    ).map(FilePath)
+    ).map(CanonicalPath)
 
   }
 

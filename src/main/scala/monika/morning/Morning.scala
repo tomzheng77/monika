@@ -1,10 +1,9 @@
 package monika.morning
 
-import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.time.temporal.ChronoUnit
 import java.time.{LocalDateTime, LocalTime}
 import java.util.{Timer, TimerTask}
 
-import scalaz.{@@, Tag}
 import spark.Spark.{get, port}
 
 import scala.language.implicitConversions
@@ -19,15 +18,9 @@ object Morning {
   //   all notes will be deleted
   // - notes cannot be viewed from 11 PM until 7 AM
 
-  sealed trait NoteID
-  def NoteID[A <: Int](a: A): A @@ NoteID = Tag[A, NoteID](a)
-
-  sealed trait Message
-  def Message[A <: String](a: A): A @@ Message = Tag[A, Message](a)
-
-  private var nextID: Int @@ NoteID = NoteID(0)
+  private var nextID: Int = 0
   private var solves: Vector[LocalDateTime] = Vector.empty
-  private var deposits: Map[Int @@ NoteID, String @@ Message] = Map.empty
+  private var deposits: Map[Int, String] = Map.empty
 
   def startHttpServer(): Unit = {
     port(3000)
@@ -39,8 +32,8 @@ object Morning {
     })
     get("/deposit", (req, resp) => {
       Morning.this.synchronized {
-        deposits = deposits.updated(nextID, Message(req.body()))
-        nextID = NoteID(Tag.unwrap(nextID) + 1)
+        deposits = deposits.updated(nextID, req.body())
+        nextID += 1
         "the note has been successfully deposited"
       }
     })
@@ -57,7 +50,7 @@ object Morning {
         else if (Try(req.queryParams("id").toInt).isFailure) "ID must be an integer"
         else {
           val id = req.queryParams("id").toInt
-          deposits.get(NoteID(id)).map(Tag.unwrap) match {
+          deposits.get(id) match {
             case None => s"the ID $id does not exist"
             case Some(message) => message
           }
@@ -70,9 +63,9 @@ object Morning {
         else if (Try(req.queryParams("id").toInt).isFailure) "ID must be an integer"
         else {
           val id = req.queryParams("id").toInt
-          if (!deposits.contains(NoteID(id))) s"the ID $id does not exist"
+          if (!deposits.contains(id)) s"the ID $id does not exist"
           else {
-            deposits -= NoteID(id)
+            deposits -= id
             s"the note with id $id has been deleted"
           }
         }
@@ -80,7 +73,7 @@ object Morning {
     })
   }
 
-  def runTomorrow(time: LocalTime, task: () => Unit, repeat: Boolean = true): Unit = {
+  def runEveryDay(time: LocalTime, task: () => Unit, repeat: Boolean = true): Unit = {
     val timer = new Timer()
     val now = LocalDateTime.now()
     val tomorrow = now.toLocalDate.plusDays(1)
@@ -94,7 +87,7 @@ object Morning {
 
   def main(args: Array[String]): Unit = {
     startHttpServer()
-    runTomorrow(LocalTime.of(7, 0), () => ())
+    runEveryDay(LocalTime.of(7, 0), () => ())
   }
 
 }

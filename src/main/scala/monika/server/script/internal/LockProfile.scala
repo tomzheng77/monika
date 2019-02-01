@@ -28,6 +28,7 @@ object LockProfile extends Script(Internal, Requestable) {
     clearAllRestrictions(),
     setFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
+    closeAllBrowsers(),
     restrictProgramsExcept(programs.map(Filename).toVector),
     restrictProjectsExcept(projects.map(Filename).toVector)
   )

@@ -1,6 +1,6 @@
 package monika.server.script
 
-import monika.server.Structs.FutureAction
+import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 
@@ -18,16 +18,18 @@ object DelayUnlock extends Script with UseDateTime {
     state <- getState()
     _ <- state.queue.indexWhere(_.script == Unlock) match {
       case -1 => printLine("no unlock found")
-      case index => {
-        val oldAct = state.queue(index)
-        val newAct = FutureAction(oldAct.at.plusMinutes(minutes), Unlock)
-        val newQueue = state.queue |> removeAt(index) |> addItems(newAct)
-        steps(
-          printLine(s"unlock moved to ${newAct.at.format(DefaultFormatter)}"),
-          setState(state.copy(queue = newQueue))
-        )
-      }
+      case index => delayUnlockAtIndexForMinutes(state, index, minutes)
     }
   } yield Unit
+
+  private def delayUnlockAtIndexForMinutes(state: MonikaState, index: Int, minutes: Int): SC[Unit] = {
+    val oldAct = state.queue(index)
+    val newAct = FutureAction(oldAct.at.plusMinutes(minutes), Unlock)
+    val newQueue = state.queue |> removeAt(index) |> addItems(newAct)
+    steps(
+      printLine(s"unlock moved to ${newAct.at.format(DefaultFormatter)}"),
+      setState(state.copy(queue = newQueue))
+    )
+  }
 
 }

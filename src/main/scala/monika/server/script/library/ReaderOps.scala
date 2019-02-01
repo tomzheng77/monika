@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 import monika.Primitives._
 import monika.server.Structs.{FutureAction, MonikaState}
-import monika.server.UseScalaz
+import monika.server.{UseDateTime, UseScalaz}
 import monika.server.proxy.Filter
 import monika.server.script.Script
 import monika.server.subprocess.Commands.Command
@@ -14,7 +14,7 @@ import scalaz.@@
 import scala.collection.{GenIterable, mutable}
 import scala.language.implicitConversions
 
-trait ReaderOps extends UseScalaz {
+trait ReaderOps extends UseScalaz with UseDateTime {
 
   type ScriptAPI = monika.server.script.ScriptAPI
   type SC[A] = Reader[ScriptAPI, A]

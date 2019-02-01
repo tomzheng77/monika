@@ -1,9 +1,9 @@
 package monika.server
 
 import java.io.Writer
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
-import monika.server.proxy.{URLFilter, TransparentFilter}
+import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script
 import org.json4s.JsonAST.JString
 import org.json4s.jackson.JsonMethods
@@ -31,7 +31,16 @@ trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
     { case s: LocalDateTime => JString(s.format(DefaultFormatter)) }
   ))
 
-  private val serializeFormats: Formats = Serialization.formats(ShortTypeHints(classes)) + ScriptSerializer + LocalDateTimeSerializer
+  protected object LocalDateSerializer extends CustomSerializer[LocalDate](_ => (
+    { case JString(str) => LocalDate.parse(str) },
+    { case s: LocalDate => s.toString }
+  ))
+
+  private val serializeFormats: Formats = Serialization.formats(ShortTypeHints(classes)) +
+    ScriptSerializer +
+    LocalDateTimeSerializer +
+    LocalDateSerializer
+
   protected def writeItemAsJSON[W <: Writer](item: Any, out: W): W = {
     Serialization.writePretty(item, out)(serializeFormats)
   }

@@ -1,7 +1,7 @@
 package monika.server.persist
 
 import java.io.StringWriter
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 import monika.server.Structs._
 import monika.server.UseJSON
@@ -20,9 +20,16 @@ object JSONSpec extends Properties("JSON") with UseJSON {
     } yield LocalDateTime.ofEpochSecond(timeSinceEpoch, 0, ZoneOffset.UTC)
   })
 
+  implicit val LocalDateArb: Arbitrary[LocalDate] = Arbitrary(arbitrary[LocalDateTime].map(_.toLocalDate))
   implicit val ScriptArb: Arbitrary[Script] = Arbitrary(Gen.oneOf(Script.allScripts))
   implicit val FutureActionArb: Arbitrary[FutureAction] = Arbitrary(Gen.resultOf(FutureAction))
   implicit def VectorGenArb[A: Arbitrary]: Arbitrary[Vector[A]] = Arbitrary(Gen.listOf(arbitrary[A]).map(l => l.toVector))
+  implicit def MapGenArb[K: Arbitrary, V: Arbitrary]: Arbitrary[Map[K, V]] = Arbitrary(
+    Gen.mapOf(for {
+      k ← arbitrary[K]
+      v ← arbitrary[V]
+    } yield k → v)
+  )
   implicit val FilterGenArb: Arbitrary[Filter] = Arbitrary(Gen.oneOf(
     Gen.const(TransparentFilter),
     Gen.resultOf(URLFilter)

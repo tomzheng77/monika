@@ -47,7 +47,13 @@ object Request extends Script with UseDateTime {
     )
   )
 
-  private def replaceUnlockWithScriptAndAddUnlockAfterMinutes(state: MonikaState, script: Script, args: Vector[String], minutes: Int, index: Int): SC[Unit] = {
+  private def replaceUnlockWithScriptAndAddUnlockAfterMinutes(
+    state: MonikaState,
+    script: Script,
+    args: Vector[String],
+    minutes: Int,
+    index: Int
+  ): SC[Unit] = {
     val oldScriptAction = state.queue(index)
     val at = oldScriptAction.at
     val scriptAction = FutureAction(at, script, args)

@@ -22,6 +22,7 @@ object MakePasswords extends Script {
     }
     val pwds: Map[LocalDate, String] = nextPasswords.apply(seed)._2
     update(state => state.copy(passwords = pwds))(api)
+    printLine(s"the next $PasswordsToGenerate passwords have been generated")
   })
 
 }

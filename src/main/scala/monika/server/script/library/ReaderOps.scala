@@ -64,9 +64,14 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     })
   }
 
-  def addActionToQueueAtNow(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = for {
+  def addActionToQueueNow(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = for {
     time <- nowTime()
     _ <- addActionToQueue(time, script, args)
+  } yield Unit
+
+  def addActionToQueueAfter(minutes: Int)(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = for {
+    time <- nowTime()
+    _ <- addActionToQueue(time.plusMinutes(minutes), script, args)
   } yield Unit
 
   def setFilter(filter: Filter): IOS[Unit] = steps(

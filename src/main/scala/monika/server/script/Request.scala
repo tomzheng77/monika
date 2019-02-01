@@ -24,17 +24,12 @@ object Request extends Script with UseDateTime {
     }
   }
 
-  /**
-    * - if the queue is empty, the script is run immediately and an unlock is added afterwards
-    * - otherwise, the unlock is delayed
-    */
-  private def requestInternal(minutes: Int, script: Script, args: Vector[String]): IOS[Unit] = for {
-    time <- nowTime()
-    _ <- findScriptInQueue(Unlock).flatMap {
+  private def requestInternal(minutes: Int, script: Script, args: Vector[String]): IOS[Unit] = {
+    findScriptInQueue(Unlock).flatMap {
       case None => steps(
         printLine(s"script '${script.name}' will run immediately"),
-        addActionToQueue(time, script, args),
-        addActionToQueue(time.plusMinutes(minutes), Unlock)
+        addActionToQueueNow(script, args),
+        addActionToQueueAfter(minutes)(Unlock)
       )
       case Some((FutureAction(at, _, _), index)) => steps(
         printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
@@ -44,6 +39,6 @@ object Request extends Script with UseDateTime {
         addActionToQueue(at.plusMinutes(minutes), Unlock)
       )
     }
-  } yield Unit
+  }
 
 }

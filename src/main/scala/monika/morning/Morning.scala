@@ -73,21 +73,21 @@ object Morning {
     })
   }
 
-  def runEveryDay(time: LocalTime, task: () => Unit, repeat: Boolean = true): Unit = {
+  def scheduleDailyTask(time: LocalTime, task: () => Unit): Unit = {
     val timer = new Timer()
     val now = LocalDateTime.now()
     val tomorrow = now.toLocalDate.plusDays(1)
     val tomorrowTime = LocalDateTime.of(tomorrow, time)
-    val firstDelay = now.until(tomorrowTime, ChronoUnit.MILLIS)
+    val delay = now.until(tomorrowTime, ChronoUnit.MILLIS)
     val interval = 24 * 60 * 60 * 1000
     timer.schedule(new TimerTask {
       override def run(): Unit = task()
-    }, firstDelay, interval)
+    }, delay, interval)
   }
 
   def main(args: Array[String]): Unit = {
     startHttpServer()
-    runEveryDay(LocalTime.of(7, 0), () => ())
+    scheduleDailyTask(LocalTime.of(7, 0), () => ())
   }
 
 }

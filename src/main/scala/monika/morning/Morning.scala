@@ -87,7 +87,13 @@ object Morning {
 
   def main(args: Array[String]): Unit = {
     startHttpServer()
-    scheduleDailyTask(LocalTime.of(7, 0), () => ())
+    scheduleDailyTask(LocalTime.of(7, 0), () => {
+      val time = LocalDateTime.now()
+      if (!solves.exists(t ⇒ t.isAfter(time.minusHours(1)))) {
+        deposits = Map()
+      }
+      solves = Vector()
+    })
   }
 
 }

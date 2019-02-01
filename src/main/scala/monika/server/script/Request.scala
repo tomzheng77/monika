@@ -1,6 +1,6 @@
 package monika.server.script
 
-import monika.server.Structs.{FutureAction, MonikaState}
+import monika.server.Structs.FutureAction
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 import monika.server.script.property.CanRequest

@@ -5,7 +5,7 @@ import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
 
-  override def run(args: Vector[String]): SC[Unit] = (api: ScriptAPI) => {
+  override def run(args: Vector[String]): IOS[Unit] = (api: ScriptAPI) => {
     api.printLine("========== [Commands] ==========")
     val maxNameLength = Script.allScripts.map(_.name.length).max
     for (script <- Script.allScripts.sortBy(_.name)) {

@@ -11,7 +11,7 @@ object MakePasswords extends Script(RootOnly) {
   private val PasswordLength = 16
   private val PasswordsToGenerate = 100
 
-  override def run(args: Vector[String]): SC[Unit] = for {
+  override def run(args: Vector[String]): IOS[Unit] = for {
     time <- nowTime()
     _ <- transformState(state => state.copy(passwords = makePasswords(time)))
     _ <- printLine(s"the next $PasswordsToGenerate passwords have been generated")

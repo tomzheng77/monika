@@ -7,7 +7,7 @@ import monika.server.script.property.{CanRequest, Internal}
 
 object RejectSite extends Script(Internal, CanRequest) {
 
-  override def run(args: Vector[String]): SC[Unit] = {
+  override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 1) {
       printLine("usage: reject-site <sites>")
     } else {
@@ -16,7 +16,7 @@ object RejectSite extends Script(Internal, CanRequest) {
     }
   }
 
-  private def rejectSiteInternal(sites: Set[String]): SC[Unit] = steps(
+  private def rejectSiteInternal(sites: Set[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
     setNewFilter(URLFilter(Set("/.*/"), sites)),
     setAsNonRoot(),

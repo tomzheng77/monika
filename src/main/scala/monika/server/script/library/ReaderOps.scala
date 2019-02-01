@@ -16,47 +16,48 @@ import scala.language.implicitConversions
 
 trait ReaderOps extends UseScalaz with UseDateTime {
 
+  // an IOS is an external effect which may interact via a ScriptAPI
   type ScriptAPI = monika.server.script.ScriptAPI
-  type SC[A] = Reader[ScriptAPI, A]
-  protected implicit def SC[A](fn: ScriptAPI => A): SC[A] = Reader(fn)
+  type IOS[A] = Reader[ScriptAPI, A]
+  protected implicit def IOS[A](fn: ScriptAPI => A): IOS[A] = Reader(fn)
 
-  def nowTime(): SC[LocalDateTime] = SC(api => api.nowTime())
-  def printLine(text: String): SC[Unit] = SC(api => api.printLine(text))
-  def call(command: Command, args: String*): SC[CommandOutput] = SC(api => api.call(command, args: _*))
-  def getState(): SC[MonikaState] = SC(api => api.getState())
-  def setState(state: MonikaState): SC[Unit] = SC(api => api.setState(state))
-  def restartProxy(filter: Filter): SC[Unit] = SC(api => api.restartProxy(filter))
-  def findExecutableInPath(name: String @@ FileName): SC[Vector[String @@ FilePath]] = SC(api => api.findExecutableInPath(name))
+  def nowTime(): IOS[LocalDateTime] = IOS(api => api.nowTime())
+  def printLine(text: String): IOS[Unit] = IOS(api => api.printLine(text))
+  def call(command: Command, args: String*): IOS[CommandOutput] = IOS(api => api.call(command, args: _*))
+  def getState(): IOS[MonikaState] = IOS(api => api.getState())
+  def setState(state: MonikaState): IOS[Unit] = IOS(api => api.setState(state))
+  def restartProxy(filter: Filter): IOS[Unit] = IOS(api => api.restartProxy(filter))
+  def findExecutableInPath(name: String @@ FileName): IOS[Vector[String @@ FilePath]] = IOS(api => api.findExecutableInPath(name))
 
-  def transformState(fn: MonikaState => MonikaState): SC[Unit] = for {
+  def transformState(fn: MonikaState => MonikaState): IOS[Unit] = for {
     state <- getState()
     _ <- setState(fn(state))
   } yield Unit
 
-  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): SC[Unit] = {
-    SC(api => {
+  def enqueueAfter(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = {
+    IOS(api => {
       val state = api.getState()
       val action = FutureAction(at, script, args)
       api.setState(state.copy(queue = (state.queue :+ action).sortBy(_.at)))
     })
   }
 
-  def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): SC[Unit] = SC(api => {
+  def enqueueNextStep(script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = IOS(api => {
     val time = nowTime()(api)
     enqueueAfter(time, script, args)(api)
   })
 
-  def setNewFilter(filter: Filter): SC[Unit] = steps(
+  def setNewFilter(filter: Filter): IOS[Unit] = steps(
     restartProxy(filter),
     transformState(state => state.copy(filter = filter))
   )
 
-  implicit def anyAsUnit[A](sc: SC[A]): SC[Unit] = sc.map(_ => Unit)
+  implicit def anyAsUnit[A](sc: IOS[A]): IOS[Unit] = sc.map(_ => Unit)
 
-  def setAsNonRoot(): SC[Unit] = transformState(state => state.copy(root = false))
+  def setAsNonRoot(): IOS[Unit] = transformState(state => state.copy(root = false))
 
-  def steps[A](scs: SC[A]*): SC[Vector[A]] = sequence(scs)
-  def sequence[A](scs: GenIterable[SC[A]]): SC[Vector[A]] = SC(api => {
+  def steps[A](scs: IOS[A]*): IOS[Vector[A]] = sequence(scs)
+  def sequence[A](scs: GenIterable[IOS[A]]): IOS[Vector[A]] = IOS(api => {
     var buffer = mutable.Buffer[A]()
     for (sc <- scs) {
       buffer += sc(api)

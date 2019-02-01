@@ -11,7 +11,7 @@ import scala.util.Try
 
 object Request extends Script with UseDateTime {
 
-  override def run(args: Vector[String]): SC[Unit] = {
+  override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size < 2) printLine("usage: request <minutes> <script> <args..>")
     else if (Try(args(0).toInt).filter(_ > 0).isFailure) printLine("minutes must be a positive integer")
     else if (args(1).trim.isEmpty) printLine("script cannot be empty")
@@ -30,7 +30,7 @@ object Request extends Script with UseDateTime {
     * - if the queue is empty, the script is run immediately and an unlock is added afterwards
     * - otherwise, the unlock is delayed
     */
-  private def requestInternal(minutes: Int, script: Script, args: Vector[String]): SC[Unit] = for {
+  private def requestInternal(minutes: Int, script: Script, args: Vector[String]): IOS[Unit] = for {
     time <- nowTime()
     state <- getState()
     _ <- state |> indexOfUnlock match {
@@ -39,7 +39,7 @@ object Request extends Script with UseDateTime {
     }
   } yield Unit
 
-  private def runScriptImmediatelyAndUnlockAfterMinutes(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): SC[Unit] = steps(
+  private def runScriptImmediatelyAndUnlockAfterMinutes(time: LocalDateTime, script: Script, args: Vector[String], minutes: Int): IOS[Unit] = steps(
     printLine(s"script '${script.name}' will run immediately"),
     addItemsToQueue(
       FutureAction(time, script, args),
@@ -53,7 +53,7 @@ object Request extends Script with UseDateTime {
     args: Vector[String],
     minutes: Int,
     index: Int
-  ): SC[Unit] = {
+  ): IOS[Unit] = {
     val oldScriptAction = state.queue(index)
     val at = oldScriptAction.at
     val scriptAction = FutureAction(at, script, args)
@@ -70,7 +70,7 @@ object Request extends Script with UseDateTime {
     state.queue.indexWhere(_.script == Unlock)
   }
 
-  private def addItemsToQueue(items: FutureAction*): SC[Unit] = {
+  private def addItemsToQueue(items: FutureAction*): IOS[Unit] = {
     transformState(state => state.copy(queue = state.queue |> addItems(items:_*)))
   }
 

@@ -12,7 +12,7 @@ import monika.server.script.property.{CanRequest, Internal}
   */
 object LockSite extends Script(Internal, CanRequest) {
 
-  override def run(args: Vector[String]): SC[Unit] = {
+  override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 1) {
       printLine("usage: lock-site <sites>")
     } else {
@@ -21,7 +21,7 @@ object LockSite extends Script(Internal, CanRequest) {
     }
   }
 
-  private def lockSiteInternal(sites: Set[String]): SC[Unit] = steps(
+  private def lockSiteInternal(sites: Set[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
     setNewFilter(URLFilter(sites, Set.empty)),
     setAsNonRoot(),

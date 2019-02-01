@@ -7,7 +7,7 @@ import monika.server.script.property.{CanRequest, Internal}
 
 object LockProfile extends Script(Internal, CanRequest) {
 
-  override def run(args: Vector[String]): SC[Unit] = {
+  override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 4) {
       printLine("usage: lock-profile <url-allow> <url-reject> <programs> <projects>")
     } else {
@@ -24,7 +24,7 @@ object LockProfile extends Script(Internal, CanRequest) {
     urlReject: Set[String],
     programs: Set[String],
     projects: Set[String]
-  ): SC[Unit] = steps(
+  ): IOS[Unit] = steps(
     clearAllRestrictions(),
     setNewFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),

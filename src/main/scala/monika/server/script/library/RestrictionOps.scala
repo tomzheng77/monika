@@ -13,30 +13,30 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   // the environment of this user will be affected
   private val User = Constants.MonikaUser
 
-  def restrictLogin(): SC[Unit] = SC(api => {
+  def restrictLogin(): IOS[Unit] = IOS(api => {
     api.call(passwd, "-l", User)
   })
 
-  def forceLogout(): SC[Unit] = SC(api => {
+  def forceLogout(): IOS[Unit] = IOS(api => {
     api.call(killall, "-u", User, "i3")
     api.call(killall, "-u", User, "gnome-session-binary")
   })
 
-  def removeFromWheelGroup(): SC[Unit] = SC(api => {
+  def removeFromWheelGroup(): IOS[Unit] = IOS(api => {
     val primaryGroup = api.call(id, "-gn", User).stdout |> decode
     val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup && g!= "wheel")
     api.call(usermod, "-G", newGroups.mkString(","), User)
   })
 
-  def addToWheelGroup(): SC[Unit] = SC(api => {
+  def addToWheelGroup(): IOS[Unit] = IOS(api => {
     val primaryGroup = api.call(id, "-gn", User).stdout |> decode
     val oldGroups = api.call(groups, User).stdout |> decode |> (_.trim()) |> (_.split(' ').drop(2).map(_.trim).toSet)
     val newGroups = oldGroups.filter(g => g != primaryGroup) + "wheel"
     api.call(usermod, "-G", newGroups.mkString(","), User)
   })
 
-  def restrictProgramsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
+  def restrictProgramsExcept(except: Vector[String @@ FileName]): IOS[Unit] = IOS(api => {
     val (toUnlock, toLock) = Constants.Restricted.Programs
       .partition(pair => except.contains(pair._1)) |>
       (pair => (
@@ -55,7 +55,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
   })
 
-  def restrictProjectsExcept(except: Vector[String @@ FileName]): SC[Unit] = SC(api => {
+  def restrictProjectsExcept(except: Vector[String @@ FileName]): IOS[Unit] = IOS(api => {
     val projectNameSet = except.map(Tag.unwrap).toSet
     val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
@@ -78,7 +78,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     * clears any restrictions previously applied on the user
     * i.e. sudo, programs, projects
     */
-  def clearAllRestrictions(): SC[Unit] = SC(api => {
+  def clearAllRestrictions(): IOS[Unit] = IOS(api => {
     api.call(passwd, "-u", User)
 
     val programsToUnlock = Constants.Restricted.Programs.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)

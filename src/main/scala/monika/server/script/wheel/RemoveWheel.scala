@@ -6,7 +6,7 @@ import monika.server.script.property.RootOnly
 
 object RemoveWheel extends Script(RootOnly) with UseDateTime {
 
-  override def run(args: Vector[String]): SC[Unit] = steps(
+  override def run(args: Vector[String]): IOS[Unit] = steps(
     removeFromWheelGroup(),
     printLine("the user has been removed from the wheel group")
   )

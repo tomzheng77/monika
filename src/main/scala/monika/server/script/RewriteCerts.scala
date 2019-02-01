@@ -4,6 +4,6 @@ import monika.server.script.property.RootOnly
 
 object RewriteCerts extends Script(RootOnly) {
 
-  override def run(args: Vector[String]): SC[Unit] = SC(api => api.rewriteCertificates())
+  override def run(args: Vector[String]): IOS[Unit] = IOS(api => api.rewriteCertificates())
 
 }

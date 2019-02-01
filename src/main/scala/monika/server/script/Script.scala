@@ -29,7 +29,7 @@ abstract class Script(val props: Property*) extends UseScalaz
     } |> (s => s.dropWhile(_ == '-'))
   }
 
-  def run(args: Vector[String]): SC[Unit]
+  def run(args: Vector[String]): IOS[Unit]
 
 }
 

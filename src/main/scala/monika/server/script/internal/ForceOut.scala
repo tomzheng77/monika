@@ -5,6 +5,6 @@ import monika.server.script.property.Internal
 
 object ForceOut extends Script(Internal) {
 
-  override def run(args: Vector[String]): SC[Unit] = forceLogout()
+  override def run(args: Vector[String]): IOS[Unit] = forceLogout()
 
 }

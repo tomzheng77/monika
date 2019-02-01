@@ -6,7 +6,7 @@ import monika.server.script.property.RootOnly
 
 object AddWheel extends Script(RootOnly) with UseDateTime {
 
-  override def run(args: Vector[String]): SC[Unit] = steps(
+  override def run(args: Vector[String]): IOS[Unit] = steps(
     addToWheelGroup(),
     printLine("the user has been added to the wheel group")
   )

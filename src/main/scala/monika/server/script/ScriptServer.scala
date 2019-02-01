@@ -1,6 +1,6 @@
 package monika.server.script
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{File, PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
@@ -66,6 +66,15 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     override def rewriteCertificates(): Unit = ProxyServer.writeCertificatesToFiles()
     override def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath] = {
       Subprocess.findExecutableInPath(name)
+    }
+
+    override def listFiles(folder: String @@ FilePath): Vector[String @@ FilePath] = {
+      val file = new File(Tag.unwrap(folder))
+      Option(file.listFiles())
+        .getOrElse(Array.empty)
+        .toVector
+        .map(_.getCanonicalPath)
+        .map(FilePath)
     }
 
     def consoleOutput(): String = {

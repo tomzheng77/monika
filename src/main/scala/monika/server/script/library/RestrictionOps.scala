@@ -6,7 +6,8 @@ import monika.Primitives.FileName
 import monika.server.script.Script
 import monika.server.subprocess.Commands._
 import monika.server.{Constants, UseScalaz}
-import scalaz.{@@, Tag}
+import scalaz.@@
+import scalaz.Tag.unwrap
 
 trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
@@ -45,24 +46,24 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       ))
 
     for (program <- toUnlock) {
-      api.call(chmod, "755", Tag.unwrap(program))
-      api.call(chown, "root:root", Tag.unwrap(program))
+      api.call(chmod, "755", unwrap(program))
+      api.call(chown, "root:root", unwrap(program))
     }
     for (program <- toLock) {
-      api.call(killall, "-u", User, Tag.unwrap(program))
-      api.call(chmod, "700", Tag.unwrap(program))
-      api.call(chown, "root:root", Tag.unwrap(program))
+      api.call(killall, "-u", User, unwrap(program))
+      api.call(chmod, "700", unwrap(program))
+      api.call(chown, "root:root", unwrap(program))
     }
   })
 
   def restrictProjectsExcept(except: Vector[String @@ FileName]): IOS[Unit] = IOS(api => {
-    val projectNameSet = except.map(Tag.unwrap).toSet
-    val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
+    val projectNameSet = except.map(unwrap).toSet
+    val projects = Constants.Restricted.Projects.map(unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
     val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
 
     for (projectLocation <- Constants.Restricted.Projects) {
-      api.call(chown, "root:root", Tag.unwrap(projectLocation))
-      api.call(chmod, "777", Tag.unwrap(projectLocation))
+      api.call(chown, "root:root", unwrap(projectLocation))
+      api.call(chmod, "777", unwrap(projectLocation))
     }
     for (project <- toUnlock) {
       api.call(chmod, "755", project.getCanonicalPath)
@@ -83,18 +84,18 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
     val programsToUnlock = Constants.Restricted.Programs.flatMap(x => api.findExecutableInPath(x._1) ++ x._2)
     for (program <- programsToUnlock) {
-      api.call(chmod, "755", Tag.unwrap(program))
-      api.call(chown, "root:root", Tag.unwrap(program))
+      api.call(chmod, "755", unwrap(program))
+      api.call(chown, "root:root", unwrap(program))
     }
 
     for (projectLocation <- Constants.Restricted.Projects) {
-      api.call(chown, s"$User:$User", Tag.unwrap(projectLocation))
-      api.call(chmod, "755", Tag.unwrap(projectLocation))
+      api.call(chown, s"$User:$User", unwrap(projectLocation))
+      api.call(chmod, "755", unwrap(projectLocation))
     }
-    val projects = Constants.Restricted.Projects.map(Tag.unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
+    val projects = Constants.Restricted.Projects.flatMap(api.listFiles)
     for (project <- projects) {
-      api.call(chmod, "755", project.getCanonicalPath)
-      api.call(chown, s"$User:$User", project.getCanonicalPath)
+      api.call(chmod, "755", project |> unwrap)
+      api.call(chown, s"$User:$User", project |> unwrap)
     }
   })
 

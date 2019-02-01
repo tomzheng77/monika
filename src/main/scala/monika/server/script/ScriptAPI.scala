@@ -20,5 +20,6 @@ trait ScriptAPI {
   def restartProxy(filter: Filter): Unit
   def rewriteCertificates(): Unit
   def findExecutableInPath(name: String @@ FileName): Vector[String @@ FilePath]
+  def listFiles(folder: String @@ FilePath): Vector[String @@ FilePath]
 
 }

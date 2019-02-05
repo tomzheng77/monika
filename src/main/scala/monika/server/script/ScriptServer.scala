@@ -31,7 +31,6 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       PublicScripts.foreach(pair => {
         LOGGER.debug(s"found script: ${pair._1}")
       })
-      Spark.threadPool(1)
       Spark.port(Constants.InterpreterPort)
       Spark.get("/request", (req, resp) => {
         resp.`type`("text/plain") // prevent being intercepted by the proxy

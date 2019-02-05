@@ -42,7 +42,7 @@ object Constants {
 
     case class ProjectContainer(
       path: String @@ CanonicalPath,
-      properties: Vector[ItemsAre]
+      itemsAre: Vector[ItemsAre]
     )
 
     val ProjectContainers: Vector[ProjectContainer] = Vector(

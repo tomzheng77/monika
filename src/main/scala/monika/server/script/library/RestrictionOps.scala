@@ -43,7 +43,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
     // find all browser folders indicated by project containers
     val browsers: Vector[String @@ Primitives.CanonicalPath] = Restricted.ProjectContainers
-      .filter(_.properties.contains(Browsers))
+      .filter(_.itemsArea.contains(Browsers))
       .flatMap(p ⇒ api.listFiles(p.path)).map(_._2)
 
     for (browserFolder <- browsers) {
@@ -70,7 +70,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       // if it is a program project folder, only read access is allowed
       // otherwise read/write access is allowed
       for ((_, project) <- toUnlock) {
-        if (container.properties.contains(Programs)) {
+        if (container.itemsArea.contains(Programs)) {
           api.call(chown, s"root:root", project |> unwrap)
           api.call(chmod, "755", project |> unwrap)
         } else {

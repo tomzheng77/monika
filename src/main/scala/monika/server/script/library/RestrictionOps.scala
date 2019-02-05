@@ -43,7 +43,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
     // find all browser folders indicated by project containers
     val browsers: Vector[String @@ Primitives.CanonicalPath] = Restricted.ProjectContainers
-      .filter(_.itemsArea.contains(Browsers))
+      .filter(_.itemsAre.contains(Browsers))
       .flatMap(p ⇒ api.listFiles(p.path)).map(_._2)
 
     for (browserFolder <- browsers) {

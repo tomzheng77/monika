@@ -70,7 +70,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       // if it is a program project folder, only read access is allowed
       // otherwise read/write access is allowed
       for ((_, project) <- toUnlock) {
-        if (container.itemsArea.contains(Programs)) {
+        if (container.itemsAre.contains(Programs)) {
           api.call(chown, s"root:root", project |> unwrap)
           api.call(chmod, "755", project |> unwrap)
         } else {
@@ -112,10 +112,10 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     // allow access to all project folders
     // if it is a program project folder, only read access is allowed
     // otherwise read/write access is allowed
-    for (ProjectContainer(path, properties) ← Restricted.ProjectContainers) {
-      val projects = api.listFiles(path)
+    for (container ← Restricted.ProjectContainers) {
+      val projects = api.listFiles(container.path)
       for ((_, project) <- projects) {
-        if (properties.contains(Programs)) {
+        if (container.itemsAre.contains(Programs)) {
           api.call(chown, s"root:root", project |> unwrap)
           api.call(chmod, "755", project |> unwrap)
         } else {

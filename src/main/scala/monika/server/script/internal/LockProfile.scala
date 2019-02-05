@@ -8,7 +8,7 @@ import monika.server.script.property.{Internal, Requestable}
 object LockProfile extends Script(Internal, Requestable) {
 
   override def run(args: Vector[String]): IOS[Unit] = {
-    if (args.size != 4) {
+    if (args.size != 3) {
       printLine("usage: lock-profile <url-allow> <url-reject> <projects>")
     } else {
       val urlAllow = args(0) |> toSet

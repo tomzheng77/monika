@@ -38,7 +38,8 @@ object Constants {
 
     val ProjectContainers: Vector[String @@ CanonicalPath] = Vector(
       "/home/tomzheng/Documents/Projects",
-      "/home/tomzheng/Documents/Programs"
+      "/home/tomzheng/Documents/Programs",
+      "/home/tomzheng/Documents/Browsers"
     ).map(CanonicalPath)
 
     val BrowserContainer: String @@ CanonicalPath = CanonicalPath("/home/tomzheng/Documents/Browsers")

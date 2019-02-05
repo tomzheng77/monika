@@ -3,6 +3,7 @@ package monika.server.script.library
 import java.io.File
 
 import monika.Primitives.Filename
+import monika.server.Constants.Restricted
 import monika.server.script.Script
 import monika.server.subprocess.Commands._
 import monika.server.{Constants, UseScalaz}
@@ -38,54 +39,45 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   })
 
   def closeAllBrowsers(): IOS[Unit] = IOS(api ⇒ {
-    for ((program, coreOpt) <- Constants.Restricted.Browsers) {
-      for (path <- api.findExecutableInPath(program)) {
-        api.call(killall, "-u", User, unwrap(path))
-      }
-      for (core ← coreOpt) {
-        api.call(killall, "-u", User, unwrap(core))
-      }
-    }
-  })
-
-  def restrictProgramsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
-    val (toUnlock, toLock) = Constants.Restricted.Programs
-      .partition(pair => except.contains(pair._1))
-
-    for ((program, _) <- toUnlock) {
-      for (path <- api.findExecutableInPath(program)) {
-        api.call(chmod, "755", unwrap(path))
-        api.call(chown, "root:root", unwrap(path))
-      }
-    }
-    for ((program, coreOpt) <- toLock) {
-      for (path <- api.findExecutableInPath(program)) {
-        api.call(killall, "-u", User, unwrap(path))
-        api.call(chmod, "700", unwrap(path))
-        api.call(chown, "root:root", unwrap(path))
-      }
-      for (core ← coreOpt) {
-        api.call(killall, "-u", User, unwrap(core))
+    val procs = api.listAllProcs()
+    val browsers = Restricted.BrowserContainer |> api.listFiles
+    for ((_, browserFolder) <- browsers) {
+      // kill any process whose exe is within the folder
+      val procsToKill = procs.filter(p ⇒ unwrap(p.exe).startsWith(unwrap(browserFolder)))
+      for (proc ← procsToKill) {
+        api.call(kill, proc.pid.toString)
       }
     }
   })
 
   def restrictProjectsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
-    val projectNameSet = except.map(unwrap).toSet
-    val projects = Constants.Restricted.ProjectFolders.map(unwrap).map(new File(_)).flatMap(f => f.listFiles() ?? Array.empty)
-    val (toUnlock, toLock) = projects.partition(f => projectNameSet contains f.getName)
+    val projects = Restricted.ProjectContainers.flatMap(api.listFiles)
+    val (toUnlock, toLock) = projects.partition(p ⇒ except.contains(p._1))
 
-    for (projectLocation <- Constants.Restricted.ProjectFolders) {
-      api.call(chown, "root:root", unwrap(projectLocation))
-      api.call(chmod, "777", unwrap(projectLocation))
+    // disable write for all project containers
+    for (projectFolder <- Restricted.ProjectContainers) {
+      api.call(chown, "root:root", unwrap(projectFolder))
+      api.call(chmod, "755", unwrap(projectFolder))
     }
-    for (project <- toUnlock) {
-      api.call(chmod, "755", project.getCanonicalPath)
-      api.call(chown, s"$User:$User", project.getCanonicalPath)
+
+    // allow read/write for projects which are not restricted
+    for ((_, project) <- toUnlock) {
+      api.call(chown, s"$User:$User", project |> unwrap)
+      api.call(chmod, "755", project |> unwrap)
     }
-    for (project <- toLock) {
-      api.call(chmod, "700", project.getCanonicalPath)
-      api.call(chown, "root:root", project.getCanonicalPath)
+
+    // disable read/write for projects which are restricted
+    val procs = api.listAllProcs()
+    for ((_, project) <- toLock) {
+      api.call(chown, "root:root", project |> unwrap)
+      api.call(chmod, "700", project |> unwrap)
+
+      // kill any process whose exe is within the project
+      // or is the project itself
+      val procsToKill = procs.filter(p ⇒ unwrap(p.exe).startsWith(unwrap(project)))
+      for (proc ← procsToKill) {
+        api.call(kill, proc.pid.toString)
+      }
     }
   })
 
@@ -96,20 +88,17 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   def clearAllRestrictions(): IOS[Unit] = IOS(api => {
     api.call(passwd, "-u", User)
 
-    val programsToUnlock = Constants.Restricted.Programs.keys.flatMap(api.findExecutableInPath)
-    for (program <- programsToUnlock) {
-      api.call(chmod, "755", unwrap(program))
-      api.call(chown, "root:root", unwrap(program))
-    }
-
-    for (projectLocation <- Constants.Restricted.ProjectFolders) {
+    // allow read/write for all project containers
+    for (projectLocation <- Restricted.ProjectContainers) {
       api.call(chown, s"$User:$User", unwrap(projectLocation))
       api.call(chmod, "755", unwrap(projectLocation))
     }
-    val projects = Constants.Restricted.ProjectFolders.flatMap(api.listFiles)
-    for (project <- projects) {
-      api.call(chmod, "755", project |> unwrap)
+
+    // allow read/write for all project folders
+    val projects = Restricted.ProjectContainers.flatMap(api.listFiles)
+    for ((_, project) <- projects) {
       api.call(chown, s"$User:$User", project |> unwrap)
+      api.call(chmod, "755", project |> unwrap)
     }
   })
 

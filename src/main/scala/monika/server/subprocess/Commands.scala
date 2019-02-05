@@ -17,6 +17,7 @@ object Commands {
   case object usermod extends Command
   case object groupadd extends Command
   case object killall extends Command
+  case object kill extends Command
 
   val CommandArray: IndexedSeq[Command] = Array(id, groups, passwd, chmod, chown, iptables, usermod, groupadd, killall)
 

@@ -10,7 +10,7 @@ import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
 import monika.server.script.property.{Internal, RootOnly}
 import monika.server.subprocess.Commands.Command
-import monika.server.subprocess.Subprocess
+import monika.server.subprocess.{Proc, Subprocess}
 import monika.server.subprocess.Subprocess.CommandOutput
 import scalaz.{@@, Tag}
 import spark.Spark
@@ -67,14 +67,16 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       Subprocess.findExecutableInPath(name)
     }
 
-    override def listFiles(folder: String @@ CanonicalPath): Vector[String @@ CanonicalPath] = {
+    override def listFiles(folder: String @@ CanonicalPath): Vector[(String @@ Filename, String @@ CanonicalPath)] = {
       val file = new File(Tag.unwrap(folder))
       Option(file.listFiles())
         .getOrElse(Array.empty)
+        .map(f ⇒ (f.getName, f.getCanonicalPath))
+        .map(p ⇒ (Filename(p._1), CanonicalPath(p._2)))
         .toVector
-        .map(_.getCanonicalPath)
-        .map(CanonicalPath)
     }
+
+    override def listAllProcs(): Vector[Proc] = Subprocess.listAllProcs()
 
     def consoleOutput(): String = {
       writer.flush()

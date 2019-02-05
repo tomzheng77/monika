@@ -2,18 +2,29 @@ package monika.server.subprocess
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
-import monika.Primitives.{Filename, CanonicalPath}
-import monika.server.subprocess.Commands.Command
-import monika.server.{Constants, UseLogger}
+import monika.Primitives.{CanonicalPath, Filename}
+import monika.server.{Constants, UseLogger, UseScalaz}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import scalaz.{@@, Tag}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
-object Subprocess extends UseLogger {
+object Subprocess extends UseLogger with UseScalaz {
 
   case class CommandOutput(exitValue: Int, stdout: Array[Byte], stderr: Array[Byte])
+
+  def listAllProcs(): Vector[Proc] = {
+    // the processes folder should be "/proc", each process should be "/proc/[0-9]+"
+    val processesFolder: File = new File(Constants.ProcessesFolder)
+    val procs: Vector[File] = (processesFolder.listFiles() ?? Array()).filter(f ⇒ Try(f.getName.toInt).isSuccess).toVector
+
+    procs.flatMap(processFolder ⇒ Try({
+      val pid = processFolder.getName.toInt
+      val exePath: String @@ CanonicalPath = CanonicalPath(new File(processFolder, "exe").getCanonicalPath)
+      Proc(pid, exePath)
+    }).toOption)
+  }
 
   /**
     * calls a program either by name inside PATH or the full path

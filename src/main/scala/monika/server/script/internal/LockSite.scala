@@ -26,8 +26,7 @@ object LockSite extends Script(Internal, Requestable) {
     setFilter(URLFilter(sites, Set.empty)),
     setAsNonRoot(),
     closeAllBrowsers(),
-    restrictProgramsExcept(Vector("google-chrome", "firefox").map(Filename)),
-    restrictProjectsExcept(Vector.empty),
+    restrictProjectsExcept(Vector("google-chrome", "firefox").map(Filename)),
     printLine(s"locked onto ${sites.size} sites")
   )
 

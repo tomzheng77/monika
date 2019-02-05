@@ -1,7 +1,5 @@
 package monika.server.script.library
 
-import java.io.File
-
 import monika.Primitives.Filename
 import monika.server.Constants.Restricted
 import monika.server.script.Script

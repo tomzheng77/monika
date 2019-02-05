@@ -17,13 +17,16 @@ object Subprocess extends UseLogger with UseScalaz {
   def listAllProcs(): Vector[Proc] = {
     // the processes folder should be "/proc", each process should be "/proc/[0-9]+"
     val processesFolder: File = new File(Constants.ProcessesFolder)
-    val procs: Vector[File] = (processesFolder.listFiles() ?? Array()).filter(f ⇒ Try(f.getName.toInt).isSuccess).toVector
+    val procs: Vector[File] = (processesFolder.listFiles() ?? Array()).toVector
 
-    procs.flatMap(processFolder ⇒ Try({
-      val pid = processFolder.getName.toInt
-      val exePath: String @@ CanonicalPath = CanonicalPath(new File(processFolder, "exe").getCanonicalPath)
-      Proc(pid, exePath)
-    }).toOption)
+    for {
+      processFolder ← procs
+      if processFolder.canRead
+
+      pid ← Try(processFolder.getName.toInt).toOption
+      exe = new File(processFolder, "exe")
+      if exe.canRead
+    } yield Proc(pid, CanonicalPath(exe.getCanonicalPath))
   }
 
   /**

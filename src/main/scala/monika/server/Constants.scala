@@ -36,13 +36,13 @@ object Constants {
 
   object Restricted {
 
-    sealed trait ContainerProperty
-    case object Programs extends ContainerProperty
-    case object Browsers extends ContainerProperty
+    sealed trait HasThis
+    case object Programs extends HasThis
+    case object Browsers extends HasThis
 
     case class ProjectContainer(
       path: String @@ CanonicalPath,
-      properties: Vector[ContainerProperty]
+      properties: Vector[HasThis]
     )
 
     val ProjectContainers: Vector[ProjectContainer] = Vector(

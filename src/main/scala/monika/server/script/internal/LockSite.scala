@@ -1,6 +1,5 @@
 package monika.server.script.internal
 
-import monika.Primitives.Filename
 import monika.server.proxy.URLFilter
 import monika.server.script.Script
 import monika.server.script.property.{Internal, Requestable}
@@ -26,8 +25,7 @@ object LockSite extends Script(Internal, Requestable) {
     setFilter(URLFilter(sites, Set.empty)),
     setAsNonRoot(),
     closeAllBrowsers(),
-    restrictProgramsExcept(Vector("google-chrome", "firefox").map(Filename)),
-    restrictProjectsExcept(Vector.empty),
+    restrictProjectsExcept(exceptBrowsers = true),
     printLine(s"locked onto ${sites.size} sites")
   )
 

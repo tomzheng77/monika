@@ -25,52 +25,31 @@ object Constants {
 
   val GlobalEncoding = "UTF-8"
   val GlobalCharset: Charset = Charset.forName("UTF-8")
+  val FileSeparator: Char = File.separatorChar
 
   val ProxyPort = 9000
   val InterpreterPort = 9001
   val MaxQueueSize = 3
   val MonikaUser = "tomzheng"
   val UnlockerUser = "unlocker"
+  val ProcessesFolder = "/proc"
 
   object Restricted {
 
-    /**
-      * programs organised by launcher name and core-file path
-      * the launcher name is the name of the script inside PATH
-      * - upon lock, it will be set to root:root 700
-      * - upon unlock, it will be set to root:root 755
-      * - killall will be run on the resolved location
-      * - this should be referred to when sending commands
-      *
-      * the core-file path is the path of the ongoing process
-      * once the program has been launched. it should only be set when it
-      * is a separate file from the launcher
-      * - upon lock, it will be set to root:root 700
-      * - upon unlock, it will be set to root:root 755
-      * - killall will be run on this path
-      */
-    val Programs: Map[String @@ Filename, Option[String @@ CanonicalPath]] = Vector(
-      "studio" -> Some("/opt/android-studio/jre/bin/java"),
-      "subl" -> Some("/opt/sublime_text/sublime_text"),
-      "idea" -> Some("/opt/JetBrains/Toolbox/apps/IDEA-U/ch-0/182.4892.20/jre64/bin/java"),
-      "firefox" -> Some("/usr/lib64/firefox/firefox"),
-      "google-chrome" -> Some("/opt/google/chrome/chrome"),
-      "steam" -> None,
-      "virtualbox" -> Some("/usr/lib/virtualbox/VirtualBox"),
-      "wine" -> Some("/usr/bin/wine64-preloader"),
-      "libreoffice" -> Some("/usr/lib64/libreoffice/program/soffice.bin"),
-      "ssh" -> None,
-      "assistant.jar" -> None,
-      "arduino" -> None
-    ).map(pair => Filename(pair._1) -> pair._2.map(CanonicalPath)).toMap
+    sealed trait ItemsAre
+    case object Programs extends ItemsAre
+    case object Browsers extends ItemsAre
 
-    val Browsers: Map[String @@ Filename, Option[String @@ CanonicalPath]] = Programs.filterKeys(k ⇒ {
-      k == "google-chrome" || k == "firefox"
-    })
+    case class ProjectContainer(
+      path: String @@ CanonicalPath,
+      itemsAre: Set[ItemsAre]
+    )
 
-    val ProjectFolders: Vector[String @@ CanonicalPath] = Vector(
-      "/home/tomzheng/Documents/Projects"
-    ).map(CanonicalPath)
+    val ProjectContainers: Vector[ProjectContainer] = Vector(
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), itemsAre = Set()),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), itemsAre = Set(Programs)),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), itemsAre = Set(Programs, Browsers))
+    )
 
   }
 

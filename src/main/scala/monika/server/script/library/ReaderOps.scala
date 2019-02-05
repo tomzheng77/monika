@@ -4,11 +4,11 @@ import java.time.LocalDateTime
 
 import monika.Primitives._
 import monika.server.Structs.{FutureAction, MonikaState}
-import monika.server.{UseDateTime, UseScalaz}
 import monika.server.proxy.Filter
 import monika.server.script.Script
 import monika.server.subprocess.Commands.Command
 import monika.server.subprocess.Subprocess.CommandOutput
+import monika.server.{UseDateTime, UseScalaz}
 import scalaz.@@
 
 import scala.collection.{GenIterable, mutable}

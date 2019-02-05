@@ -10,8 +10,8 @@ import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
 import monika.server.script.property.{Internal, RootOnly}
 import monika.server.subprocess.Commands.Command
-import monika.server.subprocess.{Proc, Subprocess}
 import monika.server.subprocess.Subprocess.CommandOutput
+import monika.server.subprocess.{Proc, Subprocess}
 import scalaz.{@@, Tag}
 import spark.Spark
 

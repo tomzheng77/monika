@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
-import monika.Primitives.{Filename, CanonicalPath}
+import monika.Primitives.{CanonicalPath, Filename}
 import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
@@ -15,7 +15,6 @@ import monika.server.subprocess.Subprocess.CommandOutput
 import scalaz.{@@, Tag}
 import spark.Spark
 
-import scala.collection.{GenIterable, mutable}
 import scala.util.Try
 
 object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTime {

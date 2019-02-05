@@ -55,9 +55,9 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     val (toUnlock, toLock) = projects.partition(p ⇒ except.contains(p._1))
 
     // disable write for all project containers
-    for (projectFolder <- Restricted.ProjectContainers) {
-      api.call(chown, "root:root", unwrap(projectFolder))
-      api.call(chmod, "755", unwrap(projectFolder))
+    for (projectContainer <- Restricted.ProjectContainers) {
+      api.call(chown, "root:root", unwrap(projectContainer))
+      api.call(chmod, "755", unwrap(projectContainer))
     }
 
     // allow read/write for projects which are not restricted

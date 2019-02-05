@@ -42,13 +42,13 @@ object Constants {
 
     case class ProjectContainer(
       path: String @@ CanonicalPath,
-      itemsAre: Vector[ItemsAre]
+      itemsAre: Set[ItemsAre]
     )
 
     val ProjectContainers: Vector[ProjectContainer] = Vector(
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), itemsAre = Vector()),
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), itemsAre = Vector(Programs)),
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), itemsAre = Vector(Programs, Browsers))
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), itemsAre = Set()),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), itemsAre = Set(Programs)),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), itemsAre = Set(Programs, Browsers))
     )
 
   }

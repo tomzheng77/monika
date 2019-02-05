@@ -21,7 +21,7 @@ object RejectSite extends Script(Internal, Requestable) {
     setFilter(URLFilter(Set("/.*/"), sites)),
     setAsNonRoot(),
     closeAllBrowsers(),
-    restrictProjectsExcept(Vector("google-chrome", "firefox").map(Filename)),
+    restrictProjectsExcept(exceptBrowsers = true),
     printLine(s"rejected ${sites.size} sites")
   )
 

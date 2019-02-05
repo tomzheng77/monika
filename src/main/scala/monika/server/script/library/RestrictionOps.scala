@@ -43,7 +43,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
 
     // find all browser folders indicated by project containers
     val browsers: Vector[String @@ Primitives.CanonicalPath] = Restricted.ProjectContainers
-      .filter(_.itemsAre.contains(Browsers))
+      .filter(_.itemsAre(Browsers))
       .flatMap(p ⇒ api.listFiles(p.path)).map(_._2)
 
     for (browserFolder <- browsers) {
@@ -55,7 +55,10 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     }
   })
 
-  def restrictProjectsExcept(except: Vector[String @@ Filename]): IOS[Unit] = IOS(api => {
+  def restrictProjectsExcept(
+    except: Vector[String @@ Filename] = Vector.empty,
+    exceptBrowsers: Boolean = false
+  ): IOS[Unit] = IOS(api => {
     val procs = api.listAllProcs()
 
     // disable write for all project containers
@@ -64,13 +67,16 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
       api.call(chmod, "755", unwrap(container.path))
 
       val projects = api.listFiles(container.path)
-      val (toUnlock, toLock) = projects.partition(p ⇒ except.contains(p._1))
+      val (toUnlock, toLock) = projects.partition(p ⇒
+        (except.contains(p._1)) ||
+        (exceptBrowsers && container.itemsAre(Browsers))
+      )
 
       // allow access for projects which are not restricted
       // if it is a program project folder, only read access is allowed
       // otherwise read/write access is allowed
       for ((_, project) <- toUnlock) {
-        if (container.itemsAre.contains(Programs)) {
+        if (container.itemsAre(Programs)) {
           api.call(chown, s"root:root", project |> unwrap)
           api.call(chmod, "755", project |> unwrap)
         } else {
@@ -115,7 +121,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
     for (container ← Restricted.ProjectContainers) {
       val projects = api.listFiles(container.path)
       for ((_, project) <- projects) {
-        if (container.itemsAre.contains(Programs)) {
+        if (container.itemsAre(Programs)) {
           api.call(chown, s"root:root", project |> unwrap)
           api.call(chmod, "755", project |> unwrap)
         } else {

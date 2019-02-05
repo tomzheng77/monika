@@ -46,9 +46,9 @@ object Constants {
     )
 
     val ProjectContainers: Vector[ProjectContainer] = Vector(
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), Vector()),
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), Vector(Programs)),
-      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), Vector(Programs, Browsers))
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), itemsAre = Vector()),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), itemsAre = Vector(Programs)),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), itemsAre = Vector(Programs, Browsers))
     )
 
   }

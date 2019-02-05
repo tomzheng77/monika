@@ -32,7 +32,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         LOGGER.debug(s"found script: ${pair._1}")
       })
       Spark.port(Constants.InterpreterPort)
-      Spark.get("/request", (req, resp) => ScriptExecutionLock.synchronized {
+      Spark.get("/request", (req, resp) => {
         resp.`type`("text/plain") // prevent being intercepted by the proxy
         val parts: List[String] = {
           val cmd: String = Option(req.queryParams("cmd")).getOrElse("")

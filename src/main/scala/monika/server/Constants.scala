@@ -36,13 +36,20 @@ object Constants {
 
   object Restricted {
 
-    val ProjectContainers: Vector[String @@ CanonicalPath] = Vector(
-      "/home/tomzheng/Documents/Projects",
-      "/home/tomzheng/Documents/Programs",
-      "/home/tomzheng/Documents/Browsers"
-    ).map(CanonicalPath)
+    sealed trait ContainerProperty
+    case object Programs extends ContainerProperty
+    case object Browsers extends ContainerProperty
 
-    val BrowserContainer: String @@ CanonicalPath = CanonicalPath("/home/tomzheng/Documents/Browsers")
+    case class ProjectContainer(
+      path: String @@ CanonicalPath,
+      properties: Vector[ContainerProperty]
+    )
+
+    val ProjectContainers: Vector[ProjectContainer] = Vector(
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Projects"), Vector()),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Programs"), Vector(Programs)),
+      ProjectContainer(CanonicalPath("/home/tomzheng/Documents/Browsers"), Vector(Programs, Browsers))
+    )
 
   }
 

@@ -28,6 +28,12 @@ object SignalClient {
     Logger.getRootLogger.addAppender(console)
   }
 
+  def parseCommand(line: String): Vector[String] = {
+    // remove starting from the first '#' which isn't quoted
+    val cmd: CommandLine = CommandLine.parse(line)
+    cmd.getExecutable +: cmd.getArguments.toVector
+  }
+
   def main(args: Array[String]): Unit = {
     setupLogger()
     while (true) {
@@ -37,12 +43,11 @@ object SignalClient {
         case Some("exit") => System.exit(0)
         case Some("") =>
         case Some(line) =>
-          val cmd: CommandLine = CommandLine.parse(line)
-          val vec: Vector[String] = cmd.getExecutable +: cmd.getArguments.toVector
-          val vecJson: String = pretty(render(seq2jvalue(vec)))
+          val cmd = parseCommand(line)
+          val cmdJson: String = pretty(render(seq2jvalue(cmd)))
           val response: String = {
             Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-              .queryString("cmd", vecJson)
+              .queryString("cmd", cmdJson)
               .asString().getBody
           }
           println(response)

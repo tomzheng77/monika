@@ -5,6 +5,12 @@ import scala.language.postfixOps
 
 class SignalClientSpec extends FlatSpec with Matchers {
 
+  "The parseCommand function" should "handle this critical case" in {
+    val line = "add-wheel"
+    val cmd = SignalClient.parseCommand(line)
+    cmd should be(Vector("add-wheel"))
+  }
+
   "The parseCommand function" should "handle without comments" in {
     val line = "this \"is\" a command"
     val cmd = SignalClient.parseCommand(line)

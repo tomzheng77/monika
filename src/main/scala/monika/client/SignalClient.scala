@@ -28,10 +28,18 @@ object SignalClient {
     Logger.getRootLogger.addAppender(console)
   }
 
+  /**
+    * rules for commenting:
+    * - leave at least one space after the '#'
+    * - "#" also counts as comment start
+    */
   def parseCommand(line: String): Vector[String] = {
-    // remove starting from the first '#' which isn't quoted
     val cmd: CommandLine = CommandLine.parse(line)
-    cmd.getExecutable +: cmd.getArguments.toVector
+    val seq = cmd.getExecutable +: cmd.getArguments.toVector
+    seq.indexOf("#") match {
+      case -1 ⇒ seq
+      case index ⇒ seq.take(index)
+    }
   }
 
   def main(args: Array[String]): Unit = {

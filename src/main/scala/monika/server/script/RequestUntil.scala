@@ -42,13 +42,13 @@ object RequestUntil extends Script with UseDateTime {
         )
       case Some((FutureAction(at, _, _), index)) => {
         if (untilTime.isAfter(at)) steps(
-          printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-          printLine(s"unlock moved to ${untilTime.format(DefaultFormatter)}"),
+          printLine(s"script '${script.name}' will run at ${at.format()}"),
+          printLine(s"unlock moved to ${untilTime.format()}"),
           removeActionFromQueue(index),
           addActionToQueue(at, script, args),
           addActionToQueue(untilTime, Unlock)
         ) else {
-          printLine(s"until must be after ${at.format(DateFormat)}")
+          printLine(s"until must be after ${at.format()}")
         }
       }
     }

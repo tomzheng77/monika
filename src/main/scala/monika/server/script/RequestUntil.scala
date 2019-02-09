@@ -21,10 +21,11 @@ object RequestUntil extends Script with UseDateTime {
       val time = LocalTime.parse(args(1), DefaultTimeFormatter)
       val dateAndTime = LocalDateTime.of(date, time)
       val scriptName = args(2).trim
+      val remainingArgs = args.drop(3)
       Script.allScriptsByName.get(scriptName) match {
         case None => printLine(s"script '$scriptName' does not exist")
         case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-        case Some(sc) => requestUntilInternal(dateAndTime, sc, args.drop(2))
+        case Some(sc) => requestUntilInternal(dateAndTime, sc, remainingArgs)
       }
     }
   }

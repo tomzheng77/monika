@@ -33,7 +33,7 @@ object Request extends Script with UseDateTime {
       )
       case Some((FutureAction(at, _, _), index)) => steps(
         printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-        printLine(s"unlock moved to ${at.format(DefaultFormatter)}"),
+        printLine(s"unlock moved to ${at.plusMinutes(minutes).format(DefaultFormatter)}"),
         removeActionFromQueue(index),
         addActionToQueue(at, script, args),
         addActionToQueue(at.plusMinutes(minutes), Unlock)

@@ -93,4 +93,8 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     buffer.toVector
   })
 
+  def branch[A](condition: IOS[Boolean], ifTrue: IOS[A], ifFalse: IOS[A]): IOS[A] = {
+    condition.flatMap(b ⇒ if (b) ifTrue else ifFalse)
+  }
+
 }

@@ -29,22 +29,29 @@ object RequestUntil extends Script with UseDateTime {
     }
   }
 
-  private def requestInternal(dateAndTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
+  private def requestInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
     findScriptInQueue(Unlock).flatMap {
-      case None => steps(
-        // TODO: check if dateAndTime is before now
-        printLine(s"script '${script.name}' will run immediately"),
-        addActionToQueueNow(script, args),
-        addActionToQueue(dateAndTime, Unlock)
-      )
-      case Some((FutureAction(at, _, _), index)) => steps(
-        // TODO: check if dateAndTime is after unlock
-        printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-        printLine(s"unlock moved to ${at.format(DefaultFormatter)}"),
-        removeActionFromQueue(index),
-        addActionToQueue(at, script, args),
-        addActionToQueue(dateAndTime, Unlock)
-      )
+      case None =>
+        branch(
+          nowTime().map(untilTime.isAfter),
+          steps(
+            printLine(s"script '${script.name}' will run immediately"),
+            addActionToQueueNow(script, args),
+            addActionToQueue(untilTime, Unlock)
+          ),
+          printLine("until must be after now")
+        )
+      case Some((FutureAction(at, _, _), index)) => {
+        if (untilTime.isAfter(at)) steps(
+          printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
+          printLine(s"unlock moved to ${untilTime.format(DefaultFormatter)}"),
+          removeActionFromQueue(index),
+          addActionToQueue(at, script, args),
+          addActionToQueue(untilTime, Unlock)
+        ) else {
+          printLine(s"until must be after ${at.format(DefaultDateFormatter)}")
+        }
+      }
     }
   }
 

@@ -11,31 +11,31 @@ class SignalClientSpec extends FlatSpec with Matchers {
     cmd should be(Vector("add-wheel"))
   }
 
-  "The parseCommand function" should "handle without comments" in {
+  it should "handle without comments" in {
     val line = "this \"is\" a command"
     val cmd = SignalClient.parseCommand(line)
     cmd should be(Vector("this", "is", "a", "command"))
   }
 
-  "The parseCommand function" should "handle comments (1)" in {
+  it should "handle comments (1)" in {
     val line = "one command # comment here"
     val cmd = SignalClient.parseCommand(line)
     cmd should be(Vector("one", "command"))
   }
 
-  "The parseCommand function" should "handle comments (2)" in {
+  it should "handle comments (2)" in {
     val line = "one command \"#\" comment here"
     val cmd = SignalClient.parseCommand(line)
     cmd should be(Vector("one", "command"))
   }
 
-  "The parseCommand function" should "handle comments (3)" in {
+  it should "handle comments (3)" in {
     val line = "one command # \"comment\" here"
     val cmd = SignalClient.parseCommand(line)
     cmd should be(Vector("one", "command"))
   }
 
-  "The parseCommand function" should "handle comments (4)" in {
+  it should "handle comments (4)" in {
     val line = "one command #comment here"
     val cmd = SignalClient.parseCommand(line)
     cmd should be(Vector("one", "command", "#comment", "here"))

@@ -16,10 +16,7 @@ trait UseDateTime extends ToIdOps {
 
   protected implicit val dateTimeOrder: Ordering[LocalDateTime] = (x: LocalDateTime, y: LocalDateTime) => x.compareTo(y)
 
-  private val DefaultFormatter: DateTimeFormatter = {
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-  }
-
+  private val DefaultFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   private val DateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   private val TimeFormatterA = DateTimeFormatter.ofPattern("H:mm:ss")
   private val TimeFormatterB = DateTimeFormatter.ofPattern("H:mm")

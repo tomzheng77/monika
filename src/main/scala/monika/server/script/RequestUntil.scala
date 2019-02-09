@@ -1,24 +1,22 @@
 package monika.server.script
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.LocalDateTime
 
 import monika.server.Structs.FutureAction
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 import monika.server.script.property.Requestable
 
-import scala.util.Try
-
 object RequestUntil extends Script with UseDateTime {
 
   override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size < 3) printLine("usage: request-until <date> <time> <script> <args..>")
-    else if (Try(LocalDate.parse(args(0), DefaultDateFormatter)).isFailure) printLine("date format is invalid")
-    else if (Try(LocalTime.parse(args(1), DefaultTimeFormatter)).isFailure) printLine("time format is invalid")
+    else if (parseDate(args(0)).isFailure) printLine("date format is invalid")
+    else if (parseTime(args(1)).isFailure) printLine("time format is invalid")
     else if (args(2).trim.isEmpty) printLine("script cannot be empty")
     else {
-      val date = LocalDate.parse(args(0), DefaultDateFormatter)
-      val time = LocalTime.parse(args(1), DefaultTimeFormatter)
+      val date = parseDate(args(0)).get
+      val time = parseTime(args(1)).get
       val dateAndTime = LocalDateTime.of(date, time)
       val scriptName = args(2).trim
       val remainingArgs = args.drop(3)
@@ -50,7 +48,7 @@ object RequestUntil extends Script with UseDateTime {
           addActionToQueue(at, script, args),
           addActionToQueue(untilTime, Unlock)
         ) else {
-          printLine(s"until must be after ${at.format(DefaultDateFormatter)}")
+          printLine(s"until must be after ${at.format(DateFormat)}")
         }
       }
     }

@@ -24,12 +24,12 @@ object RequestUntil extends Script with UseDateTime {
       Script.allScriptsByName.get(scriptName) match {
         case None => printLine(s"script '$scriptName' does not exist")
         case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-        case Some(sc) => requestInternal(dateAndTime, sc, args.drop(2))
+        case Some(sc) => requestUntilInternal(dateAndTime, sc, args.drop(2))
       }
     }
   }
 
-  private def requestInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
+  def requestUntilInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
     findScriptInQueue(Unlock).flatMap {
       case None =>
         branch(

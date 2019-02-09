@@ -22,35 +22,9 @@ object RequestUntilToday extends Script with UseDateTime {
       Script.allScriptsByName.get(scriptName) match {
         case None => printLine(s"script '$scriptName' does not exist")
         case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-        case Some(sc) => requestInternal(dateAndTime, sc, args.drop(2))
+        case Some(sc) => RequestUntil.requestUntilInternal(dateAndTime, sc, args.drop(2))
       }
     })
-  }
-
-  private def requestInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
-    findScriptInQueue(Unlock).flatMap {
-      case None =>
-        branch(
-          nowTime().map(untilTime.isAfter),
-          steps(
-            printLine(s"script '${script.name}' will run immediately"),
-            addActionToQueueNow(script, args),
-            addActionToQueue(untilTime, Unlock)
-          ),
-          printLine("until must be after now")
-        )
-      case Some((FutureAction(at, _, _), index)) => {
-        if (untilTime.isAfter(at)) steps(
-          printLine(s"script '${script.name}' will run at ${at.format(DefaultFormatter)}"),
-          printLine(s"unlock moved to ${untilTime.format(DefaultFormatter)}"),
-          removeActionFromQueue(index),
-          addActionToQueue(at, script, args),
-          addActionToQueue(untilTime, Unlock)
-        ) else {
-          printLine(s"until must be after ${at.format(DefaultDateFormatter)}")
-        }
-      }
-    }
   }
 
 }

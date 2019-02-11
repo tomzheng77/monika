@@ -42,7 +42,9 @@ object OrbitServer {
         s"the note has (id: $index) been successfully removed"
       }
       case "verify" ⇒ {
-        ""
+        val dateAndTime = LocalDateTime.now()
+        verifications = verifications :+ dateAndTime
+        s"the verification ($dateAndTime) has been accepted"
       }
       case "request-verify" ⇒ {
         val date = (json \ "date").extractOpt[String]

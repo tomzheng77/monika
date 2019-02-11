@@ -9,7 +9,7 @@ import scalaz.effect.IO
 import spark.Spark
 import org.json4s.JsonDSL._
 
-object OrbitServer {
+object OrbitServer extends OrbitEncryption {
 
   private implicit val defaultFormats: Formats = DefaultFormats
 
@@ -21,9 +21,10 @@ object OrbitServer {
     Spark.port(8080)
     Spark.post("/orbit", (req, resp) ⇒ {
       resp.header("content-type", "application/json")
-      val requestJson: JValue = JsonMethods.parseOpt(req.body()).getOrElse(JNull)
+      val body = decrypt(req.body())
+      val requestJson: JValue = JsonMethods.parseOpt(body).getOrElse(JNull)
       val responseJson: JValue = handle(requestJson).unsafePerformIO()
-      JsonMethods.pretty(JsonMethods.render(responseJson))
+      encrypt(JsonMethods.pretty(JsonMethods.render(responseJson)))
     })
   }
 
@@ -49,7 +50,8 @@ object OrbitServer {
       case "request-verify" ⇒ {
         val date = (json \ "date").extractOpt[String]
         val time = (json \ "time").extractOpt[String]
-        "you must verify before <> otherwise all notes will be lost"
+
+        "you must verify before <10> otherwise all notes will be lost"
       }
     }
     ("message" → message)

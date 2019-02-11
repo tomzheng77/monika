@@ -24,7 +24,7 @@ object LockProfile extends Script(Internal, Requestable) {
     projects: Set[String]
   ): IOS[Unit] = steps(
     clearAllRestrictions(),
-    if (urlAllow.contains("<all>") && urlReject.isEmpty) setFilter(TransparentFilter)
+    if (urlAllow("<all>") && urlReject.isEmpty) setFilter(TransparentFilter)
     else setFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
     closeAllBrowsers(),

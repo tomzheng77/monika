@@ -1,5 +1,6 @@
 package monika.orbit
 
+import java.security.SecureRandom
 import java.time.LocalDateTime
 
 import org.json4s.{DefaultFormats, Formats, JValue}
@@ -9,13 +10,14 @@ import scalaz.effect.IO
 import spark.Spark
 import org.json4s.JsonDSL._
 
+import scala.util.Random
+
 object OrbitServer extends OrbitEncryption {
 
   private implicit val defaultFormats: Formats = DefaultFormats
 
   private var notes: Vector[String] = Vector.empty
-  private var verifications: Vector[LocalDateTime] = Vector.empty
-  private var requests: Vector[LocalDateTime] = Vector.empty
+  private var verifications: Map[String, LocalDateTime] = Map.empty
 
   def main(args: Array[String]): Unit = {
     Spark.port(8080)
@@ -26,6 +28,12 @@ object OrbitServer extends OrbitEncryption {
       val responseJson: JValue = handle(requestJson).unsafePerformIO()
       encrypt(JsonMethods.pretty(JsonMethods.render(responseJson)))
     })
+  }
+
+  def randomCode(): IO[String] = IO {
+    val secure = new SecureRandom()
+    val dictionary = ('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9')
+    Stream.continually(secure.nextInt(dictionary.size)).map(dictionary).take(16).mkString
   }
 
   def handle(json: JValue): IO[JValue] = IO {
@@ -43,14 +51,14 @@ object OrbitServer extends OrbitEncryption {
         s"the note has (id: $index) been successfully removed"
       }
       case "verify" ⇒ {
-        val dateAndTime = LocalDateTime.now()
-        verifications = verifications :+ dateAndTime
-        s"the verification ($dateAndTime) has been accepted"
+        val code = (json \ "code").extract[String]
+        verifications -= code
+        s"the verification ($code) has been accepted"
       }
       case "request-verify" ⇒ {
         val date = (json \ "date").extractOpt[String]
         val time = (json \ "time").extractOpt[String]
-
+        val code = (json \ "code").extractOpt[String]
         "you must verify before <10> otherwise all notes will be lost"
       }
     }

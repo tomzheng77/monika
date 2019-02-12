@@ -48,9 +48,10 @@ object SignalClient extends OrbitEncryption {
   private var batchEnabled: Boolean = false
   private var batch: Vector[List[String]] = Vector.empty
 
+  private val VariableNameRegex = "\\$[A-Z0-9_]+"
   def exportVariable(name: String, value: String): Unit = {
-    if (!name.matches("[A-Z_]+")) {
-      println("variable name must match [A-Z_]+")
+    if (!name.matches(VariableNameRegex)) {
+      println(s"variable name must match $VariableNameRegex")
     } else {
       variables = variables.updated(name, value)
       println(s"$name=$value")
@@ -58,7 +59,7 @@ object SignalClient extends OrbitEncryption {
   }
 
   def expandVariables(text: String): String = {
-    val regex = "$[A-Z_]+".r
+    val regex = VariableNameRegex.r
     val buffer = new StringBuilder()
     val a = regex.split(text).iterator
     val b = regex.findAllMatchIn(text).map(m ⇒ m.group(0))
@@ -96,9 +97,18 @@ object SignalClient extends OrbitEncryption {
       optCommand match {
         case None => System.exit(0)
         case Some("exit" :: _) => System.exit(0)
-        case Some("export" :: name :: value :: _) => exportVariable(name, value)
+        case Some("export" :: Nil) =>
+          println(variables map {
+            case (key, value) ⇒ s"$key=$value"
+          } mkString "\n")
+        case Some("export" :: name :: value :: Nil) => exportVariable(name, value)
+        case Some("alias" :: Nil) => {
+          println(aliases map {
+            case (key, value) ⇒ s"$key=${value.flatMap(expandAlias).map(expandVariables).mkString(" ")}"
+          } mkString "\n")
+        }
         case Some("alias" :: name :: value) => createAlias(name, value)
-        case Some("echo" :: list) => println(pretty(render(list.flatMap(expandAlias).map(expandVariables))))
+        case Some("echo" :: list) => println(list.flatMap(expandAlias).map(expandVariables).mkString(" "))
         case Some("batch-begin" :: _) => {
           batchEnabled = true
           batch = Vector.empty

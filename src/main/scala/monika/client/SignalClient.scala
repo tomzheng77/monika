@@ -4,6 +4,7 @@ import com.mashape.unirest.http.Unirest
 import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
+import org.json4s.JValue
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 
@@ -40,6 +41,9 @@ object SignalClient extends OrbitEncryption {
 
   private var variables: Map[String, String] = Map.empty
   private var aliases: Map[String, List[String]] = Map.empty
+
+  private var batchEnabled: Boolean = false
+  private var batch: Vector[List[String]] = Vector.empty
 
   def exportVariable(name: String, value: String): Unit = {
     if (!name.matches("[A-Z_]+")) {
@@ -92,14 +96,28 @@ object SignalClient extends OrbitEncryption {
         case Some("export" :: name :: value :: _) => exportVariable(name, value)
         case Some("alias" :: name :: value) => createAlias(name, value)
         case Some("echo" :: list) => println(pretty(render(list.flatMap(expandAlias).map(expandVariables))))
-        case Some(Nil) =>
-        case Some(cmd) =>
-          val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
-          val cmdJson: String = pretty(render(seq2jvalue(cmdExpanded)))
+        case Some("batch-begin" :: _) => {
+          batchEnabled = true
+          batch = Vector.empty
+        }
+        case Some("batch-commit" :: _) => {
+          batchEnabled = false
           val response: String = {
             Unirest
               .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-              .queryString("cmd", cmdJson)
+              .queryString("cmd", pretty(render(batch)))
+              .asString().getBody
+          }
+          println(response)
+          batch = Vector.empty
+        }
+        case Some(Nil) =>
+        case Some(cmd) =>
+          val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
+          val response: String = {
+            Unirest
+              .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
+              .queryString("cmd", pretty(render(cmdExpanded)))
               .asString().getBody
           }
           println(response)

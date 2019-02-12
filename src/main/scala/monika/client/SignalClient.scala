@@ -93,7 +93,8 @@ object SignalClient extends OrbitEncryption {
   def main(args: Array[String]): Unit = {
     setupLogger()
     while (true) {
-      val optCommand: Option[List[String]] = Option(StdIn.readLine("M1-1> "))
+      val prompt = if (batchEnabled) "    > " else "M1-1> "
+      val optCommand: Option[List[String]] = Option(prompt)
         .map(_.trim)
         .map(parseCommand)
 
@@ -130,13 +131,16 @@ object SignalClient extends OrbitEncryption {
         case Some(Nil) =>
         case Some(cmd) =>
           val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
-          val response: String = {
-            Unirest
-              .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-              .queryString("cmd", pretty(render(cmdExpanded)))
-              .asString().getBody
+          if (batchEnabled) batch = batch :+ cmdExpanded
+          else {
+            val response: String = {
+              Unirest
+                .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
+                .queryString("cmd", pretty(render(cmdExpanded)))
+                .asString().getBody
+            }
+            println(response)
           }
-          println(response)
       }
     }
   }

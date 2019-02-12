@@ -30,11 +30,15 @@ object SignalClient extends OrbitEncryption {
   }
 
   def parseCommand(line: String): List[String] = {
-    val cmd: CommandLine = CommandLine.parse(line)
-    val seq = cmd.getExecutable +: cmd.getArguments.toList
-    seq.indexOf("#") match {
-      case -1 ⇒ seq
-      case index ⇒ seq.take(index)
+    line.trim() match {
+      case "" ⇒ Nil
+      case nonEmptyLine ⇒
+        val cmd: CommandLine = CommandLine.parse(nonEmptyLine)
+        val seq = cmd.getExecutable :: cmd.getArguments.toList
+        seq.indexOf("#") match {
+          case -1 ⇒ seq
+          case index ⇒ seq.take(index)
+        }
     }
   }
 

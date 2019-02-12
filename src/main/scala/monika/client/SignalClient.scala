@@ -94,7 +94,7 @@ object SignalClient extends OrbitEncryption {
     setupLogger()
     while (true) {
       val prompt = if (batchEnabled) "    > " else "M1-1> "
-      val optCommand: Option[List[String]] = Option(prompt)
+      val optCommand: Option[List[String]] = Option(StdIn.readLine(prompt))
         .map(_.trim)
         .map(parseCommand)
 

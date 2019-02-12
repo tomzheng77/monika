@@ -57,9 +57,14 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
     val action = (json \ "action").extract[String]
     val message: IO[String] = action match {
       case "append" ⇒ {
-        val note = (json \ "note").extract[String]
-        notes = notes :+ note
-        IO(s"the note (id: ${notes.length - 1}) has been successfully added")
+        val noteOpt = (json \ "note").extractOpt[String]
+        noteOpt match {
+          case None ⇒ IO("please enter a note")
+          case Some(note) ⇒ IO {
+            notes = notes :+ note
+            s"the note (id: ${notes.length - 1}) has been successfully added"
+          }
+        }
       }
       case "list" ⇒ {
         IO(notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n"))
@@ -76,12 +81,14 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
         }
       }
       case "verify" ⇒ {
-        val code = (json \ "code").extract[String]
-        if (!verifications.contains(code)) {
-          IO("the code is not found")
-        } else {
-          verifications -= code
-          IO(s"the verification ($code) has been accepted")
+        val codeOpt = (json \ "code").extractOpt[String]
+        codeOpt match {
+          case None ⇒ IO("please enter a code")
+          case Some(code) if !verifications.contains(code) ⇒ IO("the code is not found")
+          case Some(code) ⇒ IO {
+            verifications -= code
+            IO(s"the verification ($code) has been accepted")
+          }
         }
       }
       case "request-verify" ⇒ {

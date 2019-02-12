@@ -1,7 +1,7 @@
 package monika.server
 
 import java.io.Writer
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 
 import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script

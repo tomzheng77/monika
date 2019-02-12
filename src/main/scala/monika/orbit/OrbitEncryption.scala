@@ -6,7 +6,7 @@ import javax.crypto.{Cipher, SecretKeyFactory}
 
 trait OrbitEncryption {
 
-  private val SecretKey = "%%QLWaMKt2w^MWxN]H&0**"
+  private val SecretKey = "Tp]+6FqOxj[G4.&7]Qp8GDjAvUP+[eq7"
   private val SecretKeyChars = SecretKey.toCharArray
   private val Encoding = "UTF-8"
   private val Salt = Array(0xde.toByte, 0x33.toByte, 0x10.toByte, 0x12.toByte, 0xde.toByte, 0x33.toByte, 0x10.toByte, 0x12.toByte)

@@ -87,7 +87,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
           case Some(code) if !verifications.contains(code) ⇒ IO("the code is not found")
           case Some(code) ⇒ IO {
             verifications -= code
-            IO(s"the verification ($code) has been accepted")
+            s"the verification ($code) has been accepted"
           }
         }
       }

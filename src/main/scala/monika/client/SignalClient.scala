@@ -55,7 +55,7 @@ object SignalClient extends OrbitEncryption {
       buffer.append(x)
       if (b.hasNext) {
         val y = b.next()
-        val yv = variables.get(y).map(expandVariables).getOrElse("")
+        val yv = variables.get(y).map(s ⇒ expandVariables(s.tail)).getOrElse("")
         buffer.append(yv)
       }
     }

@@ -1,16 +1,16 @@
 package monika
 
-import monika.adm.Admin
 import monika.client.SignalClient
-import monika.server.Bootstrap
+import monika.orbit.OrbitServer
+import monika.server.MonikaServer
 
 object Monika {
 
   def main(args: Array[String]): Unit = {
     args.headOption match {
       case None => SignalClient.main(args)
-      case Some("--server") => Bootstrap.main(args)
-      case Some("--admin") => Admin.main(args.drop(1))
+      case Some("--server") => MonikaServer.main(args)
+      case Some("--orbit") => OrbitServer.main(args)
       case Some(other) => println(s"unknown mode $other")
     }
   }

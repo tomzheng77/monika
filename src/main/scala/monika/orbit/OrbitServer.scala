@@ -71,8 +71,12 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
       }
       case "verify" ⇒ {
         val code = (json \ "code").extract[String]
-        verifications -= code
-        IO(s"the verification ($code) has been accepted")
+        if (!verifications.contains(code)) {
+          IO("the code is not found")
+        } else {
+          verifications -= code
+          IO(s"the verification ($code) has been accepted")
+        }
       }
       case "request-verify" ⇒ {
         val date = (json \ "date").extractOpt[String].flatMap(parseDate(_).toOption)

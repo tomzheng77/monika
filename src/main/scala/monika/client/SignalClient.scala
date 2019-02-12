@@ -48,7 +48,8 @@ object SignalClient extends OrbitEncryption {
   private var batchEnabled: Boolean = false
   private var batch: Vector[List[String]] = Vector.empty
 
-  private val VariableNameRegex = "\\$[A-Z0-9_]+"
+  private val VariableNameRegex = "[A-Z0-9_]+"
+  private val VariableReferenceRegex = "\\$[A-Z0-9_]+"
   def exportVariable(name: String, value: String): Unit = {
     if (!name.matches(VariableNameRegex)) {
       println(s"variable name must match $VariableNameRegex")
@@ -59,7 +60,7 @@ object SignalClient extends OrbitEncryption {
   }
 
   def expandVariables(text: String): String = {
-    val regex = VariableNameRegex.r
+    val regex = VariableReferenceRegex.r
     val buffer = new StringBuilder()
     val a = regex.split(text).iterator
     val b = regex.findAllMatchIn(text).map(m ⇒ m.group(0))

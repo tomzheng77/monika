@@ -66,8 +66,13 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
           }
         }
       }
-      case "list" ⇒ {
-        IO(notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n"))
+      case "list" ⇒ IO {
+        notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n")
+      }
+      case "pending" ⇒ IO {
+        verifications.toList.sortBy(_._2).map {
+          case (code, time) ⇒ println(code.take(4) ++ code.drop(4).map(_))
+        }
       }
       case "remove" ⇒ {
         val indexOpt = (json \ "index").extractOpt[Int]

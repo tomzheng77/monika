@@ -61,11 +61,19 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
         notes = notes :+ note
         IO(s"the note (id: ${notes.length - 1}) has been successfully added")
       }
-      case "list" ⇒ IO(notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n"))
+      case "list" ⇒ {
+        IO(notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n"))
+      }
       case "remove" ⇒ {
-        val index = (json \ "index").extract[Int]
-        notes = notes.take(index) ++ notes.drop(index + 1)
-        IO(s"the note (id: $index) has been successfully removed")
+        val indexOpt = (json \ "index").extractOpt[Int]
+        indexOpt match {
+          case None ⇒ IO("the index is invalid")
+          case Some(i) if !notes.indices.contains(i) ⇒ IO(s"the index must be between 0 and ${notes.size - 1} (inclusive)")
+          case Some(index) ⇒ IO {
+            notes = notes.take(index) ++ notes.drop(index + 1)
+            s"the note (id: $index) has been successfully removed"
+          }
+        }
       }
       case "verify" ⇒ {
         val code = (json \ "code").extract[String]

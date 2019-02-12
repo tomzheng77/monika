@@ -34,36 +34,66 @@ object SignalClient extends OrbitEncryption {
     * - leave at least one space after the '#'
     * - "#" also counts as comment start
     */
-  def parseCommand(line: String): Vector[String] = {
+  def parseCommand(line: String): List[String] = {
     val cmd: CommandLine = CommandLine.parse(line)
-    val seq = cmd.getExecutable +: cmd.getArguments.toVector
+    val seq = cmd.getExecutable +: cmd.getArguments.toList
     seq.indexOf("#") match {
       case -1 ⇒ seq
       case index ⇒ seq.take(index)
     }
   }
 
+  private var variables: Map[String, String] = Map.empty
+
+  def expandVariables(text: String): String = {
+    val regex = "$[A-Z_]+".r
+    val buffer = new StringBuilder()
+    val a = regex.split(text).iterator
+    val b = regex.findAllMatchIn(text).map(m ⇒ m.group(0))
+    while (a.hasNext) {
+      val x = a.next()
+      buffer.append(x)
+      if (b.hasNext) {
+        val y = b.next()
+        val yv = variables.get(y).map(expandVariables).getOrElse("")
+        buffer.append(yv)
+      }
+    }
+    buffer.toString()
+  }
+
+  def exportVariable(name: String, value: String): Unit = {
+    if (!name.matches("[A-Z_]+")) {
+      println("variable name must match [A-Z_]+")
+    } else {
+      variables = variables.updated(name, value)
+      println(s"$name=$value")
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     setupLogger()
     while (true) {
-      val optLine: Option[String] = Option(StdIn.readLine("M1-1> ")).map(_.trim)
-      optLine match {
-        case None => System.exit(0)
-        case Some("exit") => System.exit(0)
-        case Some("") =>
-        case Some(line) =>
-          val cmd = parseCommand(line)
-          if (cmd.nonEmpty) {
-            val cmdJson: String = pretty(render(seq2jvalue(cmd)))
-            val response: String = {
-              Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-                .queryString("cmd", cmdJson)
-                .asString().getBody
-            }
-            println(response)
-          }
-      }
+      val optCommand: Option[List[String]] = Option(StdIn.readLine("M1-1> "))
+        .map(_.trim)
+        .map(parseCommand)
 
+      optCommand match {
+        case None => System.exit(0)
+        case Some("exit" :: _) => System.exit(0)
+        case Some("export" :: name :: value :: _) => exportVariable(name, value)
+        case Some(Nil) =>
+        case Some(cmd) =>
+          val cmdExpanded: List[String] = cmd.map(expandVariables)
+          val cmdJson: String = pretty(render(seq2jvalue(cmdExpanded)))
+          val response: String = {
+            Unirest
+              .get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
+              .queryString("cmd", cmdJson)
+              .asString().getBody
+          }
+          println(response)
+      }
     }
   }
 

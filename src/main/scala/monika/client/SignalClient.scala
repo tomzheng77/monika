@@ -64,12 +64,14 @@ object SignalClient extends OrbitEncryption {
     val buffer = new StringBuilder()
     val a = regex.split(text).iterator
     val b = regex.findAllMatchIn(text).map(m ⇒ m.group(0))
-    while (a.hasNext) {
-      val x = a.next()
-      buffer.append(x)
+    while (a.hasNext || b.hasNext) {
+      if (a.hasNext) {
+        val x = a.next()
+        buffer.append(x)
+      }
       if (b.hasNext) {
         val y = b.next()
-        val yv = variables.get(y).map(s ⇒ expandVariables(s.tail)).getOrElse("")
+        val yv = variables.get(y.tail).map(expandVariables).getOrElse("")
         buffer.append(yv)
       }
     }

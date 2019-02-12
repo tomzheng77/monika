@@ -50,7 +50,8 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         }
         if (cmds.isEmpty) "please provide commands in JSON format"
         else {
-          cmds.filter(_.nonEmpty).map {
+          cmds.map {
+            case Nil ⇒ ""
             case script :: args ⇒ runScriptFromRequest(script, args.toVector)
           } mkString "\n"
         }

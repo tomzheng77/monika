@@ -21,10 +21,10 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
     Spark.port(8080)
     Spark.post("/orbit", (req, resp) ⇒ {
       resp.header("content-type", "application/json")
-      val body = decrypt(req.body())
+      val body = decryptAES(req.body())
       val requestJson: JValue = JsonMethods.parseOpt(body).getOrElse(JNull)
       val responseJson: JValue = handle(requestJson).unsafePerformIO()
-      encrypt(JsonMethods.pretty(JsonMethods.render(responseJson)))
+      encryptAES(JsonMethods.pretty(JsonMethods.render(responseJson)))
     })
     new Thread(() ⇒ {
       while (true) {

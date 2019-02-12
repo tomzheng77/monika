@@ -8,13 +8,13 @@ object OrbitEncryptionSpec extends Properties("OrbitEncryption") with OrbitEncry
 
   property("encrypt and decrypt") = {
     forAll(arbitrary[String])(a => {
-      decrypt(encrypt(a)) == a
+      decryptAES(encryptAES(a)) == a
     })
   }
 
   property("encrypt and decrypt with salt") = {
     forAll(arbitrary[String])(a => {
-      decryptWithSalt(encryptWithSalt(a)) == a
+      decryptPBE(encryptPBE(a)) == a
     })
   }
 

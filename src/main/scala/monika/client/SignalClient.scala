@@ -29,11 +29,6 @@ object SignalClient extends OrbitEncryption {
     Logger.getRootLogger.addAppender(console)
   }
 
-  /**
-    * rules for commenting:
-    * - leave at least one space after the '#'
-    * - "#" also counts as comment start
-    */
   def parseCommand(line: String): List[String] = {
     val cmd: CommandLine = CommandLine.parse(line)
     val seq = cmd.getExecutable +: cmd.getArguments.toList

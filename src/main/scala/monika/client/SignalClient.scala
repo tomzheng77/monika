@@ -1,6 +1,7 @@
 package monika.client
 
 import com.mashape.unirest.http.Unirest
+import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
 import org.json4s.JsonDSL._
@@ -14,7 +15,7 @@ import scala.io.StdIn
   * - prints out the response as plain text
   * - repeat until "exit" is entered
   */
-object SignalClient {
+object SignalClient extends OrbitEncryption {
 
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
@@ -52,13 +53,15 @@ object SignalClient {
         case Some("") =>
         case Some(line) =>
           val cmd = parseCommand(line)
-          val cmdJson: String = pretty(render(seq2jvalue(cmd)))
-          val response: String = {
-            Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
-              .queryString("cmd", cmdJson)
-              .asString().getBody
+          if (cmd.nonEmpty) {
+            val cmdJson: String = pretty(render(seq2jvalue(cmd)))
+            val response: String = {
+              Unirest.get(s"http://127.0.0.1:${Constants.InterpreterPort}/request")
+                .queryString("cmd", cmdJson)
+                .asString().getBody
+            }
+            println(response)
           }
-          println(response)
       }
 
     }

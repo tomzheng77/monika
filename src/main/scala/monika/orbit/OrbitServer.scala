@@ -71,8 +71,8 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
       }
       case "pending" ⇒ IO {
         verifications.toList.sortBy(_._2).map {
-          case (code, time) ⇒ println(code.take(4) ++ code.drop(4).map(_))
-        }
+          case (code, time) ⇒ code.take(4) + code.drop(4).map(_) + ": " + time.format()
+        } mkString "\n"
       }
       case "remove" ⇒ {
         val indexOpt = (json \ "index").extractOpt[Int]

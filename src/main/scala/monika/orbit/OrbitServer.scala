@@ -85,7 +85,6 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
           case (_, Failure(_)) ⇒ IO("the time is invalid")
           case (Success(date), Success(time)) ⇒ requestVerify(date, time)
         }
-
       }
     }
     message.map("message" → _)

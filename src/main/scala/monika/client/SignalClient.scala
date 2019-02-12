@@ -39,6 +39,16 @@ object SignalClient extends OrbitEncryption {
   }
 
   private var variables: Map[String, String] = Map.empty
+  private var aliases: Map[String, List[String]] = Map.empty
+
+  def exportVariable(name: String, value: String): Unit = {
+    if (!name.matches("[A-Z_]+")) {
+      println("variable name must match [A-Z_]+")
+    } else {
+      variables = variables.updated(name, value)
+      println(s"$name=$value")
+    }
+  }
 
   def expandVariables(text: String): String = {
     val regex = "$[A-Z_]+".r
@@ -57,12 +67,15 @@ object SignalClient extends OrbitEncryption {
     buffer.toString()
   }
 
-  def exportVariable(name: String, value: String): Unit = {
-    if (!name.matches("[A-Z_]+")) {
-      println("variable name must match [A-Z_]+")
-    } else {
-      variables = variables.updated(name, value)
-      println(s"$name=$value")
+  def createAlias(name: String, value: List[String]): Unit = {
+    aliases = aliases.updated(name, value)
+    println(s"$name: $value")
+  }
+
+  def expandAlias(token: String): List[String] = {
+    aliases.get(token) match {
+      case None ⇒ List(token)
+      case Some(expand) ⇒ expand.flatMap(expandAlias)
     }
   }
 
@@ -77,9 +90,11 @@ object SignalClient extends OrbitEncryption {
         case None => System.exit(0)
         case Some("exit" :: _) => System.exit(0)
         case Some("export" :: name :: value :: _) => exportVariable(name, value)
+        case Some("alias" :: name :: value) => createAlias(name, value)
+        case Some("echo" :: list) => println(pretty(render(list.flatMap(expandAlias).map(expandVariables))))
         case Some(Nil) =>
         case Some(cmd) =>
-          val cmdExpanded: List[String] = cmd.map(expandVariables)
+          val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
           val cmdJson: String = pretty(render(seq2jvalue(cmdExpanded)))
           val response: String = {
             Unirest

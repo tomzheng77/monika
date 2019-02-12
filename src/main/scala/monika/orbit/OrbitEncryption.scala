@@ -30,7 +30,7 @@ trait OrbitEncryption {
     val key = keyFactory.generateSecret(new PBEKeySpec(SecretKeyChars))
     val pbeCipher = Cipher.getInstance("PBEWithMD5AndDES")
     pbeCipher.init(Cipher.ENCRYPT_MODE, key, new PBEParameterSpec(Salt, 20))
-    base64().encode(pbeCipher.doFinal())
+    base64().encode(pbeCipher.doFinal(in.getBytes(Encoding)))
   }
 
   protected def decryptWithSalt(in: String): String = {

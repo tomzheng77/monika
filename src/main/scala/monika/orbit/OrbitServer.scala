@@ -1,16 +1,16 @@
 package monika.orbit
 
 import java.security.SecureRandom
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.LocalDateTime
 
-import monika.server.{UseDateTime, UseJSON, UseLogger}
+import monika.server.{UseDateTime, UseJSON, UseLogger, UseTry}
 import org.json4s.JsonAST.JNull
 import org.json4s.jackson.JsonMethods
 import org.json4s.{DefaultFormats, Formats, JValue}
 import scalaz.effect.IO
 import spark.Spark
 
-object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with UseJSON {
+object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with UseJSON with UseTry {
 
   private implicit val defaultFormats: Formats = DefaultFormats
 
@@ -77,9 +77,15 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
         }
       }
       case "request-verify" ⇒ {
-        val date = (json \ "date").extract[String] |> parseDate
-        val time = (json \ "time").extract[String] |> parseTime
-        requestVerify(date.get, time.get)
+        val dateTry = (json \ "date").extract[String] |> parseDate
+        val timeTry = (json \ "time").extract[String] |> parseTime
+        (dateTry, timeTry) match {
+          case (Failure(_), Failure(_)) ⇒ IO("the date and time is invalid")
+          case (Failure(_), _) ⇒ IO("the date is invalid")
+          case (_, Failure(_)) ⇒ IO("the time is invalid")
+          case (Success(date), Success(time)) ⇒ requestVerify(date, time)
+        }
+
       }
     }
     message.map("message" → _)

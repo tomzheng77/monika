@@ -15,14 +15,14 @@ trait OrbitEncryption {
     val aesKey = new SecretKeySpec(SecretKey.getBytes(Encoding), "AES")
     val cipher = Cipher.getInstance("AES")
     cipher.init(Cipher.ENCRYPT_MODE, aesKey)
-    new String(cipher.doFinal(in.getBytes(Encoding)), Encoding)
+    base64().encode(cipher.doFinal(in.getBytes(Encoding)))
   }
 
   protected def decrypt(in: String): String = {
     val cipher = Cipher.getInstance("AES")
     val aesKey = new SecretKeySpec(SecretKey.getBytes(Encoding), "AES")
     cipher.init(Cipher.DECRYPT_MODE, aesKey)
-    new String(cipher.doFinal(in.getBytes(Encoding)), Encoding)
+    new String(cipher.doFinal(base64().decode(in)), Encoding)
   }
 
   protected def encryptWithSalt(in: String): String = {

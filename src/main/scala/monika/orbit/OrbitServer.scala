@@ -45,9 +45,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
     Stream.continually(secure.nextInt(dictionary.size)).map(dictionary).take(16).mkString
   }
 
-  private def today(): IO[LocalDate] = IO(LocalDate.now())
-  private def requestVerify(dateOpt: Option[LocalDate], time: LocalTime): IO[String] = for {
-    date ← dateOpt.map(IO(_)).getOrElse(today())
+  private def requestVerify(date: LocalDate, time: LocalTime): IO[String] = for {
     code ← randomCode()
   } yield {
     val dateAndTime = LocalDateTime.of(date, time)
@@ -56,16 +54,16 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
   }
 
   def handle(json: JValue): IO[JValue] = {
-    val action = (json \ "action").extractOpt[String].getOrElse("list")
+    val action = (json \ "action").extract[String]
     val message: IO[String] = action match {
       case "append" ⇒ {
-        val note = (json \ "note").extractOpt[String].getOrElse("empty note")
+        val note = (json \ "note").extract[String]
         notes = notes :+ note
         IO(s"the note (id: ${notes.length - 1}) has been successfully added")
       }
       case "list" ⇒ IO(notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n"))
       case "remove" ⇒ {
-        val index = (json \ "index").extractOpt[Int].getOrElse(0)
+        val index = (json \ "index").extract[Int]
         notes = notes.take(index) ++ notes.drop(index + 1)
         IO(s"the note (id: $index) has been successfully removed")
       }
@@ -79,9 +77,9 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
         }
       }
       case "request-verify" ⇒ {
-        val date = (json \ "date").extractOpt[String].flatMap(parseDate(_).toOption)
-        val time = (json \ "time").extractOpt[String].flatMap(parseTime(_).toOption)
-        requestVerify(date, time.get)
+        val date = (json \ "date").extract[String] |> parseDate
+        val time = (json \ "time").extract[String] |> parseTime
+        requestVerify(date.get, time.get)
       }
     }
     message.map("message" → _)

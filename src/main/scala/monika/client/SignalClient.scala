@@ -103,8 +103,8 @@ object SignalClient extends OrbitEncryption {
           batchEnabled = false
           val response: String = {
             Unirest
-              .get(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
-              .queryString("cmds", pretty(render(batch)))
+              .post(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
+              .body(pretty(render(batch)))
               .asString().getBody
           }
           println(response)

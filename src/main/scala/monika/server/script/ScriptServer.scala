@@ -42,13 +42,13 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         if (parts.isEmpty) "please provide a command (cmd) in JSON format"
         else runScriptFromRequest(parts.head, parts.tail.toVector)
       })
-      Spark.get("/batch", (req, resp) => {
+      Spark.post("/batch", (req, resp) => {
         resp.`type`("text/plain")
         val cmds: List[List[String]] = {
-          val cmd: String = Option(req.queryParams("cmds")).getOrElse("")
+          val cmd: String = Option(req.body()).getOrElse("")
           Try(readJSONToItem[List[List[String]]](cmd)).getOrElse(Nil)
         }
-        if (cmds.isEmpty) "please provide commands (cmds) in JSON format"
+        if (cmds.isEmpty) "please provide commands in JSON format"
         else {
           cmds.filter(_.nonEmpty).map {
             case script :: args ⇒ runScriptFromRequest(script, args.toVector)

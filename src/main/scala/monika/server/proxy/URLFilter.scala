@@ -35,9 +35,8 @@ case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter wit
       else if (rejectM.matches(urlWithoutHTTP)) false
       else true
     }
-    if (!result) {
-      LOGGER.debug(s"intercepted request to $urlWithoutHTTP")
-    }
+    if (result) LOGGER.debug(s"[ALLOW] $urlWithoutHTTP")
+    else LOGGER.debug(s"[BLOCK] $urlWithoutHTTP")
     result
   }
 

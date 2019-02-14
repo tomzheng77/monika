@@ -5,9 +5,10 @@ import java.io.File
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
 import monika.server.Constants.{Locations, ProxyPort}
-import monika.server.UseLogger
+import monika.server.{Constants, UseLogger}
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
+import org.apache.commons.io.FileUtils
 import org.littleshoot.proxy._
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 
@@ -63,6 +64,18 @@ object ProxyServer extends UseLogger {
     // or save the certificate and private key as a PKCS12 keystore, for later use
     rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Locations.KeyStore),
       "private-key", "123456")
+
+    FileUtils.writeStringToFile(new File(Locations.Readme),
+      """IntelliJ IDEA - Proxy: Automatic
+        |
+        |https://drissamri.be/blog/2017/02/22/java-keystore-keytool-essentials/
+        |cd /etc/pki/ca-trust/extracted/java/cacerts
+        |keytool -importcert \
+        |        -trustcacerts -file /home/tomzheng/monika/certs/certificate.cer \
+        |        -alias monika \
+        |        -keystore cacerts
+        |
+      """.stripMargin, Constants.GlobalEncoding)
   }
 
   private def serveTransparently(): Unit = {

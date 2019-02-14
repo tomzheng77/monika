@@ -90,6 +90,55 @@ object SignalClient extends OrbitEncryption {
     }
   }
 
+  def handleBuiltin: PartialFunction[List[String], Unit] = {
+    case "exit" :: Nil => System.exit(0)
+    case "export" :: Nil =>
+      println(variables map {
+        case (key, value) ⇒ s"$key=$value"
+      } mkString "\n")
+    case "export" :: name :: value :: Nil => exportVariable(name, value)
+    case "alias" :: Nil => {
+      println(aliases map {
+        case (key, value) ⇒ s"$key=${value.flatMap(expandAlias).map(expandVariables).mkString(" ")}"
+      } mkString "\n")
+    }
+    case "alias" :: name :: value => createAlias(name, value)
+    case "echo" :: list => println(list.flatMap(expandAlias).map(expandVariables).mkString(" "))
+    case "batch-begin" :: Nil => {
+      batchEnabled = true
+      batch = Vector.empty
+    }
+    case "batch-commit" :: Nil => {
+      batchEnabled = false
+      val response: String = {
+        Unirest
+          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
+          .body(pretty(render(batch)))
+          .asString().getBody
+      }
+      println(response)
+      batch = Vector.empty
+    }
+  }
+
+  def handleOrbit: PartialFunction[List[String], Unit] = {
+    case "orbit" :: Nil ⇒
+  }
+
+  def handleScript(cmd: List[String]): Unit = {
+    val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
+    if (batchEnabled) batch = batch :+ cmdExpanded
+    else {
+      val response: String = {
+        Unirest
+          .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
+          .queryString("cmd", pretty(render(cmdExpanded)))
+          .asString().getBody
+      }
+      println(response)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     setupLogger()
     while (true) {
@@ -104,47 +153,12 @@ object SignalClient extends OrbitEncryption {
 
       optCommand match {
         case None => System.exit(0)
-        case Some("exit" :: _) => System.exit(0)
-        case Some("export" :: Nil) =>
-          println(variables map {
-            case (key, value) ⇒ s"$key=$value"
-          } mkString "\n")
-        case Some("export" :: name :: value :: Nil) => exportVariable(name, value)
-        case Some("alias" :: Nil) => {
-          println(aliases map {
-            case (key, value) ⇒ s"$key=${value.flatMap(expandAlias).map(expandVariables).mkString(" ")}"
-          } mkString "\n")
-        }
-        case Some("alias" :: name :: value) => createAlias(name, value)
-        case Some("echo" :: list) => println(list.flatMap(expandAlias).map(expandVariables).mkString(" "))
-        case Some("batch-begin" :: _) => {
-          batchEnabled = true
-          batch = Vector.empty
-        }
-        case Some("batch-commit" :: _) => {
-          batchEnabled = false
-          val response: String = {
-            Unirest
-              .post(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
-              .body(pretty(render(batch)))
-              .asString().getBody
-          }
-          println(response)
-          batch = Vector.empty
-        }
         case Some(Nil) =>
-        case Some(cmd) =>
-          val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
-          if (batchEnabled) batch = batch :+ cmdExpanded
-          else {
-            val response: String = {
-              Unirest
-                .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-                .queryString("cmd", pretty(render(cmdExpanded)))
-                .asString().getBody
-            }
-            println(response)
-          }
+        case Some(cmd) => {
+          if (handleBuiltin.isDefinedAt(cmd)) handleBuiltin(cmd)
+          else if (handleOrbit.isDefinedAt(cmd)) handleOrbit(cmd)
+          else handleScript(cmd)
+        }
       }
     }
   }

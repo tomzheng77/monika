@@ -45,7 +45,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
     Stream.continually(secure.nextInt(dictionary.size)).map(dictionary).take(16).mkString
   }
 
-  private def requestVerify(date: LocalDate, time: LocalTime): IO[String] = for {
+  private def requestVerify(date: LocalDate, time: LocalTime): IO[JValue] = for {
     code ← randomCode()
   } yield {
     val dateAndTime = LocalDateTime.of(date, time)
@@ -55,7 +55,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
 
   def handle(json: JValue): IO[JValue] = {
     val action = (json \ "action").extract[String]
-    val message: IO[String] = action match {
+    action match {
       case "append" ⇒ {
         val noteOpt = (json \ "note").extractOpt[String]
         noteOpt match {
@@ -66,13 +66,14 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
           }
         }
       }
-      case "list" ⇒ IO {
-        notes.zipWithIndex.map(pair ⇒ s"${pair._2}\t| ${pair._1}").mkString("\n")
-      }
+      case "list" ⇒ IO("notes" → notes)
       case "pending" ⇒ IO {
-        verifications.toList.sortBy(_._2).map {
-          case (code, time) ⇒ code.take(4) + code.drop(4).map(_ ⇒ '*').mkString + ": " + time.format()
-        } mkString "\n"
+        ("pending" → verifications.toList.sortBy(_._2).map {
+          case (code, time) ⇒ {
+            ("code" → code.take(4) + code.drop(4).map(_ ⇒ '*').mkString) ~
+            ("time" → time.format())
+          }
+        })
       }
       case "remove" ⇒ {
         val indexOpt = (json \ "index").extractOpt[Int]
@@ -107,7 +108,6 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
         }
       }
     }
-    message.map("message" → _)
   }
 
 }

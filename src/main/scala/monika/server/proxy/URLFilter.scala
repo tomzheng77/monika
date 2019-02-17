@@ -19,7 +19,7 @@ case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter wit
   override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
     val url = findURL(request)
     val contentType = findContentType(response)
-    if (contentType.contains("text/html")) return true
+    if (!contentType.contains("text/html")) return true
     val pass: Boolean = allowM.matches(url) && !rejectM.matches(url)
     if (pass) LOGGER.debug(s"[ALLOW] $url")
     else LOGGER.debug(s"[BLOCK] $url")

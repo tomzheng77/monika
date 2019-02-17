@@ -4,40 +4,48 @@ import monika.server.UseLogger
 
 import scala.util.matching.Regex
 
+/**
+  * - HTTP transactions will only be allowed if they pass both the allow [A] and reject [R] composite matcher
+  * - each composite matcher is a collection of matchers [M]
+  * - [M]: a matcher is a predicate on a URL string, it can be prefix-based or regex based
+  * - [A]: true if the response is non-HTTP, otherwise true iff request matches one or more matchers
+  * - [R]: false iff request matches one or more matchers
+  */
 case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter with UseLogger {
 
   private val allowM = CompositeMatcher(allow)
   private val rejectM = CompositeMatcher(reject)
 
   override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
-    def mkHeaders(msg: HttpMessage): Map[String, String] = {
-      import scala.collection.JavaConverters._
-      msg.headers().asScala.map(entry => entry.getKey -> entry.getValue).toMap
-    }
-
-    // filter only if the response is of type text/html
-    // i.e. images, audio, JS, CSS will not be filtered
-    // this will emulate filtering based on the URL bar
-    val responseHeaders = mkHeaders(response)
-    val contentType = responseHeaders.getOrElse("Content-Type", "")
-    if (!contentType.startsWith("text/html")) return true
-
-    // github.com
-    // github.com/netty/netty/issues/2185
-    val requestHeaders = mkHeaders(request)
-    val host = requestHeaders.getOrElse("Host", "")
-    val uri = request.getUri
-    val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
-    val urlWithoutHTTP = url.replaceFirst("^https?://", "")
-
+    val urlWithoutHTTP = findURLWithoutHTTP(request)
     val result: Boolean = {
-      if (!allowM.matches(urlWithoutHTTP)) false
+      val contentType = findContentType(response)
+      if (contentType.startsWith("text/html") && !allowM.matches(urlWithoutHTTP)) false
       else if (rejectM.matches(urlWithoutHTTP)) false
       else true
     }
     if (result) LOGGER.debug(s"[ALLOW] $urlWithoutHTTP")
     else LOGGER.debug(s"[BLOCK] $urlWithoutHTTP")
     result
+  }
+
+  private def readHeaders(msg: HttpMessage): Map[String, String] = {
+    import scala.collection.JavaConverters._
+    msg.headers().asScala.map(entry => entry.getKey -> entry.getValue).toMap
+  }
+
+  private def findURLWithoutHTTP(request: HttpRequest): String = {
+    // github.com/netty/netty/issues/2185
+    val requestHeaders = readHeaders(request)
+    val host = requestHeaders.getOrElse("Host", "")
+    val uri = request.getUri
+    val url = if (uri.startsWith("http://") || uri.startsWith("https://")) uri else host + uri
+    url.replaceFirst("^https?://", "")
+  }
+
+  private def findContentType(response: HttpResponse): String = {
+    val responseHeaders = readHeaders(response)
+    responseHeaders.getOrElse("Content-Type", "")
   }
 
   private case class CompositeMatcher(set: Set[String]) {

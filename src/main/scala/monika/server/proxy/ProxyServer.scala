@@ -66,12 +66,17 @@ object ProxyServer extends UseLogger {
       "private-key", "123456")
 
     FileUtils.writeStringToFile(new File(Locations.Readme),
-      """IntelliJ IDEA - Proxy: Automatic
+      s"""IntelliJ IDEA - Proxy: Automatic
         |
+        |SBT settings - VM parameters
+        |-Djavax.net.ssl.trustStore="${Locations.KeyStore}"
+        |-Djavax.net.ssl.trustStorePassword="123456"
+        |
+        |Deprecated
         |https://drissamri.be/blog/2017/02/22/java-keystore-keytool-essentials/
         |cd /etc/pki/ca-trust/extracted/java/cacerts
         |keytool -importcert \
-        |        -trustcacerts -file /home/tomzheng/monika/certs/certificate.cer \
+        |        -trustcacerts -file ${Locations.Certificate} \
         |        -alias monika \
         |        -keystore cacerts
         |

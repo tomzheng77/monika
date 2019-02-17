@@ -5,8 +5,8 @@ import monika.server.UseLogger
 import scala.util.matching.Regex
 
 /**
-  * - HTTP transactions will only be allowed if they pass both the allow [A] and reject [R] composite matcher
-  * - each composite matcher is a collection of matchers [M]
+  * - HTTP transactions will only be allowed if they pass both the allow [A] and reject [R] filters
+  * - each filter uses a collection of matchers [M]
   * - [M]: a matcher is a predicate on a URL string, it can be prefix-based or regex based
   * - [A]: true if the response is non-HTTP, otherwise true iff request matches one or more matchers
   * - [R]: false iff request matches one or more matchers

@@ -70,7 +70,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
       case "pending" ⇒ IO {
         ("pending" → verifications.toList.sortBy(_._2).map {
           case (code, time) ⇒ {
-            ("code" → code.take(4) + code.drop(4).map(_ ⇒ '*').mkString) ~
+            ("code" → (code.take(4) + code.drop(4).map(_ ⇒ '*').mkString)) ~
             ("time" → time.format())
           }
         })

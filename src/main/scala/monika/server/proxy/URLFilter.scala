@@ -8,7 +8,7 @@ import scala.util.matching.Regex
   * - HTTP transactions will only be allowed if they pass both the allow [A] and reject [R] filters
   * - each filter uses a collection of matchers [M]
   * - [M]: a matcher is a predicate on a URL string, it can be prefix-based or regex based
-  * - [A]: true if the response is non-HTTP, otherwise true iff request matches one or more matchers
+  * - [A]: true iff request matches one or more matchers
   * - [R]: false iff request matches one or more matchers
   */
 case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter with UseLogger {
@@ -19,18 +19,11 @@ case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter wit
   override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
     val url = findURL(request)
     val contentType = findContentType(response)
-    val pass: Boolean = passAllow(url, contentType) && passReject(url)
+    if (contentType.contains("text/html")) return true
+    val pass: Boolean = allowM.matches(url) && !rejectM.matches(url)
     if (pass) LOGGER.debug(s"[ALLOW] $url")
     else LOGGER.debug(s"[BLOCK] $url")
     pass
-  }
-
-  private def passAllow(url: String, contentType: String): Boolean = {
-    !contentType.contains("text/html") || allowM.matches(url)
-  }
-
-  private def passReject(url: String): Boolean = {
-    !rejectM.matches(url)
   }
 
   private def readHeaders(msg: HttpMessage): Map[String, String] = {

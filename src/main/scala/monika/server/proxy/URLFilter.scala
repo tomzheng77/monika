@@ -17,16 +17,20 @@ case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter wit
   private val rejectM = CompositeMatcher(reject)
 
   override def shouldAllow(request: HttpRequest, response: HttpResponse): Boolean = {
-    val urlWithoutHTTP = findURLWithoutHTTP(request)
-    val result: Boolean = {
-      val contentType = findContentType(response)
-      if (contentType.startsWith("text/html") && !allowM.matches(urlWithoutHTTP)) false
-      else if (rejectM.matches(urlWithoutHTTP)) false
-      else true
-    }
-    if (result) LOGGER.debug(s"[ALLOW] $urlWithoutHTTP")
-    else LOGGER.debug(s"[BLOCK] $urlWithoutHTTP")
-    result
+    val url = findURL(request)
+    val contentType = findContentType(response)
+    val pass: Boolean = passAllow(url, contentType) && passReject(url)
+    if (pass) LOGGER.debug(s"[ALLOW] $url")
+    else LOGGER.debug(s"[BLOCK] $url")
+    pass
+  }
+
+  private def passAllow(url: String, contentType: String): Boolean = {
+    !contentType.contains("text/html") || allowM.matches(url)
+  }
+
+  private def passReject(url: String): Boolean = {
+    !rejectM.matches(url)
   }
 
   private def readHeaders(msg: HttpMessage): Map[String, String] = {
@@ -34,7 +38,7 @@ case class URLFilter(allow: Set[String], reject: Set[String]) extends Filter wit
     msg.headers().asScala.map(entry => entry.getKey -> entry.getValue).toMap
   }
 
-  private def findURLWithoutHTTP(request: HttpRequest): String = {
+  private def findURL(request: HttpRequest): String = {
     // github.com/netty/netty/issues/2185
     val requestHeaders = readHeaders(request)
     val host = requestHeaders.getOrElse("Host", "")

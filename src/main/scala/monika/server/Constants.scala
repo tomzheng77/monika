@@ -74,7 +74,6 @@ object Constants {
     val Certificate: String = CertificateRoot + "/certificate.cer"
     val PrivateKey: String = CertificateRoot + "/private-key.pem"
     val KeyStore: String = CertificateRoot + "/keystore.p12"
-    val Readme: String = CertificateRoot + "/README.txt"
 
   }
 

@@ -64,23 +64,6 @@ object ProxyServer extends UseLogger {
     // or save the certificate and private key as a PKCS12 keystore, for later use
     rootCertificateGenerator.saveRootCertificateAndKey("PKCS12", new File(Locations.KeyStore),
       "private-key", "123456")
-
-    FileUtils.writeStringToFile(new File(Locations.Readme),
-      s"""IntelliJ IDEA - Proxy: Automatic
-        |
-        |SBT settings - VM parameters
-        |-Djavax.net.ssl.trustStore="${Locations.KeyStore}"
-        |-Djavax.net.ssl.trustStorePassword="123456"
-        |
-        |Deprecated
-        |https://drissamri.be/blog/2017/02/22/java-keystore-keytool-essentials/
-        |cd /etc/pki/ca-trust/extracted/java/cacerts
-        |keytool -importcert \
-        |        -trustcacerts -file ${Locations.Certificate} \
-        |        -alias monika \
-        |        -keystore cacerts
-        |
-      """.stripMargin, Constants.GlobalEncoding)
   }
 
   private def serveTransparently(): Unit = {

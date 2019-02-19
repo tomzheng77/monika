@@ -1,8 +1,12 @@
 package monika.orbit
 
+import java.security.SecureRandom
 import java.time.LocalDateTime
 
+import org.json4s.{DefaultFormats, JValue}
+import scalaz.effect.IO
 import scalaz.{@@, State, Tag}
+import org.json4s.JsonDSL._
 
 object Domain {
 
@@ -25,7 +29,34 @@ object Domain {
 
   type ST[A] = State[OrbitState, A]
   def ST[A](fn: OrbitState ⇒ (OrbitState, A)) = State(fn)
+  def STA[A](a: A): ST[A] = State.state(a)
 
+  def initialState: IO[OrbitState] = IO {
+    val random = new SecureRandom()
+    OrbitState(random.nextInt(), Map.empty, Map.empty)
+  }
 
+  def ofMessage(message: String): JValue = "message" → message
+
+  def handle(request: JValue): ST[JValue] = {
+    implicit val formats = DefaultFormats
+    (request \ "command").extractOpt[String].getOrElse("").trim match {
+      case "" ⇒ STA(ofMessage("please provide a command"))
+      case "add-key" ⇒ STA(ofMessage("please provide a command"))
+      case "add-confirm" ⇒ STA(ofMessage("please provide a command"))
+      case "confirm" ⇒ STA(ofMessage("please provide a command"))
+      case "orbit" ⇒ STA(ofMessage("please provide a command"))
+      case other ⇒ STA(ofMessage(s"command '$other' is not recognised"))
+    }
+
+    ST(state ⇒ {
+      null
+    })
+  }
+
+  def confirm(name: String): ST[Unit] = ST(state ⇒ {
+    if (state.confirms.contains(ConfirmName(name))) null
+    null
+  })
 
 }

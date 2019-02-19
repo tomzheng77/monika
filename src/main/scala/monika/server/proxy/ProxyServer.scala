@@ -5,10 +5,9 @@ import java.io.File
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
 import monika.server.Constants.{Locations, ProxyPort}
-import monika.server.{Constants, UseLogger}
+import monika.server.UseLogger
 import net.lightbody.bmp.mitm.manager.ImpersonatingMitmManager
 import net.lightbody.bmp.mitm.{KeyStoreFileCertificateSource, RootCertificateGenerator}
-import org.apache.commons.io.FileUtils
 import org.littleshoot.proxy._
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer
 

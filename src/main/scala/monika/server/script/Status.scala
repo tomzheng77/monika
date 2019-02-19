@@ -22,7 +22,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("========== [Queue] ==========")
     val state = api.getState()
     for (FutureAction(at, script, args) <- state.queue) {
-      api.printLine(s"- ${at.format(DefaultFormatter)}: ${script.name} ${args.mkString(" ")}")
+      api.printLine(s"- ${at.format()}: ${script.name} ${args.mkString(" ")}")
     }
 
     api.printLine("")

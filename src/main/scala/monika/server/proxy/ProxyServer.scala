@@ -79,7 +79,7 @@ object ProxyServer extends UseLogger {
   private def serveWithFilter(filter: Filter): Unit = {
     def allowOrRejectHttp(request: HttpRequest, response: HttpResponse): HttpResponse = {
       if (filter.shouldAllow(request, response)) response
-      else new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN)
+      else new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN)
     }
     val filterObj: HttpFiltersSource = new HttpFiltersSourceAdapter() {
       override def filterRequest(request: HttpRequest, ctx: ChannelHandlerContext): HttpFilters = {

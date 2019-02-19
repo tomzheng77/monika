@@ -32,14 +32,29 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         LOGGER.debug(s"found script: ${pair._1}")
       })
       Spark.port(Constants.InterpreterPort)
-      Spark.get("/request", (req, resp) => {
-        resp.`type`("text/plain") // prevent being intercepted by the proxy
+      Spark.get("/run", (req, resp) => {
+        // prevent being intercepted by the proxy
+        resp.`type`("text/plain")
         val parts: List[String] = {
           val cmd: String = Option(req.queryParams("cmd")).getOrElse("")
           Try(readJSONToItem[List[String]](cmd)).getOrElse(Nil)
         }
         if (parts.isEmpty) "please provide a command (cmd) in JSON format"
         else runScriptFromRequest(parts.head, parts.tail.toVector)
+      })
+      Spark.post("/batch", (req, resp) => {
+        resp.`type`("text/plain")
+        val cmds: List[List[String]] = {
+          val cmd: String = Option(req.body()).getOrElse("")
+          Try(readJSONToItem[List[List[String]]](cmd)).getOrElse(Nil)
+        }
+        if (cmds.isEmpty) "please provide commands in JSON format"
+        else {
+          cmds.map {
+            case Nil ⇒ ""
+            case script :: args ⇒ runScriptFromRequest(script, args.toVector)
+          } mkString "\n"
+        }
       })
     }
   }

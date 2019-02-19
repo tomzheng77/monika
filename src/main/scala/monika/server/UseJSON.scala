@@ -1,7 +1,7 @@
 package monika.server
 
 import java.io.Writer
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 
 import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script
@@ -27,8 +27,8 @@ trait UseJSON extends JsonDSL with DoubleMode with UseDateTime {
   ))
 
   private object LocalDateTimeSerializer extends CustomSerializer[LocalDateTime](_ => (
-    { case JString(str) => LocalDateTime.parse(str, DefaultFormatter) },
-    { case s: LocalDateTime => JString(s.format(DefaultFormatter)) }
+    { case JString(str) => parseDateTime(str).getOrThrow() },
+    { case s: LocalDateTime => JString(s.format()) }
   ))
 
   private object LocalDateSerializer extends CustomKeySerializer[LocalDate](_ => (

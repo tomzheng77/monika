@@ -1,7 +1,7 @@
 package monika.server.persist
 
 import java.io.StringWriter
-import java.time.{LocalDate, LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.server.Structs._
 import monika.server.UseJSON

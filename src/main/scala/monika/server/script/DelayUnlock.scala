@@ -30,7 +30,7 @@ object DelayUnlock extends Script with UseDateTime {
     val newAction = FutureAction(oldAction.at.plusMinutes(minutes), Unlock)
     val newQueue = state.queue |> removeAt(index) |> addItems(newAction)
     steps(
-      printLine(s"unlock moved to ${newAction.at.format(DefaultFormatter)}"),
+      printLine(s"unlock moved to ${newAction.at.format()}"),
       setState(state.copy(queue = newQueue))
     )
   }

@@ -1,7 +1,7 @@
 package monika.server.script.internal
 
 import monika.Primitives.Filename
-import monika.server.proxy.URLFilter
+import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script
 import monika.server.script.property.{Internal, Requestable}
 
@@ -24,7 +24,8 @@ object LockProfile extends Script(Internal, Requestable) {
     projects: Set[String]
   ): IOS[Unit] = steps(
     clearAllRestrictions(),
-    setFilter(URLFilter(urlAllow, urlReject)),
+    if (urlAllow("<all>") && urlReject.isEmpty) setFilter(TransparentFilter)
+    else setFilter(URLFilter(urlAllow, urlReject)),
     setAsNonRoot(),
     closeAllBrowsers(),
     restrictProjectsExcept(projects.map(Filename).toVector)

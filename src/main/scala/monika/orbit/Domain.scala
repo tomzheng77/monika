@@ -36,22 +36,14 @@ object Domain {
     OrbitState(random.nextInt(), Map.empty, Map.empty)
   }
 
-  def ofMessage(message: String): JValue = "message" → message
-
-  def handle(request: JValue): ST[JValue] = {
-    implicit val formats = DefaultFormats
-    (request \ "command").extractOpt[String].getOrElse("").trim match {
-      case "" ⇒ STA(ofMessage("please provide a command"))
-      case "add-key" ⇒ STA(ofMessage("please provide a command"))
-      case "add-confirm" ⇒ STA(ofMessage("please provide a command"))
-      case "confirm" ⇒ STA(ofMessage("please provide a command"))
-      case "orbit" ⇒ STA(ofMessage("please provide a command"))
-      case other ⇒ STA(ofMessage(s"command '$other' is not recognised"))
+  def handle(args: Vector[String]): ST[String] = {
+    args.headOption.getOrElse("").trim match {
+      case "" ⇒ STA("please provide a command")
+      case "add-key" ⇒ STA("please provide a command")
+      case "add-confirm" ⇒ STA("please provide a command")
+      case "confirm" ⇒ STA("please provide a command")
+      case other ⇒ STA(s"command '$other' is not recognised")
     }
-
-    ST(state ⇒ {
-      null
-    })
   }
 
   def confirm(name: String): ST[Unit] = ST(state ⇒ {

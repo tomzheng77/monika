@@ -2,7 +2,7 @@ package monika.orbit
 
 import java.time.LocalDateTime
 
-import scalaz.{@@, Tag}
+import scalaz.{@@, State, Tag}
 
 object Domain {
 
@@ -17,9 +17,15 @@ object Domain {
   sealed trait ConfirmName
   def ConfirmName[A](a: A): A @@ ConfirmName = Tag(a)
 
-  case class State(
+  case class OrbitState(
+    seed: Int,
     keys: Map[String @@ KeyName, String @@ KeyValue],
     confirms: Map[String @@ ConfirmName, Confirm]
   )
+
+  type ST[A] = State[OrbitState, A]
+  def ST[A](fn: OrbitState ⇒ (OrbitState, A)) = State(fn)
+
+
 
 }

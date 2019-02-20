@@ -74,17 +74,20 @@ object Domain extends UseDateTime {
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else {
       val name = ConfirmName(args(0).trim)
-      query(st ⇒ st.confirms.exists(nameEquals(name))).flatMap {
-        case true ⇒ update(st ⇒ st.copy(confirms = st.confirms.filterNot(nameEquals(name))))
-          .mapTo(s"$name has been confirmed")
+      existsConfirmWithName(name).flatMap {
+        case true ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
         case false ⇒ unit(s"confirm-name $name does not exist")
       }
     }
   }
 
   private def nameEquals(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
+  private def existsConfirmWithName(name: String @@ ConfirmName): ST[Boolean] = query(st ⇒ st.confirms.exists(nameEquals(name)))
   private def appendConfirm(confirm: Confirm): ST[Unit] = update(state ⇒ {
     state.copy(confirms = state.confirms.filterNot(nameEquals(confirm.name)) :+ confirm)
   })
+  private def removeConfirmIf(fn: Confirm ⇒ Boolean): ST[Unit] = {
+    update(st ⇒ st.copy(confirms = st.confirms.filterNot(fn)))
+  }
 
 }

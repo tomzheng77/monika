@@ -8,6 +8,7 @@ import scalaz.effect.IO
 import scalaz.{@@, State, Tag}
 
 import scala.language.implicitConversions
+import scala.util.Try
 
 object Domain extends UseDateTime {
 
@@ -20,7 +21,12 @@ object Domain extends UseDateTime {
   sealed trait ConfirmName
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
-  case class Confirm(name: String @@ ConfirmName, time: LocalDateTime, keyName: Option[String @@ KeyName])
+  case class Confirm(
+    name: String @@ ConfirmName,
+    time: LocalDateTime,
+    keyName: Option[String @@ KeyName],
+    window: Int
+  )
 
   case class OrbitState(
     seed: Int,
@@ -55,16 +61,18 @@ object Domain extends UseDateTime {
   }
 
   def addConfirm(args: Vector[String]): ST[String] = {
-    if (args.length != 3) unit("add-key <confirm-name> <confirm-date> <confirm-time>")
+    if (args.length != 3) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
     else if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
+    else if (Try(args(3).toInt).filter(_ > 0).isFailure) unit("window is invalid")
     else {
       val name = ConfirmName(args(0).trim)
       val date = parseDate(args(1).trim).get
       val time = parseTime(args(2).trim).get
+      val window = args(3).toInt
       val dateAndTime = LocalDateTime.of(date, time)
-      val confirm = Confirm(name, dateAndTime, None)
+      val confirm = Confirm(name, dateAndTime, None, window)
       appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
     }
   }

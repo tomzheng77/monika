@@ -32,7 +32,7 @@ object Domain extends UseDateTime {
   type ST[A] = State[OrbitState, A]
   def ST[A](fn: OrbitState ⇒ (OrbitState, A)) = State(fn)
   def update(fn: OrbitState ⇒ OrbitState): ST[Unit] = ST(st ⇒ fn(st) → ())
-  def STA[A](a: A): ST[A] = State.state(a)
+  def unit[A](a: A): ST[A] = State.state(a)
 
   implicit class AnyST[A](st: ST[A]) {
     def mapTo[B](b: B): ST[B] = st.map(_ ⇒ b)
@@ -45,19 +45,19 @@ object Domain extends UseDateTime {
 
   def handle(args: Vector[String]): ST[String] = {
     args.headOption.getOrElse("").trim match {
-      case "" ⇒ STA("please provide a command")
-      case "add-key" ⇒ STA("this command has not been implemented")
+      case "" ⇒ unit("please provide a command")
+      case "add-key" ⇒ unit("this command has not been implemented")
       case "add-confirm" ⇒ addConfirm(args.drop(1))
-      case "confirm" ⇒ STA("please provide a command")
-      case other ⇒ STA(s"command '$other' is not recognised")
+      case "confirm" ⇒ unit("please provide a command")
+      case other ⇒ unit(s"command '$other' is not recognised")
     }
   }
 
   def addConfirm(args: Vector[String]): ST[String] = {
-    if (args.length != 3) STA("add-key <confirm-name> <confirm-date> <confirm-time>")
-    if (args(0).trim.isEmpty) STA("confirm-name cannot be empty")
-    if (parseDate(args(1).trim).isFailure) STA("confirm-date is invalid")
-    if (parseTime(args(2).trim).isFailure) STA("confirm-time is invalid")
+    if (args.length != 3) unit("add-key <confirm-name> <confirm-date> <confirm-time>")
+    if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
+    if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
+    if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
     else {
       val name = args(0).trim
       val date = parseDate(args(1).trim).get

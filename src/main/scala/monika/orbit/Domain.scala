@@ -21,10 +21,6 @@ object Domain extends UseDateTime {
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
   case class Confirm(name: String @@ ConfirmName, time: LocalDateTime, keyName: Option[String @@ KeyName])
-  def hasName(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
-  def appendConfirm(confirm: Confirm)(state: OrbitState): OrbitState = {
-    state.copy(confirms = state.confirms.filterNot(hasName(confirm.name)) :+ confirm)
-  }
 
   case class OrbitState(
     seed: Int,
@@ -35,6 +31,7 @@ object Domain extends UseDateTime {
 
   type ST[A] = State[OrbitState, A]
   def ST[A](fn: OrbitState ⇒ (OrbitState, A)) = State(fn)
+  def query[A](fn: OrbitState ⇒ A): ST[A] = ST(st ⇒ st → fn(st))
   def update(fn: OrbitState ⇒ OrbitState): ST[Unit] = ST(st ⇒ fn(st) → ())
   def unit[A](a: A): ST[A] = State.state(a)
 
@@ -59,22 +56,35 @@ object Domain extends UseDateTime {
 
   def addConfirm(args: Vector[String]): ST[String] = {
     if (args.length != 3) unit("add-key <confirm-name> <confirm-date> <confirm-time>")
-    if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
-    if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
-    if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
+    else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
+    else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
+    else if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
     else {
       val name = ConfirmName(args(0).trim)
       val date = parseDate(args(1).trim).get
       val time = parseTime(args(2).trim).get
       val dateAndTime = LocalDateTime.of(date, time)
       val confirm = Confirm(name, dateAndTime, None)
-      update(appendConfirm(confirm)).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+      appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
     }
   }
 
-  def confirm(name: String): ST[Unit] = ST(state ⇒ {
-    if (state.confirms.exists(_.name == ConfirmName(name))) null
-    null
+  def confirm(args: Vector[String]): ST[String] = {
+    if (args.length != 1) unit("confirm <confirm-name>")
+    else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
+    else {
+      val name = ConfirmName(args(0).trim)
+      query(st ⇒ st.confirms.exists(nameEquals(name))).flatMap {
+        case true ⇒ update(st ⇒ st.copy(confirms = st.confirms.filterNot(nameEquals(name))))
+          .mapTo(s"$name has been confirmed")
+        case false ⇒ unit(s"confirm-name $name does not exist")
+      }
+    }
+  }
+
+  private def nameEquals(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
+  private def appendConfirm(confirm: Confirm): ST[Unit] = update(state ⇒ {
+    state.copy(confirms = state.confirms.filterNot(nameEquals(confirm.name)) :+ confirm)
   })
 
 }

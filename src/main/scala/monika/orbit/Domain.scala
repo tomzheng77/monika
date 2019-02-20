@@ -12,13 +12,13 @@ import scala.language.implicitConversions
 object Domain extends UseDateTime {
 
   sealed trait KeyName
-  def KeyName[A](a: A): A @@ KeyName = Tag(a)
+  def KeyName[A <: String](a: A): A @@ KeyName = Tag(a)
 
   sealed trait KeyValue
-  def KeyValue[A](a: A): A @@ KeyValue = Tag(a)
+  def KeyValue[A <: String](a: A): A @@ KeyValue = Tag(a)
 
   sealed trait ConfirmName
-  def ConfirmName[A](a: A): A @@ ConfirmName = Tag(a)
+  def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
   case class Confirm(name: String @@ ConfirmName, time: LocalDateTime, keyName: Option[String @@ KeyName])
 

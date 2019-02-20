@@ -50,12 +50,12 @@ object Domain extends UseDateTime {
     OrbitState(random.nextInt(), Map.empty, Vector.empty, Vector.empty)
   }
 
-  def handle(args: Vector[String]): ST[String] = {
+  def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     args.headOption.getOrElse("").trim match {
       case "" ⇒ unit("please provide a command")
       case "add-key" ⇒ unit("this command has not been implemented")
       case "add-confirm" ⇒ addConfirm(args.drop(1))
-      case "confirm" ⇒ unit("please provide a command")
+      case "confirm" ⇒ confirm(args)(nowTime)
       case other ⇒ unit(s"command '$other' is not recognised")
     }
   }
@@ -77,20 +77,21 @@ object Domain extends UseDateTime {
     }
   }
 
-  def confirm(args: Vector[String]): ST[String] = {
+  def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     if (args.length != 1) unit("confirm <confirm-name>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else {
       val name = ConfirmName(args(0).trim)
-      existsConfirmWithName(name).flatMap {
-        case true ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
-        case false ⇒ unit(s"confirm-name $name does not exist")
+      findConfirmWithName(name).flatMap {
+        case None ⇒ unit(s"confirm-name $name does not exist")
+        case Some(confirm) if nowTime.isBefore(confirm.time.minusMinutes(confirm.window)) ⇒ unit(s"the window has not been reached")
+        case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }
     }
   }
 
   private def nameEquals(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
-  private def existsConfirmWithName(name: String @@ ConfirmName): ST[Boolean] = query(st ⇒ st.confirms.exists(nameEquals(name)))
+  private def findConfirmWithName(name: String @@ ConfirmName): ST[Option[Confirm]] = query(st ⇒ st.confirms.find(nameEquals(name)))
   private def appendConfirm(confirm: Confirm): ST[Unit] = update(state ⇒ {
     state.copy(confirms = state.confirms.filterNot(nameEquals(confirm.name)) :+ confirm)
   })

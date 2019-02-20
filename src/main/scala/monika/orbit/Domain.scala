@@ -21,7 +21,10 @@ object Domain extends UseDateTime {
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
   case class Confirm(name: String @@ ConfirmName, time: LocalDateTime, keyName: Option[String @@ KeyName])
-  def appendConfirm(confirm: Confirm)(state: OrbitState): OrbitState = state.copy(confirms = state.confirms :+ confirm)
+  def hasName(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
+  def appendConfirm(confirm: Confirm)(state: OrbitState): OrbitState = {
+    state.copy(confirms = state.confirms.filterNot(hasName(confirm.name)) :+ confirm)
+  }
 
   case class OrbitState(
     seed: Int,
@@ -60,11 +63,11 @@ object Domain extends UseDateTime {
     if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
     if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
     else {
-      val name = args(0).trim
+      val name = ConfirmName(args(0).trim)
       val date = parseDate(args(1).trim).get
       val time = parseTime(args(2).trim).get
       val dateAndTime = LocalDateTime.of(date, time)
-      val confirm = Confirm(Tag(name), dateAndTime, None)
+      val confirm = Confirm(name, dateAndTime, None)
       update(appendConfirm(confirm)).mapTo(s"confirm $name added at ${dateAndTime.format()}")
     }
   }

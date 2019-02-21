@@ -54,13 +54,13 @@ object Domain extends UseDateTime {
     args.headOption.getOrElse("").trim match {
       case "" ⇒ unit("please provide a command")
       case "add-key" ⇒ unit("this command has not been implemented")
-      case "add-confirm" ⇒ addConfirm(args.drop(1))
+      case "add-confirm" ⇒ addConfirm(args.drop(1))(nowTime)
       case "confirm" ⇒ confirm(args)(nowTime)
       case other ⇒ unit(s"command '$other' is not recognised")
     }
   }
 
-  def addConfirm(args: Vector[String]): ST[String] = {
+  def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     if (args.length != 3) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
@@ -72,8 +72,11 @@ object Domain extends UseDateTime {
       val time = parseTime(args(2).trim).get
       val window = args(3).toInt
       val dateAndTime = LocalDateTime.of(date, time)
-      val confirm = Confirm(name, dateAndTime, None, window)
-      appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+      if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
+      else {
+        val confirm = Confirm(name, dateAndTime, None, window)
+        appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+      }
     }
   }
 

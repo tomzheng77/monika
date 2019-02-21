@@ -45,15 +45,21 @@ object Domain extends UseDateTime {
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     args.headOption.getOrElse("").trim match {
       case "" ⇒ unit("please provide a command")
-      case "add-key" ⇒ unit("this command has not been implemented")
+      case "add-note" ⇒ addNote(args.drop(1))
       case "add-confirm" ⇒ addConfirm(args.drop(1))(nowTime)
-      case "confirm" ⇒ confirm(args)(nowTime)
+      case "confirm" ⇒ confirm(args.drop(1))(nowTime)
       case other ⇒ unit(s"command '$other' is not recognised")
     }
   }
 
+  def addNote(args: Vector[String]): ST[String] = {
+    if (args.length != 1) unit("add-note <note-text>")
+    else if (args(0).trim.isEmpty) unit("note-text cannot be empty")
+    else appendNote(args(0)).map(i ⇒ s"the note #$i has been added")
+  }
+
   def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
-    if (args.length != 3) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
+    if (args.length != 4) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
     else if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
@@ -92,6 +98,9 @@ object Domain extends UseDateTime {
   })
   private def removeConfirmIf(fn: Confirm ⇒ Boolean): ST[Unit] = {
     update(st ⇒ st.copy(confirms = st.confirms.filterNot(fn)))
+  }
+  private def appendNote(note: String): ST[Int] = {
+    ST(st ⇒ st.copy(notes = st.notes :+ note) → st.notes.length)
   }
 
 }

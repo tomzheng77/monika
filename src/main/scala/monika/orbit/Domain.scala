@@ -1,10 +1,9 @@
 package monika.orbit
 
-import java.security.SecureRandom
 import java.time.LocalDateTime
 
 import monika.server.UseDateTime
-import scalaz.effect.IO
+import scalaz.Tag.unwrap
 import scalaz.{@@, State, Tag}
 
 import scala.language.implicitConversions
@@ -12,25 +11,19 @@ import scala.util.Try
 
 object Domain extends UseDateTime {
 
-  sealed trait KeyName
-  def KeyName[A <: String](a: A): A @@ KeyName = Tag(a)
-
-  sealed trait KeyValue
-  def KeyValue[A <: String](a: A): A @@ KeyValue = Tag(a)
-
   sealed trait ConfirmName
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
+
+  sealed trait Minutes
+  def Minutes[A <: String](a: A): A @@ Minutes = Tag(a)
 
   case class Confirm(
     name: String @@ ConfirmName,
     time: LocalDateTime,
-    keyName: Option[String @@ KeyName],
-    window: Int
+    window: Int @@ Minutes
   )
 
   case class OrbitState(
-    seed: Int,
-    keys: Map[String @@ KeyName, String @@ KeyValue],
     confirms: Vector[Confirm],
     notes: Vector[String]
   )
@@ -45,9 +38,8 @@ object Domain extends UseDateTime {
     def mapTo[B](b: B): ST[B] = st.map(_ ⇒ b)
   }
 
-  def initialState: IO[OrbitState] = IO {
-    val random = new SecureRandom()
-    OrbitState(random.nextInt(), Map.empty, Vector.empty, Vector.empty)
+  def initialState: OrbitState = {
+    OrbitState(Vector.empty, Vector.empty)
   }
 
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
@@ -74,7 +66,7 @@ object Domain extends UseDateTime {
       val dateAndTime = LocalDateTime.of(date, time)
       if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
       else {
-        val confirm = Confirm(name, dateAndTime, None, window)
+        val confirm = Confirm(name, dateAndTime, Minutes(window))
         appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
       }
     }
@@ -87,7 +79,7 @@ object Domain extends UseDateTime {
       val name = ConfirmName(args(0).trim)
       findConfirmWithName(name).flatMap {
         case None ⇒ unit(s"confirm-name $name does not exist")
-        case Some(confirm) if nowTime.isBefore(confirm.time.minusMinutes(confirm.window)) ⇒ unit(s"the window has not been reached")
+        case Some(confirm) if nowTime.isBefore(confirm.time.minusMinutes(unwrap(confirm.window))) ⇒ unit(s"the window has not been reached")
         case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }
     }

@@ -29,7 +29,7 @@ object Constants {
 
   val ProxyPort = 9000
   val InterpreterPort = 9001
-  val OrbitAddress = "127.0.0.1"
+  val OrbitAddress = "103.29.84.69"
   val OrbitPort = 9002
   val MaxQueueSize = 3
   val MonikaUser = "tomzheng"

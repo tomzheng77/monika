@@ -47,6 +47,10 @@ object SignalClient extends OrbitEncryption {
     }
   }
 
+  def parseCommandInterp(line: String): List[String] = {
+
+  }
+
   private var variables: Map[String, String] = Map.empty
   private var aliases: Map[String, List[String]] = Map.empty
 

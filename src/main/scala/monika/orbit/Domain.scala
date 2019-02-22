@@ -44,13 +44,29 @@ object Domain extends UseDateTime {
 
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     args.headOption.getOrElse("").trim match {
-      case "" ⇒ unit("please provide a command")
+      case "" ⇒ listNotesOrConfirms()
       case "add-note" ⇒ addNote(args.drop(1))
       case "add-confirm" ⇒ addConfirm(args.drop(1))(nowTime)
       case "confirm" ⇒ confirm(args.drop(1))(nowTime)
       case other ⇒ unit(s"command '$other' is not recognised")
     }
   }
+
+  def listNotesOrConfirms(): ST[String] = query(st ⇒ {
+    val output = new StringBuilder()
+    if (st.confirms.nonEmpty) {
+      output.append("==========[Confirms]==========").append('\n')
+      for (confirm ← st.confirms) {
+        output.append(s"- ${confirm.name}: ${confirm.time.format()}").append('\n')
+      }
+    } else {
+      output.append("==========[Notes]==========").append('\n')
+      for ((note, index) ← st.notes.zipWithIndex) {
+        output.append(s"- #$index: $note").append('\n')
+      }
+    }
+    output.toString()
+  })
 
   def addNote(args: Vector[String]): ST[String] = {
     if (args.length != 1) unit("add-note <note-text>")

@@ -1,7 +1,7 @@
 package monika.server
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import scalaz.syntax.ToIdOps
 

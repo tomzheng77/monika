@@ -1,9 +1,10 @@
 package monika.editor;
 
-import javax.swing.*;
-import org.fife.ui.rtextarea.*;
-import org.fife.ui.rsyntaxtextarea.*;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
+import javax.swing.*;
 import java.awt.*;
 
 public class TextEditorDemo extends JFrame {

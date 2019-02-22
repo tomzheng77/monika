@@ -1,7 +1,5 @@
 package monika.server.script.locknext
 
-import java.time.LocalDate
-
 import monika.server.Constants
 import monika.server.script.Script
 import monika.server.script.property.RootOnly

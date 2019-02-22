@@ -1,13 +1,9 @@
 package monika.server.script
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.LocalDateTime
 
-import monika.server.Structs.FutureAction
 import monika.server.UseDateTime
-import monika.server.script.internal.Unlock
 import monika.server.script.property.Requestable
-
-import scala.util.Try
 
 object RequestUntilToday extends Script with UseDateTime {
 

@@ -1,6 +1,8 @@
 package monika.orbit
 
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime, Period}
+import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.util.concurrent.TimeUnit
 
 import monika.server.UseDateTime
 import scalaz.Tag.unwrap
@@ -103,7 +105,11 @@ object Domain extends UseDateTime {
       val name = ConfirmName(args(0).trim)
       findConfirmWithName(name).flatMap {
         case None ⇒ unit(s"confirm-name $name does not exist")
-        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒ unit(s"please wait until ${confirm.start.format()}")
+        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒ {
+          val secondsLeft = nowTime.until(confirm.start, ChronoUnit.SECONDS)
+          val durationString = Duration.ofSeconds(secondsLeft).formatted("HH:mm:ss")
+          unit(s"please wait $durationString")
+        }
         case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }
     }

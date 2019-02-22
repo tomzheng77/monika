@@ -16,8 +16,7 @@ object Structs {
   case class MonikaState(
     root: Boolean = true,
     queue: Vector[FutureAction] = Vector.empty,
-    filter: Filter = TransparentFilter,
-    passwords: Map[LocalDate, String] = Map.empty
+    filter: Filter = TransparentFilter
   )
 
   case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)

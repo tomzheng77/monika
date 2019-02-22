@@ -127,7 +127,7 @@ object SignalClient extends OrbitEncryption {
     case "orbit" :: args ⇒ {
       val response: String = Unirest
         .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
-        .body("cmd", encryptPBE(pretty(render(args))))
+        .body(encryptPBE(pretty(render(args))))
         .asString().getBody
 
       println(decryptPBE(response))

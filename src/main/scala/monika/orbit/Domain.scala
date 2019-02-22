@@ -64,7 +64,7 @@ object Domain extends UseDateTime {
     } else {
       output.append("==========[Notes]==========").append('\n')
       for ((note, index) ← st.notes.zipWithIndex) {
-        output.append(s"- #$index: $note").append('\n')
+        output.append(s"- #${index + 1}: $note").append('\n')
       }
     }
     output.toString()
@@ -73,7 +73,7 @@ object Domain extends UseDateTime {
   private def addNote(args: Vector[String]): ST[String] = {
     if (args.length != 1) unit("add-note <note-text>")
     else if (args(0).trim.isEmpty) unit("note-text cannot be empty")
-    else appendNote(args(0)).map(i ⇒ s"the note #$i has been added")
+    else appendNote(args(0)).map(index ⇒ s"the note #${index + 1} has been added")
   }
 
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {

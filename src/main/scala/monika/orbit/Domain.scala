@@ -107,8 +107,11 @@ object Domain extends UseDateTime {
         case None ⇒ unit(s"confirm-name $name does not exist")
         case Some(confirm) if nowTime.isBefore(confirm.start) ⇒ {
           val secondsLeft = nowTime.until(confirm.start, ChronoUnit.SECONDS)
-          val durationString = Duration.ofSeconds(secondsLeft).formatted("HH:mm:ss")
-          unit(s"please wait $durationString")
+          def format00(n: Long): String = ("0" + n.toString).takeRight(2)
+          val hours = format00(secondsLeft / 60 / 60)
+          val minutes = format00(secondsLeft / 60 % 60)
+          val seconds = format00(secondsLeft % 60)
+          unit(s"please wait $hours:$minutes:$seconds")
         }
         case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }

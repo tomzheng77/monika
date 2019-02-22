@@ -52,7 +52,7 @@ object Domain extends UseDateTime {
     }
   }
 
-  def listNotesOrConfirms(): ST[String] = query(st ⇒ {
+  private def listNotesOrConfirms(): ST[String] = query(st ⇒ {
     val output = new StringBuilder()
     if (st.confirms.nonEmpty) {
       output.append("==========[Confirms]==========").append('\n')
@@ -68,13 +68,13 @@ object Domain extends UseDateTime {
     output.toString()
   })
 
-  def addNote(args: Vector[String]): ST[String] = {
+  private def addNote(args: Vector[String]): ST[String] = {
     if (args.length != 1) unit("add-note <note-text>")
     else if (args(0).trim.isEmpty) unit("note-text cannot be empty")
     else appendNote(args(0)).map(i ⇒ s"the note #$i has been added")
   }
 
-  def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
+  private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     if (args.length != 4) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
@@ -94,7 +94,7 @@ object Domain extends UseDateTime {
     }
   }
 
-  def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
+  private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     if (args.length != 1) unit("confirm <confirm-name>")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else {

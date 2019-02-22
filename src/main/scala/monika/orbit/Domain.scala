@@ -59,7 +59,7 @@ object Domain extends UseDateTime {
     if (st.confirms.nonEmpty) {
       output.append("==========[Confirms]==========").append('\n')
       for (confirm ← st.confirms) {
-        output.append(s"- ${confirm.name}: ${confirm.time.format()}").append('\n')
+        output.append(s"- ${confirm.name}: ${confirm.time.format()} (window = ${confirm.window})").append('\n')
       }
     } else {
       output.append("==========[Notes]==========").append('\n')
@@ -103,8 +103,7 @@ object Domain extends UseDateTime {
       val name = ConfirmName(args(0).trim)
       findConfirmWithName(name).flatMap {
         case None ⇒ unit(s"confirm-name $name does not exist")
-        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒
-          unit(s"the window (${confirm.start.format()} to ${confirm.time.format()}) has not been reached")
+        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒ unit(s"please wait until ${confirm.start.format()}")
         case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }
     }

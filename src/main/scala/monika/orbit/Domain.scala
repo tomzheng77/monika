@@ -21,7 +21,9 @@ object Domain extends UseDateTime {
     name: String @@ ConfirmName,
     time: LocalDateTime,
     window: Int @@ Minutes
-  )
+  ) {
+    val start: LocalDateTime = time.minusMinutes(unwrap(window))
+  }
 
   case class OrbitState(
     confirms: Vector[Confirm],
@@ -101,7 +103,8 @@ object Domain extends UseDateTime {
       val name = ConfirmName(args(0).trim)
       findConfirmWithName(name).flatMap {
         case None ⇒ unit(s"confirm-name $name does not exist")
-        case Some(confirm) if nowTime.isBefore(confirm.time.minusMinutes(unwrap(confirm.window))) ⇒ unit(s"the window has not been reached")
+        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒
+          unit(s"the window (${confirm.start.format()} to ${confirm.time.format()}) has not been reached")
         case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
       }
     }

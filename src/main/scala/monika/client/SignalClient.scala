@@ -60,8 +60,9 @@ object SignalClient extends OrbitEncryption {
     if (!name.matches(VariableNameRegex)) {
       println(s"variable name must match $VariableNameRegex")
     } else {
-      variables = variables.updated(name, value)
-      println(s"$name=$value")
+      val valueExpanded = expandVariables(value)
+      variables = variables.updated(name, valueExpanded)
+      println(s"$name=$valueExpanded")
     }
   }
 
@@ -86,7 +87,7 @@ object SignalClient extends OrbitEncryption {
   }
 
   def createAlias(name: String, value: List[String]): Unit = {
-    aliases = aliases.updated(name, value)
+    aliases = aliases.updated(name, value.flatMap(expandAlias))
     println(s"$name: $value")
   }
 

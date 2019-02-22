@@ -59,7 +59,7 @@ object Domain extends UseDateTime {
     if (st.confirms.nonEmpty) {
       output.append("==========[Confirms]==========").append('\n')
       for (confirm ← st.confirms) {
-        output.append(s"- ${confirm.name}: ${confirm.time.format()} (window = ${confirm.window})").append('\n')
+        output.append(s"- ${confirm.name}: ${confirm.time.format()} (window: ${confirm.window})").append('\n')
       }
     } else {
       output.append("==========[Notes]==========").append('\n')

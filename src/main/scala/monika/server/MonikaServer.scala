@@ -1,6 +1,6 @@
 package monika.server
 
-import monika.server.Constants._
+import monika.Constants._
 import monika.server.Structs._
 import monika.server.proxy.ProxyServer
 import monika.server.script._

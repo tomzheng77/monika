@@ -2,8 +2,9 @@ package monika.server.subprocess
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
+import monika.Constants
 import monika.Primitives.{CanonicalPath, Filename}
-import monika.server.{Constants, UseLogger, UseScalaz}
+import monika.server.{UseLogger, UseScalaz}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import scalaz.{@@, Tag}
 

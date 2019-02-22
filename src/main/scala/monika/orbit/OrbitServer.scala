@@ -2,6 +2,7 @@ package monika.orbit
 
 import java.time.LocalDateTime
 
+import monika.Constants
 import monika.orbit.Domain.OrbitState
 import monika.server.{UseDateTime, UseJSON, UseLogger, UseTry}
 import org.apache.log4j.{ConsoleAppender, Level, Logger, PatternLayout}
@@ -27,7 +28,7 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
   def main(args: Array[String]): Unit = {
     setupLogger()
     state = Domain.initialState
-    Spark.port(9002)
+    Spark.port(Constants.OrbitPort)
     Spark.post("/", (req, resp) ⇒ {
       resp.header("content-type", "text/plain")
       val body = decryptPBE(req.body())

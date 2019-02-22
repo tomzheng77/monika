@@ -1,6 +1,7 @@
 package monika.client
 
 import com.mashape.unirest.http.Unirest
+import monika.Constants
 import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._

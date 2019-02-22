@@ -1,9 +1,9 @@
-package monika.server
+package monika
 
 import java.io.File
 import java.nio.charset.Charset
 
-import monika.Primitives._
+import monika.Primitives.CanonicalPath
 import scalaz.@@
 
 object Constants {
@@ -29,6 +29,8 @@ object Constants {
 
   val ProxyPort = 9000
   val InterpreterPort = 9001
+  val OrbitAddress = "127.0.0.1"
+  val OrbitPort = 9002
   val MaxQueueSize = 3
   val MonikaUser = "tomzheng"
   val UnlockerUser = "unlocker"

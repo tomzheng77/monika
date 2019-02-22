@@ -1,7 +1,8 @@
 package monika.server.proxy
 
 import io.netty.handler.codec.http.{FullHttpResponse, HttpMessage, HttpRequest, HttpResponse}
-import monika.server.{Constants, UseLogger}
+import monika.Constants
+import monika.server.UseLogger
 
 case class KeywordRejectFilter(keywords: Set[String]) extends Filter with UseLogger {
 

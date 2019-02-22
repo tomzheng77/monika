@@ -3,7 +3,7 @@ package monika.adm
 import java.io._
 import java.net.{ServerSocket, Socket}
 
-import monika.server.Constants
+import monika.Constants
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 
 import scala.collection.JavaConverters._

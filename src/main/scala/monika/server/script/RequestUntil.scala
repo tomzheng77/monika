@@ -28,7 +28,7 @@ object RequestUntil extends Script with UseDateTime {
     }
   }
 
-  def requestUntilInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
+  private def requestUntilInternal(untilTime: LocalDateTime, script: Script, args: Vector[String]): IOS[Unit] = {
     findScriptInQueue(Unlock).flatMap {
       case None =>
         branch(

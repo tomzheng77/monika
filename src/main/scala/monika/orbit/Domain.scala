@@ -15,7 +15,7 @@ object Domain extends UseDateTime {
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
   sealed trait Minutes
-  def Minutes[A <: String](a: A): A @@ Minutes = Tag(a)
+  def Minutes[A <: Int](a: A): A @@ Minutes = Tag(a)
 
   case class Confirm(
     name: String @@ ConfirmName,

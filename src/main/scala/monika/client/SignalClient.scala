@@ -36,10 +36,14 @@ object SignalClient extends OrbitEncryption {
       case nonEmptyLine ⇒
         val cmd: CommandLine = CommandLine.parse(nonEmptyLine)
         val seq = cmd.getExecutable :: cmd.getArguments.toList
-        seq.indexOf("#") match {
+        val notComment = seq.indexOf("#") match {
           case -1 ⇒ seq
           case index ⇒ seq.take(index)
         }
+        notComment.map(s ⇒ {
+          if (s.startsWith("\"") && s.endsWith("\""))
+            s.substring(1, s.length - 1) else s
+        })
     }
   }
 

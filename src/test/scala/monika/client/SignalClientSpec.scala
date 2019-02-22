@@ -41,4 +41,28 @@ class SignalClientSpec extends FlatSpec with Matchers {
     cmd should be(Vector("one", "command", "#comment", "here"))
   }
 
+  it should "handle quotes" in {
+    val line = "this is a \"line\""
+    val cmd = SignalClient.parseCommand(line)
+    cmd should be(Vector("this", "is", "a", "line"))
+  }
+
+  it should "handle quotes with spaces inside (1)" in {
+    val line = "this is \"a line\""
+    val cmd = SignalClient.parseCommand(line)
+    cmd should be(Vector("this", "is", "a line"))
+  }
+
+  it should "handle quotes with spaces inside (2)" in {
+    val line = "\"this is\" \"a line\""
+    val cmd = SignalClient.parseCommand(line)
+    cmd should be(Vector("this is", "a line"))
+  }
+
+  it should "handle quotes with spaces inside (3)" in {
+    val line = "this \"is a\" line"
+    val cmd = SignalClient.parseCommand(line)
+    cmd should be(Vector("this", "is a", "line"))
+  }
+
 }

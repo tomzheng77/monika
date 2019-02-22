@@ -92,7 +92,10 @@ object Domain extends UseDateTime {
       if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
       else {
         val confirm = Confirm(name, dateAndTime, Minutes(window))
-        appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+        findConfirmWithName(name).flatMap {
+          case None ⇒ appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+          case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
+        }
       }
     }
   }

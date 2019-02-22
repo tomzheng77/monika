@@ -1,4 +1,2 @@
 #!/usr/bin/env bash
-sudo cp target/scala-2.12/monika.jar /home/tomzheng/monika/monika.jar
-sudo chmod 755 /home/tomzheng/monika/monika.jar
-sudo chown root:root /home/tomzheng/monika/monika.jar
+scp target/scala-2.12/monika.jar root@103.29.84.69:/root/monika.jar

@@ -124,7 +124,14 @@ object SignalClient extends OrbitEncryption {
   }
 
   def handleOrbit: PartialFunction[List[String], Unit] = {
-    case "orbit" :: Nil ⇒
+    case "orbit" :: args ⇒ {
+      val response: String = Unirest
+        .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
+        .body("cmd", encryptPBE(pretty(render(args))))
+        .asString().getBody
+
+      println(decryptPBE(response))
+    }
   }
 
   def handleScript(cmd: List[String]): Unit = {

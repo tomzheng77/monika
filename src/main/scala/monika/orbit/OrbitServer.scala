@@ -15,8 +15,8 @@ object OrbitServer extends OrbitEncryption with UseLogger with UseDateTime with 
 
   def main(args: Array[String]): Unit = {
     state = Domain.initialState
-    Spark.port(8080)
-    Spark.post("/orbit", (req, resp) ⇒ {
+    Spark.port(9002)
+    Spark.post("/", (req, resp) ⇒ {
       resp.header("content-type", "text/plain")
       val body = decryptPBE(req.body())
       val args = JsonMethods.parseOpt(body).flatMap(_.extractOpt[Vector[String]]).getOrElse(Vector.empty)

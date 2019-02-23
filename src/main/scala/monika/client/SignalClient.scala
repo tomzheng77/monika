@@ -141,13 +141,12 @@ object SignalClient extends OrbitEncryption {
   }
 
   def handleScript(cmd: List[String]): Unit = {
-    val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
-    if (batchEnabled) batch = batch :+ cmdExpanded
+    if (batchEnabled) batch = batch :+ cmd
     else {
       val response: String = {
         Unirest
           .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-          .queryString("cmd", pretty(render(cmdExpanded)))
+          .queryString("cmd", pretty(render(cmd)))
           .asString().getBody
       }
       println(response)
@@ -165,6 +164,7 @@ object SignalClient extends OrbitEncryption {
       val optCommand: Option[List[String]] = Option(StdIn.readLine(prompt))
         .map(_.trim)
         .map(parseCommand)
+        .map(cmd ⇒ cmd.flatMap(expandAlias).map(expandVariables))
 
       optCommand match {
         case None => System.exit(0)

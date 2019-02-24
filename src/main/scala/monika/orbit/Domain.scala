@@ -127,7 +127,7 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def leftIf[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
+  private def check[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
     if (e) Right(()) else Left(unit(b))
   }
 
@@ -136,16 +136,16 @@ object Domain extends UseDateTime {
   }
 
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
-    _ ← leftIf(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
-    name ← attempt(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
-    date ← attempt(parseDate(args(1).trim).get)("confirm-date is invalid")
-    time ← attempt(parseTime(args(2).trim).get)("confirm-time is invalid")
+    _      ← check(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
+    name   ← attempt(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
+    date   ← attempt(parseDate(args(1).trim).get)("confirm-date is invalid")
+    time   ← attempt(parseTime(args(2).trim).get)("confirm-time is invalid")
     window ← attempt(args(3).toInt)("window is invalid")
-    keyNameOpt = Try(args(4).trim).filter(_.nonEmpty).map(KeyName).toOption
-    dateAndTime = LocalDateTime.of(date, time)
-    _ ← leftIf(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
+    dateAndTime   = LocalDateTime.of(date, time)
+    _      ← check(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
+    keyNameOption = Try(args(4).trim).filter(_.nonEmpty).map(KeyName).toOption
   } yield {
-    keyNameOpt match {
+    keyNameOption match {
       case None ⇒ addConfirmInternal(Confirm(name, dateAndTime, Minutes(window), None))
       case Some(keyName) ⇒ findKeyWithName(keyName).flatMap {
         case Some(key) ⇒ addConfirmInternal(Confirm(name, dateAndTime, Minutes(window), Some(key.value)))

@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import monika.server.UseDateTime
 import scalaz.Tag.unwrap
-import scalaz.{@@, OptionT, State, Tag}
+import scalaz.{@@, Id, IndexedStateT, OptionT, State, Tag}
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -28,7 +28,7 @@ object Domain extends UseDateTime {
     name: String @@ ConfirmName,
     time: LocalDateTime,
     window: Int @@ Minutes,
-    key: Option[String @@ KeyName]
+    key: Option[String @@ KeyValue]
   ) {
     val start: LocalDateTime = time.minusMinutes(unwrap(window))
   }
@@ -120,21 +120,14 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def either[A, B](t: ⇒ A)(b: B): Either[ST[B], A] = {
+  private def attempt[A, B](t: ⇒ A)(b: B): Either[ST[B], A] = {
     Try(t) match {
       case Success(a) ⇒ Right(a)
       case Failure(_) ⇒ Left(unit(b))
     }
   }
 
-  private def option[A, B](t: ⇒ A): Either[ST[B], Option[A]] = {
-    Try(t) match {
-      case Success(a) ⇒ Right(Some(a))
-      case Failure(_) ⇒ Right(None)
-    }
-  }
-
-  private def failIf[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
+  private def leftIf[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
     if (e) Right(()) else Left(unit(b))
   }
 
@@ -143,21 +136,28 @@ object Domain extends UseDateTime {
   }
 
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
-    _ ← failIf(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
-    name ← either(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
-    date ← either(parseDate(args(1).trim).get)("confirm-date is invalid")
-    time ← either(parseTime(args(2).trim).get)("confirm-time is invalid")
-    window ← either(args(3).toInt)("window is invalid")
-    keyName ← option(KeyName(args(4).trim))
+    _ ← leftIf(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
+    name ← attempt(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
+    date ← attempt(parseDate(args(1).trim).get)("confirm-date is invalid")
+    time ← attempt(parseTime(args(2).trim).get)("confirm-time is invalid")
+    window ← attempt(args(3).toInt)("window is invalid")
+    keyNameOpt = Try(args(4).trim).filter(_.nonEmpty).map(KeyName).toOption
+    dateAndTime = LocalDateTime.of(date, time)
+    _ ← leftIf(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
   } yield {
-    val dateAndTime = LocalDateTime.of(date, time)
-    if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
-    else {
-      val confirm = Confirm(name, dateAndTime, Minutes(window), keyName)
-      findConfirmWithName(name).flatMap {
-        case None ⇒ appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
-        case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
+    keyNameOpt match {
+      case None ⇒ addConfirmInternal(Confirm(name, dateAndTime, Minutes(window), None))
+      case Some(keyName) ⇒ findKeyWithName(keyName).flatMap {
+        case Some(key) ⇒ addConfirmInternal(Confirm(name, dateAndTime, Minutes(window), Some(key.value)))
+        case None ⇒ unit(s"key '$keyName' does not exist")
       }
+    }
+  }
+
+  private def addConfirmInternal(confirm: Confirm): ST[String] = {
+    findConfirmWithName(confirm.name).flatMap {
+      case None ⇒ appendConfirm(confirm).mapTo(s"confirm ${confirm.name} added at ${confirm.time.format()}")
+      case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
     }
   }
 

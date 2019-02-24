@@ -86,4 +86,15 @@ class OrbitSpec extends FlatSpec with Matchers {
     state.confirms.length should be(0)
   }
 
+  it should "add notes" in {
+    val time = LocalDateTime.of(2019, 2, 24, 21, 0, 0)
+    var state = Domain.initialState
+    state = Domain.handle(Vector("add-note", "noteA"))(time)(state)._1
+    state.notes.length should be(1)
+
+    state = Domain.handle(Vector("add-note", "noteB"))(time)(state)._1
+    state = Domain.handle(Vector("add-note", "noteC"))(time)(state)._1
+    state.notes.length should be(3)
+  }
+
 }

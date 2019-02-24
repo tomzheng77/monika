@@ -15,6 +15,12 @@ object Domain extends UseDateTime {
   sealed trait ConfirmName
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
 
+  sealed trait KeyName
+  def KeyName[A <: String](a: A): A @@ KeyName = Tag(a)
+
+  sealed trait KeyValue
+  def KeyValue[A <: String](a: A): A @@ KeyValue = Tag(a)
+
   sealed trait Minutes
   def Minutes[A <: Int](a: A): A @@ Minutes = Tag(a)
 
@@ -26,7 +32,10 @@ object Domain extends UseDateTime {
     val start: LocalDateTime = time.minusMinutes(unwrap(window))
   }
 
+  case class Key(name: String @@ KeyName, value: String @@ KeyValue)
+
   case class OrbitState(
+    keys: Vector[Key],
     confirms: Vector[Confirm],
     notes: Vector[String]
   )
@@ -42,7 +51,7 @@ object Domain extends UseDateTime {
   }
 
   def initialState: OrbitState = {
-    OrbitState(Vector.empty, Vector.empty)
+    OrbitState(Vector.empty, Vector.empty, Vector.empty)
   }
 
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {

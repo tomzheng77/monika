@@ -86,71 +86,39 @@ object Domain extends UseDateTime {
     output.toString()
   })
 
-  private def addNote(args: Vector[String]): ST[String] = {
-    if (args.length != 1) unit("add-note <note-text>")
-    else if (args(0).trim.isEmpty) unit("note-text cannot be empty")
-    else appendNote(args(0)).map(index ⇒ s"the note #${index + 1} has been added")
-  }
+  private def addNote(args: Vector[String]): ST[String] =   for {
+    _        ← check(args.length == 1)("add-note <note-text>")
+    noteText ← require(args(0).trim)(notEmpty)("note-text cannot be empty")
+  } yield appendNote(noteText).map(i ⇒ s"the note #${i + 1} has been added")
 
-  private def addKey(args: Vector[String]): ST[String] = {
-    if (args.length != 2) unit("add-key <key-name> <key-value>")
-    else if (args(0).trim.isEmpty) unit("key-name cannot be empty")
-    else if (args(1).trim.isEmpty) unit("key-value cannot be empty")
-    else {
-      val keyName = KeyName(args(0).trim)
-      val keyValue = KeyValue(args(1).trim)
-      val key = Key(keyName, keyValue)
-      findKeyWithName(keyName).flatMap {
-        case Some(_) ⇒ unit(s"key '$keyName' already exists")
-        case None ⇒ update(state ⇒ state.copy(keys = state.keys :+ key)).mapTo(s"key '$keyName' has been added")
-      }
+  private def addKey(args: Vector[String]): ST[String] = for {
+    _        ← check(args.length == 2)("add-key <key-name> <key-value>")
+    keyName  ← require(args(0).trim)(notEmpty)("key-name cannot be empty").map(KeyName)
+    keyValue ← require(args(1).trim)(notEmpty)("key-value cannot be empty").map(KeyValue)
+  } yield {
+    val key = Key(keyName, keyValue)
+    findKeyWithName(keyName).flatMap {
+      case Some(_) ⇒ unit(s"key '$keyName' already exists")
+      case None ⇒ update(state ⇒ state.copy(keys = state.keys :+ key)).mapTo(s"key '$keyName' has been added")
     }
   }
 
-  private def removeKey(args: Vector[String]): ST[String] = {
-    if (args.length != 1) unit("remove-key <key-name>")
-    else if (args(0).trim.isEmpty) unit("key-name cannot be empty")
-    else {
-      val keyName = KeyName(args(0).trim)
-      findKeyWithName(keyName).flatMap {
-        case Some(key) ⇒ removeKeyIf(k ⇒ k.name == keyName).mapTo(s"key '${key.name}' has been removed")
-        case None ⇒ unit(s"key '$keyName' does not exist")
-      }
+  private def removeKey(args: Vector[String]): ST[String] = for {
+    _       ← check(args.length == 1)("remove-key <key-name>")
+    keyName ← require(args(0).trim)(notEmpty)("key-name cannot be empty").map(KeyName)
+  } yield {
+    findKeyWithName(keyName).flatMap {
+      case Some(key) ⇒ removeKeyIf(k ⇒ k.name == keyName).mapTo(s"key '${key.name}' has been removed")
+      case None ⇒ unit(s"key '$keyName' does not exist")
     }
-  }
-
-  private def requireValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean)(b: B): Either[ST[B], A] = {
-    Try(t).filter(fil) match {
-      case Success(a) ⇒ Right(a)
-      case Failure(_) ⇒ Left(unit(b))
-    }
-  }
-
-  private def optionalValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean): Option[A] = {
-    Try(t).filter(fil).toOption
-  }
-
-  private def check[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
-    if (e) Right(()) else Left(unit(b))
-  }
-
-  implicit def eitherToST[A, B](either: Either[ST[A], ST[A]]): ST[A] = {
-    either.fold(identity, identity)
-  }
-
-  def pass[A](a: A): Boolean = true
-  def notEmpty(a: String): Boolean = a.nonEmpty
-
-  implicit class VectorExt[A](vec: Vector[A]) {
-    def lengthOneOf(lengths: Int*): Boolean = lengths.contains(vec.length)
   }
 
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
     _      ← check(args.lengthOneOf(4, 5))("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
-    name   ← requireValue(args(0).trim)(notEmpty)("confirm-name cannot be empty").map(ConfirmName)
-    date   ← requireValue(args(1).trim |> parseDate |> (_.get))(pass)("confirm-date is invalid")
-    time   ← requireValue(args(2).trim |> parseTime |> (_.get))(pass)("confirm-time is invalid")
-    window ← requireValue(args(3).toInt)(pass)("window is invalid")
+    name   ← require(args(0).trim)(notEmpty)("confirm-name cannot be empty").map(ConfirmName)
+    date   ← require(args(1).trim |> parseDate |> (_.get))(pass)("confirm-date is invalid")
+    time   ← require(args(2).trim |> parseTime |> (_.get))(pass)("confirm-time is invalid")
+    window ← require(args(3).toInt)(pass)("window is invalid")
     dateAndTime = LocalDateTime.of(date, time)
     _      ← check(dateAndTime.isAfter(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
     keyNameOption = optionalValue(args(4).trim)(notEmpty).map(KeyName)
@@ -173,7 +141,7 @@ object Domain extends UseDateTime {
 
   private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
     _        ← check(args.lengthOneOf(1, 2))("confirm <confirm-name> [<key-value>]")
-    name     ← requireValue(args(0).trim)(_.nonEmpty)("confirm-name cannot be empty").map(ConfirmName)
+    name     ← require(args(0).trim)(_.nonEmpty)("confirm-name cannot be empty").map(ConfirmName)
     keyValue = optionalValue(args(1).trim)(notEmpty).map(KeyValue)
   } yield {
     findConfirmWithName(name).flatMap {
@@ -185,20 +153,58 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def nameEquals(name: String @@ ConfirmName)(confirm: Confirm): Boolean = confirm.name == name
-  private def findConfirmWithName(name: String @@ ConfirmName): ST[Option[Confirm]] = query(st ⇒ st.confirms.find(nameEquals(name)))
+  private def nameEquals(name: String @@ ConfirmName)(confirm: Confirm): Boolean = {
+    confirm.name == name
+  }
+
+  private def findConfirmWithName(name: String @@ ConfirmName): ST[Option[Confirm]] = {
+    query(st ⇒ st.confirms.find(nameEquals(name)))
+  }
+
   private def appendConfirm(confirm: Confirm): ST[Unit] = update(state ⇒ {
     state.copy(confirms = state.confirms.filterNot(nameEquals(confirm.name)) :+ confirm)
   })
+
   private def removeConfirmIf(fn: Confirm ⇒ Boolean): ST[Unit] = {
     update(st ⇒ st.copy(confirms = st.confirms.filterNot(fn)))
   }
-  private def findKeyWithName(name: String @@ KeyName): ST[Option[Key]] = query(st ⇒ st.keys.find(_.name == name))
+
+  private def findKeyWithName(name: String @@ KeyName): ST[Option[Key]] = {
+    query(st ⇒ st.keys.find(_.name == name))
+  }
+
   private def removeKeyIf(fn: Key ⇒ Boolean): ST[Unit] = {
     update(st ⇒ st.copy(keys = st.keys.filterNot(fn)))
   }
+
   private def appendNote(note: String): ST[Int] = {
     ST(st ⇒ st.copy(notes = st.notes :+ note) → st.notes.length)
+  }
+
+  private def require[A, B](t: ⇒ A)(fil: A ⇒ Boolean)(b: B): Either[ST[B], A] = {
+    Try(t).filter(fil) match {
+      case Success(a) ⇒ Right(a)
+      case Failure(_) ⇒ Left(unit(b))
+    }
+  }
+
+  private def optionalValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean): Option[A] = {
+    Try(t).filter(fil).toOption
+  }
+
+  private def check[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
+    if (e) Right(()) else Left(unit(b))
+  }
+
+  implicit def eitherToST[A, B](either: Either[ST[A], ST[A]]): ST[A] = {
+    either.fold(identity, identity)
+  }
+
+  private def pass[A](a: A): Boolean = true
+  private def notEmpty(a: String): Boolean = a.nonEmpty
+
+  implicit class VectorExt[A](vec: Vector[A]) {
+    def lengthOneOf(lengths: Int*): Boolean = lengths.contains(vec.length)
   }
 
 }

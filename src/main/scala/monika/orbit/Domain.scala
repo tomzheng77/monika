@@ -98,7 +98,7 @@ object Domain extends UseDateTime {
     else if (args(1).trim.isEmpty) unit("key-value cannot be empty")
     else {
       val keyName = KeyName(args(0).trim)
-      val keyValue = keyValue(args(1).trim)
+      val keyValue = KeyValue(args(1).trim)
       val key = Key(keyName, keyValue)
       findKeyWithName(keyName).flatMap {
         case Some(_) ⇒ unit(s"key '$keyName' already exists")
@@ -152,7 +152,7 @@ object Domain extends UseDateTime {
     time   ← requireValue(args(2).trim |> parseTime |> (_.get))(pass)("confirm-time is invalid")
     window ← requireValue(args(3).toInt)(pass)("window is invalid")
     dateAndTime = LocalDateTime.of(date, time)
-    _      ← check(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
+    _      ← check(dateAndTime.isAfter(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
     keyNameOption = optionalValue(args(4).trim)(notEmpty).map(KeyName)
   } yield {
     keyNameOption match {

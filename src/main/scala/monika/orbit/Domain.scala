@@ -120,11 +120,15 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def attempt[A, B](t: ⇒ A)(b: B): Either[ST[B], A] = {
-    Try(t) match {
+  private def requireValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean)(b: B): Either[ST[B], A] = {
+    Try(t).filter(fil) match {
       case Success(a) ⇒ Right(a)
       case Failure(_) ⇒ Left(unit(b))
     }
+  }
+
+  private def optionalValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean): Option[A] = {
+    Try(t).filter(fil).toOption
   }
 
   private def check[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
@@ -135,15 +139,18 @@ object Domain extends UseDateTime {
     either.fold(identity, identity)
   }
 
+  def Y[A](a: A): Boolean = true
+  def notEmpty(a: String): Boolean = a.nonEmpty
+
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
-    _      ← check(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
-    name   ← attempt(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
-    date   ← attempt(parseDate(args(1).trim).get)("confirm-date is invalid")
-    time   ← attempt(parseTime(args(2).trim).get)("confirm-time is invalid")
-    window ← attempt(args(3).toInt)("window is invalid")
-    dateAndTime   = LocalDateTime.of(date, time)
+    _      ← check(args.length == 4 || args.length == 5)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
+    name   ← requireValue(args(0).trim)(notEmpty)("confirm-name cannot be empty").map(ConfirmName)
+    date   ← requireValue(args(1).trim |> parseDate |> (_.get))(Y)("confirm-date is invalid")
+    time   ← requireValue(args(2).trim |> parseTime |> (_.get))(Y)("confirm-time is invalid")
+    window ← requireValue(args(3).toInt)(Y)("window is invalid")
+    dateAndTime = LocalDateTime.of(date, time)
     _      ← check(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
-    keyNameOption = Try(args(4).trim).filter(_.nonEmpty).map(KeyName).toOption
+    keyNameOption = optionalValue(args(4).trim)(notEmpty).map(KeyName)
   } yield {
     keyNameOption match {
       case None ⇒ addConfirmInternal(Confirm(name, dateAndTime, Minutes(window), None))
@@ -161,23 +168,17 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
-    if (args.length != 1) unit("confirm <confirm-name> [<key-value>]")
-    else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
-    else {
-      val name = ConfirmName(args(0).trim)
-      findConfirmWithName(name).flatMap {
-        case None ⇒ unit(s"confirm-name $name does not exist")
-        case Some(confirm) if nowTime.isBefore(confirm.start) ⇒ {
-          val secondsLeft = nowTime.until(confirm.start, ChronoUnit.SECONDS)
-          def format00(n: Long): String = ("0" + n.toString).takeRight(2)
-          val hours = format00(secondsLeft / 60 / 60)
-          val minutes = format00(secondsLeft / 60 % 60)
-          val seconds = format00(secondsLeft % 60)
-          unit(s"please wait $hours:$minutes:$seconds")
-        }
-        case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
-      }
+  private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
+    _ ← check(args.length == 1 || args.length == 2)("confirm <confirm-name> [<key-value>]")
+    name ← requireValue(args(0).trim)(_.nonEmpty)("confirm-name cannot be empty").map(ConfirmName)
+    keyValue = optionalValue(args(1).trim)(notEmpty).map(KeyValue)
+  } yield {
+    findConfirmWithName(name).flatMap {
+      case None ⇒ unit(s"confirm-name $name does not exist")
+      case Some(c) if nowTime.isBefore(c.start) ⇒ unit(s"please wait ${nowTime.untilHMS(c.start)}")
+      case Some(c) if c.key.nonEmpty && keyValue.isEmpty ⇒ unit(s"$name requires a key")
+      case Some(c) if c.key.nonEmpty && c.key != keyValue ⇒ unit(s"the key does not match")
+      case Some(_) ⇒ removeConfirmIf(nameEquals(name)).mapTo(s"$name has been confirmed")
     }
   }
 

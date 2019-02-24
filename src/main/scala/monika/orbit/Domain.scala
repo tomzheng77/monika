@@ -1,11 +1,10 @@
 package monika.orbit
 
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 import monika.server.UseDateTime
 import scalaz.Tag.unwrap
-import scalaz.{@@, Id, IndexedStateT, OptionT, State, Tag}
+import scalaz.{@@, State, Tag}
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -139,15 +138,19 @@ object Domain extends UseDateTime {
     either.fold(identity, identity)
   }
 
-  def Y[A](a: A): Boolean = true
+  def pass[A](a: A): Boolean = true
   def notEmpty(a: String): Boolean = a.nonEmpty
 
+  implicit class VectorExt[A](vec: Vector[A]) {
+    def lengthOneOf(lengths: Int*): Boolean = lengths.contains(vec.length)
+  }
+
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
-    _      ← check(args.length == 4 || args.length == 5)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
+    _      ← check(args.lengthOneOf(4, 5))("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
     name   ← requireValue(args(0).trim)(notEmpty)("confirm-name cannot be empty").map(ConfirmName)
-    date   ← requireValue(args(1).trim |> parseDate |> (_.get))(Y)("confirm-date is invalid")
-    time   ← requireValue(args(2).trim |> parseTime |> (_.get))(Y)("confirm-time is invalid")
-    window ← requireValue(args(3).toInt)(Y)("window is invalid")
+    date   ← requireValue(args(1).trim |> parseDate |> (_.get))(pass)("confirm-date is invalid")
+    time   ← requireValue(args(2).trim |> parseTime |> (_.get))(pass)("confirm-time is invalid")
+    window ← requireValue(args(3).toInt)(pass)("window is invalid")
     dateAndTime = LocalDateTime.of(date, time)
     _      ← check(dateAndTime.isBefore(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
     keyNameOption = optionalValue(args(4).trim)(notEmpty).map(KeyName)
@@ -169,8 +172,8 @@ object Domain extends UseDateTime {
   }
 
   private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
-    _ ← check(args.length == 1 || args.length == 2)("confirm <confirm-name> [<key-value>]")
-    name ← requireValue(args(0).trim)(_.nonEmpty)("confirm-name cannot be empty").map(ConfirmName)
+    _        ← check(args.lengthOneOf(1, 2))("confirm <confirm-name> [<key-value>]")
+    name     ← requireValue(args(0).trim)(_.nonEmpty)("confirm-name cannot be empty").map(ConfirmName)
     keyValue = optionalValue(args(1).trim)(notEmpty).map(KeyValue)
   } yield {
     findConfirmWithName(name).flatMap {

@@ -5,10 +5,10 @@ import java.time.temporal.ChronoUnit
 
 import monika.server.UseDateTime
 import scalaz.Tag.unwrap
-import scalaz.{@@, State, Tag}
+import scalaz.{@@, OptionT, State, Tag}
 
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object Domain extends UseDateTime {
 
@@ -120,25 +120,43 @@ object Domain extends UseDateTime {
     }
   }
 
-  private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
-    if (args.length != 4) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
-    else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
-    else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
-    else if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
-    else if (Try(args(3).toInt).filter(_ > 0).isFailure) unit("window is invalid")
+  private def either[A, B](t: ⇒ A)(b: B): Either[ST[B], A] = {
+    Try(t) match {
+      case Success(a) ⇒ Right(a)
+      case Failure(_) ⇒ Left(unit(b))
+    }
+  }
+
+  private def option[A, B](t: ⇒ A): Either[ST[B], Option[A]] = {
+    Try(t) match {
+      case Success(a) ⇒ Right(Some(a))
+      case Failure(_) ⇒ Right(None)
+    }
+  }
+
+  private def failIf[B](e: Boolean)(b: B): Either[ST[B], Unit] = {
+    if (e) Right(()) else Left(unit(b))
+  }
+
+  implicit def eitherToST[A, B](either: Either[ST[A], ST[A]]): ST[A] = {
+    either.fold(identity, identity)
+  }
+
+  private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = for {
+    _ ← failIf(args.length != 4)("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
+    name ← either(Try(args(0).trim).filter(_.nonEmpty).map(ConfirmName).get)("confirm-name cannot be empty")
+    date ← either(parseDate(args(1).trim).get)("confirm-date is invalid")
+    time ← either(parseTime(args(2).trim).get)("confirm-time is invalid")
+    window ← either(args(3).toInt)("window is invalid")
+    keyName ← option(KeyName(args(4).trim))
+  } yield {
+    val dateAndTime = LocalDateTime.of(date, time)
+    if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
     else {
-      val name = ConfirmName(args(0).trim)
-      val date = parseDate(args(1).trim).get
-      val time = parseTime(args(2).trim).get
-      val window = args(3).toInt
-      val dateAndTime = LocalDateTime.of(date, time)
-      if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
-      else {
-        val confirm = Confirm(name, dateAndTime, Minutes(window), None)
-        findConfirmWithName(name).flatMap {
-          case None ⇒ appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
-          case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
-        }
+      val confirm = Confirm(name, dateAndTime, Minutes(window), keyName)
+      findConfirmWithName(name).flatMap {
+        case None ⇒ appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
+        case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
       }
     }
   }

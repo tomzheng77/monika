@@ -27,7 +27,8 @@ object Domain extends UseDateTime {
   case class Confirm(
     name: String @@ ConfirmName,
     time: LocalDateTime,
-    window: Int @@ Minutes
+    window: Int @@ Minutes,
+    key: Option[String @@ KeyName]
   ) {
     val start: LocalDateTime = time.minusMinutes(unwrap(window))
   }
@@ -57,6 +58,8 @@ object Domain extends UseDateTime {
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     args.headOption.getOrElse("").trim match {
       case "" ⇒ listNotesOrConfirms()
+      case "add-key" ⇒ addKey(args.drop(1))
+      case "remove-key" ⇒ removeKey(args.drop(1))
       case "add-note" ⇒ addNote(args.drop(1))
       case "add-confirm" ⇒ addConfirm(args.drop(1))(nowTime)
       case "confirm" ⇒ confirm(args.drop(1))(nowTime)
@@ -76,6 +79,10 @@ object Domain extends UseDateTime {
       for ((note, index) ← st.notes.zipWithIndex) {
         output.append(s"- #${index + 1}: $note").append('\n')
       }
+      output.append("==========[Keys]==========").append('\n')
+      for (Key(name, value) ← st.keys) {
+        output.append(s"- $name: $value").append('\n')
+      }
     }
     output.toString()
   })
@@ -86,8 +93,35 @@ object Domain extends UseDateTime {
     else appendNote(args(0)).map(index ⇒ s"the note #${index + 1} has been added")
   }
 
+  private def addKey(args: Vector[String]): ST[String] = {
+    if (args.length != 2) unit("add-key <key-name> <key-value>")
+    else if (args(0).trim.isEmpty) unit("key-name cannot be empty")
+    else if (args(1).trim.isEmpty) unit("key-value cannot be empty")
+    else {
+      val keyName = KeyName(args(0).trim)
+      val keyValue = keyValue(args(1).trim)
+      val key = Key(keyName, keyValue)
+      findKeyWithName(keyName).flatMap {
+        case Some(_) ⇒ unit(s"key '$keyName' already exists")
+        case None ⇒ update(state ⇒ state.copy(keys = state.keys :+ key)).mapTo(s"key '$keyName' has been added")
+      }
+    }
+  }
+
+  private def removeKey(args: Vector[String]): ST[String] = {
+    if (args.length != 1) unit("remove-key <key-name>")
+    else if (args(0).trim.isEmpty) unit("key-name cannot be empty")
+    else {
+      val keyName = KeyName(args(0).trim)
+      findKeyWithName(keyName).flatMap {
+        case Some(key) ⇒ removeKeyIf(k ⇒ k.name == keyName).mapTo(s"key '${key.name}' has been removed")
+        case None ⇒ unit(s"key '$keyName' does not exist")
+      }
+    }
+  }
+
   private def addConfirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
-    if (args.length != 4) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window>")
+    if (args.length != 4) unit("add-confirm <confirm-name> <confirm-date> <confirm-time> <window> [<key-name>]")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else if (parseDate(args(1).trim).isFailure) unit("confirm-date is invalid")
     else if (parseTime(args(2).trim).isFailure) unit("confirm-time is invalid")
@@ -100,7 +134,7 @@ object Domain extends UseDateTime {
       val dateAndTime = LocalDateTime.of(date, time)
       if (dateAndTime.isBefore(nowTime.plusMinutes(1))) unit("confirm must be at least one minute after now")
       else {
-        val confirm = Confirm(name, dateAndTime, Minutes(window))
+        val confirm = Confirm(name, dateAndTime, Minutes(window), None)
         findConfirmWithName(name).flatMap {
           case None ⇒ appendConfirm(confirm).mapTo(s"confirm $name added at ${dateAndTime.format()}")
           case Some(c) ⇒ unit(s"confirm ${c.name} already exists at ${c.time.format()}")
@@ -110,7 +144,7 @@ object Domain extends UseDateTime {
   }
 
   private def confirm(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
-    if (args.length != 1) unit("confirm <confirm-name>")
+    if (args.length != 1) unit("confirm <confirm-name> [<key-value>]")
     else if (args(0).trim.isEmpty) unit("confirm-name cannot be empty")
     else {
       val name = ConfirmName(args(0).trim)
@@ -136,6 +170,10 @@ object Domain extends UseDateTime {
   })
   private def removeConfirmIf(fn: Confirm ⇒ Boolean): ST[Unit] = {
     update(st ⇒ st.copy(confirms = st.confirms.filterNot(fn)))
+  }
+  private def findKeyWithName(name: String @@ KeyName): ST[Option[Key]] = query(st ⇒ st.keys.find(_.name == name))
+  private def removeKeyIf(fn: Key ⇒ Boolean): ST[Unit] = {
+    update(st ⇒ st.copy(keys = st.keys.filterNot(fn)))
   }
   private def appendNote(note: String): ST[Int] = {
     ST(st ⇒ st.copy(notes = st.notes :+ note) → st.notes.length)

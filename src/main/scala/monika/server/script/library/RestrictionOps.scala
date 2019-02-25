@@ -133,7 +133,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   })
 
   private def decode(bytes: Array[Byte]): String = {
-    new String(bytes, Constants.GlobalEncoding)
+    new String(bytes, Constants.Encoding)
   }
 
 }

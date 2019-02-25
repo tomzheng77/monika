@@ -23,7 +23,7 @@ object Constants {
   val Path: String = PathAdd.mkString(File.pathSeparator) + File.pathSeparator + PathOriginal
   val PathList: Vector[String] = Path.split(File.pathSeparatorChar).toVector
 
-  val GlobalEncoding = "UTF-8"
+  val Encoding = "UTF-8"
   val GlobalCharset: Charset = Charset.forName("UTF-8")
   val FileSeparator: Char = File.separatorChar
 

@@ -63,6 +63,7 @@ object Subprocess extends UseLogger with UseScalaz {
     executor.setStreamHandler(psh)
     workingDirectory.map(Tag.unwrap).map(new File(_)).foreach(executor.setWorkingDirectory)
 
+    // assuming monika is run with root, the proxy variables should be unset
     val environment = Map(
       "PATH" → Constants.Path,
       "HTTP_PROXY" → "",

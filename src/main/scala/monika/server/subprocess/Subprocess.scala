@@ -63,7 +63,11 @@ object Subprocess extends UseLogger with UseScalaz {
     executor.setStreamHandler(psh)
     workingDirectory.map(Tag.unwrap).map(new File(_)).foreach(executor.setWorkingDirectory)
 
-    val environment = Map("PATH" -> Constants.Path).asJava
+    val environment = Map(
+      "PATH" → Constants.Path,
+      "HTTP_PROXY" → "",
+      "HTTPS_PROXY" → ""
+    ).asJava
     val exitValue = Try(executor.execute(cmd, environment)) match {
       case Success(value) => value
       case Failure(ex: ExecuteException) => ex.getExitValue

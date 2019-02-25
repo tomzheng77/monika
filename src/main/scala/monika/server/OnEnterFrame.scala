@@ -71,7 +71,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
   private def pollAndNotifyOrbit(nowTime: LocalDateTime): Try[Unit] = Try {
     val json: JValue = Unirest
       .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
-      .body(encryptPBE(pretty(Vector("list-confirm"))))
+      .body(encryptPBE(pretty(Vector("list-confirms"))))
       .asString().getBody |> decryptPBE |> (s ⇒ parse(s))
 
     implicit val formats: Formats = DefaultFormats

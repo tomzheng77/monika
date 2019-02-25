@@ -79,7 +79,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       val name: String = (confirmJson \ "name").extract[String]
       val time: LocalDateTime = (confirmJson \ "time").extract[String] |> parseDateTime |> (_.get)
       val window: Int = (confirmJson \ "window").extract[Int]
-      val key: Boolean = (confirmJson \ "key").extract[Boolean]
+      val key: Boolean = (confirmJson \ "hasKey").extract[Boolean]
 
       if (nowTime.isAfter(time.minusMinutes(window))) {
         if (!notifiedConfirm(name → time)) {

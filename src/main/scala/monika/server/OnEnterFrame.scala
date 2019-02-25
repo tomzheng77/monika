@@ -58,7 +58,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       }
       pollAndNotifyOrbit(nowTime) match {
         case Success(_) ⇒
-        case Failure(ex) ⇒ LOGGER.error(s"failed to poll orbit: ${ex.getMessage}")
+        case Failure(ex) ⇒ LOGGER.error(s"failed to poll orbit: ${ex.getClass.getSimpleName} ${ex.getMessage}")
       }
       (state.copy(queue = state.queue.dropWhile(shouldRun)), state.queue.takeWhile(shouldRun))
     })

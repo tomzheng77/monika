@@ -47,7 +47,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
     val maybeRun: Vector[FutureAction] = Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()
       def shouldRun(act: FutureAction): Boolean = !act.at.isAfter(nowTime)
-      def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.minusMinutes(1))
+      def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
       for (act ← state.queue.takeWhile(shouldNotify)) {
         if (!notifiedAction(act.at)) {
           notifiedAction += act.at

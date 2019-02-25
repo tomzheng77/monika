@@ -19,9 +19,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
 
   private val timer = new Timer()
   private var hasPollStarted = false
-
   private var notifiedAction: Set[LocalDateTime] = Set.empty
-  private var notifiedConfirm: Set[(String, LocalDateTime)] = Set.empty
 
   def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {
@@ -80,12 +78,9 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       val key: Boolean = (confirmJson \ "hasKey").extract[Boolean]
 
       if (nowTime.isAfter(time.minusMinutes(window))) {
-        if (!notifiedConfirm(name → time)) {
-          notifiedConfirm += name → time
-          Subprocess.sendNotify(s"Confirm $name", s"in ${nowTime.untilHMS(time)}" + {
-            if (key) " (requires key)" else ""
-          })
-        }
+        Subprocess.sendNotify(s"Confirm $name", s"in ${nowTime.untilHMS(time)}" + {
+          if (key) " (requires key)" else ""
+        })
       }
     }
   }

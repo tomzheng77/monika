@@ -9,11 +9,9 @@ import monika.orbit.OrbitEncryption
 import monika.server.Structs.FutureAction
 import monika.server.script.ScriptServer.runScriptFromPoll
 import monika.server.subprocess.Subprocess
-import org.json4s.JsonAST.JNull
-import org.json4s.{DefaultFormats, Formats, JValue}
-import org.json4s.jackson.JsonMethods.{parse, pretty, render}
 import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods
+import org.json4s.jackson.JsonMethods.{parse, pretty}
+import org.json4s.{DefaultFormats, Formats, JValue}
 
 import scala.util.{Failure, Success, Try}
 
@@ -22,8 +20,8 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
   private val timer = new Timer()
   private var hasPollStarted = false
 
-  private var notifiedAction: Set[LocalDateTime] = _
-  private var notifiedConfirm: Set[(String, LocalDateTime)] = _
+  private var notifiedAction: Set[LocalDateTime] = Set.empty
+  private var notifiedConfirm: Set[(String, LocalDateTime)] = Set.empty
 
   def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {

@@ -9,9 +9,11 @@ import monika.orbit.OrbitEncryption
 import monika.server.Structs.FutureAction
 import monika.server.script.ScriptServer.runScriptFromPoll
 import monika.server.subprocess.Subprocess
+import org.json4s.JsonAST.JNull
 import org.json4s.{DefaultFormats, Formats, JValue}
-import org.json4s.native.JsonMethods.{parse, pretty, render}
+import org.json4s.jackson.JsonMethods.{parse, pretty, render}
 import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods
 
 import scala.util.{Failure, Success, Try}
 
@@ -69,7 +71,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
   private def pollAndNotifyOrbit(nowTime: LocalDateTime): Try[Unit] = Try {
     val json: JValue = Unirest
       .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
-      .body(encryptPBE(pretty(render(Vector("list-confirm")))))
+      .body(encryptPBE(pretty(Vector("list-confirm"))))
       .asString().getBody |> decryptPBE |> (s ⇒ parse(s))
 
     implicit val formats: Formats = DefaultFormats

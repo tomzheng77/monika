@@ -21,7 +21,7 @@ object MonikaServer extends UseLogger {
 
       val initialState: MonikaState = Hibernate.readStateOrDefault()
       ProxyServer.startOrRestart(initialState.filter)
-      ScriptServer.startPoll()
+      OnEnterFrame.startPoll()
       ScriptServer.startListener()
     }
     LOGGER.info("M.O.N.I.K.A started")

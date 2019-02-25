@@ -2,14 +2,16 @@ package monika.orbit
 
 import java.time.LocalDateTime
 
-import monika.server.UseDateTime
+import monika.server.{UseDateTime, UseJSON}
 import scalaz.Tag.unwrap
 import scalaz.{@@, State, Tag}
+import org.json4s.JValue
+import org.json4s.jackson.JsonMethods._
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-object Domain extends UseDateTime {
+object Domain extends UseDateTime with UseJSON {
 
   sealed trait ConfirmName
   def ConfirmName[A <: String](a: A): A @@ ConfirmName = Tag(a)
@@ -57,6 +59,7 @@ object Domain extends UseDateTime {
   def handle(args: Vector[String])(nowTime: LocalDateTime): ST[String] = {
     args.headOption.getOrElse("").trim match {
       case "" ⇒ listNotesOrConfirms()
+      case "list-confirms" ⇒ listConfirms()
       case "add-key" ⇒ addKey(args.drop(1))
       case "remove-key" ⇒ removeKey(args.drop(1))
       case "add-note" ⇒ addNote(args.drop(1))
@@ -85,6 +88,18 @@ object Domain extends UseDateTime {
     }
     output.toString()
   })
+
+  private def listConfirms(): ST[String] = {
+    query(st ⇒ {
+      val json: JValue = st.confirms.map(c ⇒ {
+        ("name" → unwrap(c.name)) ~
+        ("time" → c.time.format()) ~
+        ("window" → unwrap(c.window)) ~
+        ("hasKey" → c.key.nonEmpty)
+      })
+      pretty(render(json))
+    })
+  }
 
   private def addNote(args: Vector[String]): ST[String] =   for {
     _        ← check(args.length == 1)("add-note <note-text>")

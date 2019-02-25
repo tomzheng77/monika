@@ -84,7 +84,7 @@ object Subprocess extends UseLogger with UseScalaz {
       .map(file => CanonicalPath(file.getCanonicalPath))
   }
 
-  def sendNotify(title: String, message: String): CommandOutput = {
+  def sendNotify(title: String, message: String): Try[CommandOutput] = Try {
     // sudo -u tomzheng DISPLAY=${display:1:-1} DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "hello"
     // https://gist.github.com/shvchk/2c184304dd88b8d53812afbd1a06256d
     val userID = callUnsafe("id", Array("-u", Constants.MonikaUser)).stdout |> (new String(_, Constants.Encoding))

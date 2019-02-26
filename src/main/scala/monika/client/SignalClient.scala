@@ -21,7 +21,7 @@ object SignalClient extends OrbitEncryption {
   private val VariableNameRegex = "[a-zA-Z0-9_.]+"
   private val VariableReferenceRegex = "\\$\\{" + VariableNameRegex + "\\}"
 
-  private def setupLogger(): Unit = {
+  def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
     // https://stackoverflow.com/questions/8965946/configuring-log4j-loggers-programmatically
     val console = new ConsoleAppender()

@@ -124,6 +124,7 @@ object SignalClient extends OrbitEncryption {
   }
 
   def flush(): Unit = {
+    if (signals.isEmpty) return
     val request = pretty(render(signals))
     val response = Unirest
       .post(s"http://127.0.0.1:${Constants.InterpreterPort}/")

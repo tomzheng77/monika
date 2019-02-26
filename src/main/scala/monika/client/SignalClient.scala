@@ -137,7 +137,7 @@ object SignalClient extends OrbitEncryption {
 
   def main(args: Array[String]): Unit = {
     setupLogger()
-    var endReached = true
+    var endReached = false
     while (!endReached) {
       val prompt = if (System.console() == null) "" else "M1-1> "
       val optCommand: Option[List[String]] = Option(StdIn.readLine(prompt))

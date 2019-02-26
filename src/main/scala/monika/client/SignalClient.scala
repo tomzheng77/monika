@@ -6,7 +6,7 @@ import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
 import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods._
+import org.json4s.jackson.JsonMethods._
 
 import scala.io.StdIn
 
@@ -17,6 +17,9 @@ import scala.io.StdIn
   * - repeat until "exit" is entered
   */
 object SignalClient extends OrbitEncryption {
+
+  private val VariableNameRegex = "[a-zA-Z0-9_.]+"
+  private val VariableReferenceRegex = "\\$\\{" + VariableNameRegex + "\\}"
 
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
@@ -49,12 +52,7 @@ object SignalClient extends OrbitEncryption {
 
   private var variables: Map[String, String] = Map.empty
   private var aliases: Map[String, List[String]] = Map.empty
-
-  private var batchEnabled: Boolean = false
-  private var batch: Vector[List[String]] = Vector.empty
-
-  private val VariableNameRegex = "[a-zA-Z0-9_.]+"
-  private val VariableReferenceRegex = "\\$\\{" + VariableNameRegex + "\\}"
+  private var signals: Vector[List[String]] = Vector.empty
 
   def exportVariable(name: String, value: String): Unit = {
     if (!name.matches(VariableNameRegex)) {
@@ -112,21 +110,6 @@ object SignalClient extends OrbitEncryption {
     }
     case "alias" :: name :: value => createAlias(name, value)
     case "echo" :: list => println(list.flatMap(expandAlias).map(expandVariables).mkString(" "))
-    case "batch-begin" :: Nil => {
-      batchEnabled = true
-      batch = Vector.empty
-    }
-    case "batch-commit" :: Nil => {
-      batchEnabled = false
-      val response: String = {
-        Unirest
-          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
-          .body(pretty(render(batch)))
-          .asString().getBody
-      }
-      println(response)
-      batch = Vector.empty
-    }
   }
 
   def handleOrbit: PartialFunction[List[String], Unit] = {
@@ -140,42 +123,41 @@ object SignalClient extends OrbitEncryption {
     }
   }
 
-  def handleScript(cmd: List[String]): Unit = {
-    if (batchEnabled) batch = batch :+ cmd
-    else {
+  def sendSignals(): Unit = {
+    if (signals.nonEmpty) {
       val response: String = {
         Unirest
-          .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-          .queryString("cmd", pretty(render(cmd)))
+          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/")
+          .body(pretty(render(signals)))
           .asString().getBody
       }
-      println(response)
+      println(response.trim)
+      signals = Vector.empty
     }
   }
 
   def main(args: Array[String]): Unit = {
     setupLogger()
-    while (true) {
-      val prompt = (System.console(), batchEnabled) match {
-        case (null, _) ⇒ ""
-        case (_, true) ⇒ "    > "
-        case _ ⇒ "M1-1> "
-      }
+    var endReached = false
+    while (!endReached) {
+      val prompt = if (System.console() == null) "" else "M1-1> "
       val optCommand: Option[List[String]] = Option(StdIn.readLine(prompt))
         .map(_.trim)
         .map(parseCommand)
         .map(cmd ⇒ cmd.flatMap(expandAlias).map(expandVariables))
 
       optCommand match {
-        case None => System.exit(0)
+        case None => endReached = true
         case Some(Nil) =>
         case Some(cmd) => {
           if (handleBuiltin.isDefinedAt(cmd)) handleBuiltin(cmd)
           else if (handleOrbit.isDefinedAt(cmd)) handleOrbit(cmd)
-          else handleScript(cmd)
+          else signals = signals :+ cmd
         }
       }
+      if (System.console() != null) sendSignals()
     }
+    sendSignals()
   }
 
 }

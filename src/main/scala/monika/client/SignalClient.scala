@@ -18,6 +18,9 @@ import scala.io.StdIn
   */
 object SignalClient extends OrbitEncryption {
 
+  private val VariableNameRegex = "[a-zA-Z0-9_.]+"
+  private val VariableReferenceRegex = "\\$\\{" + VariableNameRegex + "\\}"
+
   private def setupLogger(): Unit = {
     // https://www.mkyong.com/logging/log4j-log4j-properties-examples/
     // https://stackoverflow.com/questions/8965946/configuring-log4j-loggers-programmatically
@@ -50,9 +53,6 @@ object SignalClient extends OrbitEncryption {
   private var variables: Map[String, String] = Map.empty
   private var aliases: Map[String, List[String]] = Map.empty
   private var signals: Vector[List[String]] = Vector.empty
-
-  private val VariableNameRegex = "[a-zA-Z0-9_.]+"
-  private val VariableReferenceRegex = "\\$\\{" + VariableNameRegex + "\\}"
 
   def exportVariable(name: String, value: String): Unit = {
     if (!name.matches(VariableNameRegex)) {

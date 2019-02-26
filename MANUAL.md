@@ -5,6 +5,7 @@
 - `crontab -e` and add `java -jar monika.jar --server`
 - `yum remove gnome-initial-setup`
 - (optional) set `http_proxy` and `https_proxy` in `/etc/environment`
+- install dunst (https://linuxconfig.org/get-better-notifications-in-your-wm-with-dunst)
 
 # Basic Usage
 

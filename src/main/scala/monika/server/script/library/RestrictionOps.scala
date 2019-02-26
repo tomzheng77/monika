@@ -1,12 +1,12 @@
 package monika.server.script.library
 
-import monika.Primitives
+import monika.{Constants, Primitives}
 import monika.Primitives.Filename
-import monika.server.Constants.Restricted
-import monika.server.Constants.Restricted.{Browsers, Programs, ProjectContainer}
+import monika.Constants.Restricted
+import monika.Constants.Restricted.{Browsers, Programs, ProjectContainer}
 import monika.server.script.Script
 import monika.server.subprocess.Commands._
-import monika.server.{Constants, UseScalaz}
+import monika.server.UseScalaz
 import scalaz.@@
 import scalaz.Tag.unwrap
 
@@ -133,7 +133,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   })
 
   private def decode(bytes: Array[Byte]): String = {
-    new String(bytes, Constants.GlobalEncoding)
+    new String(bytes, Constants.Encoding)
   }
 
 }

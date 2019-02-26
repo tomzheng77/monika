@@ -4,6 +4,7 @@ import java.io.{File, PrintWriter, StringWriter}
 import java.time.LocalDateTime
 import java.util.{Timer, TimerTask}
 
+import monika.Constants
 import monika.Primitives.{CanonicalPath, Filename}
 import monika.server.Structs.{FutureAction, MonikaState}
 import monika.server._
@@ -129,7 +130,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
     }
   }
 
-  private def runScriptInternal(script: Script, args: Vector[String]): Unit = {
+  def runScriptFromPoll(script: Script, args: Vector[String]): Unit = {
     ScriptExecutionLock.synchronized {
       LOGGER.debug(s"run internal: $script ${args.mkString(" ")}")
       val api = Hibernate.transaction(state => {
@@ -139,41 +140,6 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
       })
       LOGGER.debug(api.consoleOutput())
     }
-  }
-
-  private val timer = new Timer()
-  private var hasPollStarted = false
-
-  def startPoll(interval: Int = 1000): Unit = {
-    this.synchronized {
-      if (!hasPollStarted) {
-        hasPollStarted = true
-        timer.schedule(new TimerTask {
-          override def run(): Unit = pollQueue()
-        }, 0, interval)
-      }
-    }
-  }
-
-  def stopPoll(): Unit = {
-    this.synchronized {
-      if (hasPollStarted) {
-        hasPollStarted = false
-        timer.cancel()
-      }
-    }
-  }
-
-  private def pollQueue(): Unit = {
-    LOGGER.trace("poll queue")
-    // pop items from the head of the queue, save the updated state
-    val maybeRun: Vector[FutureAction] = Hibernate.transaction(state => {
-      val nowTime = LocalDateTime.now()
-      def shouldRun(act: FutureAction): Boolean = !act.at.isAfter(nowTime)
-      (state.copy(queue = state.queue.dropWhile(shouldRun)), state.queue.takeWhile(shouldRun))
-    })
-    // run each item that was popped
-    for (FutureAction(_, script, args) <- maybeRun) runScriptInternal(script, args)
   }
 
 }

@@ -1,6 +1,7 @@
 package monika.client
 
 import com.mashape.unirest.http.Unirest
+import monika.Constants
 import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
@@ -35,10 +36,14 @@ object SignalClient extends OrbitEncryption {
       case nonEmptyLine ⇒
         val cmd: CommandLine = CommandLine.parse(nonEmptyLine)
         val seq = cmd.getExecutable :: cmd.getArguments.toList
-        seq.indexOf("#") match {
+        val notComment = seq.indexOf("#") match {
           case -1 ⇒ seq
           case index ⇒ seq.take(index)
         }
+        notComment.map(s ⇒ {
+          if (s.startsWith("\"") && s.endsWith("\""))
+            s.substring(1, s.length - 1) else s
+        })
     }
   }
 
@@ -55,8 +60,9 @@ object SignalClient extends OrbitEncryption {
     if (!name.matches(VariableNameRegex)) {
       println(s"variable name must match $VariableNameRegex")
     } else {
-      variables = variables.updated(name, value)
-      println(s"$name=$value")
+      val valueExpanded = expandVariables(value)
+      variables = variables.updated(name, valueExpanded)
+      println(s"$name=$valueExpanded")
     }
   }
 
@@ -81,7 +87,7 @@ object SignalClient extends OrbitEncryption {
   }
 
   def createAlias(name: String, value: List[String]): Unit = {
-    aliases = aliases.updated(name, value)
+    aliases = aliases.updated(name, value.flatMap(expandAlias))
     println(s"$name: $value")
   }
 
@@ -124,17 +130,23 @@ object SignalClient extends OrbitEncryption {
   }
 
   def handleOrbit: PartialFunction[List[String], Unit] = {
-    case "orbit" :: Nil ⇒
+    case "orbit" :: args ⇒ {
+      val response: String = Unirest
+        .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
+        .body(encryptPBE(pretty(render(args))))
+        .asString().getBody
+
+      println(decryptPBE(response))
+    }
   }
 
   def handleScript(cmd: List[String]): Unit = {
-    val cmdExpanded: List[String] = cmd.flatMap(expandAlias).map(expandVariables)
-    if (batchEnabled) batch = batch :+ cmdExpanded
+    if (batchEnabled) batch = batch :+ cmd
     else {
       val response: String = {
         Unirest
           .get(s"http://127.0.0.1:${Constants.InterpreterPort}/run")
-          .queryString("cmd", pretty(render(cmdExpanded)))
+          .queryString("cmd", pretty(render(cmd)))
           .asString().getBody
       }
       println(response)
@@ -152,6 +164,7 @@ object SignalClient extends OrbitEncryption {
       val optCommand: Option[List[String]] = Option(StdIn.readLine(prompt))
         .map(_.trim)
         .map(parseCommand)
+        .map(cmd ⇒ cmd.flatMap(expandAlias).map(expandVariables))
 
       optCommand match {
         case None => System.exit(0)

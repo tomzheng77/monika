@@ -1,6 +1,6 @@
 package monika.server
 
-import monika.server.Constants._
+import monika.Constants._
 import monika.server.Structs._
 import monika.server.proxy.ProxyServer
 import monika.server.script._
@@ -21,7 +21,7 @@ object MonikaServer extends UseLogger {
 
       val initialState: MonikaState = Hibernate.readStateOrDefault()
       ProxyServer.startOrRestart(initialState.filter)
-      ScriptServer.startPoll()
+      OnEnterFrame.startPoll()
       ScriptServer.startListener()
     }
     LOGGER.info("M.O.N.I.K.A started")
@@ -84,6 +84,7 @@ object MonikaServer extends UseLogger {
     Logger.getLogger("org.eclipse.jetty").setLevel(Level.ERROR)
     Logger.getLogger("io.netty").setLevel(Level.ERROR)
     Logger.getLogger("org.littleshoot.proxy").setLevel(Level.ERROR)
+    Logger.getLogger("org.apache.http").setLevel(Level.ERROR)
   }
 
 }

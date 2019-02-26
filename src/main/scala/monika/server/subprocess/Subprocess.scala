@@ -2,8 +2,9 @@ package monika.server.subprocess
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 
+import monika.Constants
 import monika.Primitives.{CanonicalPath, Filename}
-import monika.server.{Constants, UseLogger, UseScalaz}
+import monika.server.{UseLogger, UseScalaz}
 import org.apache.commons.exec.{CommandLine, DefaultExecutor, ExecuteException, PumpStreamHandler}
 import scalaz.{@@, Tag}
 
@@ -62,7 +63,12 @@ object Subprocess extends UseLogger with UseScalaz {
     executor.setStreamHandler(psh)
     workingDirectory.map(Tag.unwrap).map(new File(_)).foreach(executor.setWorkingDirectory)
 
-    val environment = Map("PATH" -> Constants.Path).asJava
+    // assuming monika is run with root, the proxy variables should be unset
+    val environment = Map(
+      "PATH" → Constants.Path,
+      "HTTP_PROXY" → "",
+      "HTTPS_PROXY" → ""
+    ).asJava
     val exitValue = Try(executor.execute(cmd, environment)) match {
       case Success(value) => value
       case Failure(ex: ExecuteException) => ex.getExitValue
@@ -81,6 +87,19 @@ object Subprocess extends UseLogger with UseScalaz {
       .map(path => new File(path + File.separator + programName))
       .filter(file => file.exists && file.isFile && file.canExecute)
       .map(file => CanonicalPath(file.getCanonicalPath))
+  }
+
+  def sendNotify(title: String, message: String): Try[CommandOutput] = Try {
+    // sudo sudo -u tomzheng DISPLAY=${display:1:-1} DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "hello"
+    // https://gist.github.com/shvchk/2c184304dd88b8d53812afbd1a06256d
+    LOGGER.debug(s"sending notify: $title - $message")
+    val userID = callUnsafe("id", Array("-u", Constants.MonikaUser)).stdout |> (new String(_, Constants.Encoding).trim)
+    callUnsafe("sudo", Array(
+      "-u", Constants.MonikaUser,
+      "DISPLAY=${display:1:-1}",
+      s"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$userID/bus",
+      "notify-send", title, message
+    ))
   }
 
   // potential issues:

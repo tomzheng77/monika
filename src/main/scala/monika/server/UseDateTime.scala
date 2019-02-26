@@ -1,7 +1,8 @@
 package monika.server
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import scalaz.syntax.ToIdOps
 
@@ -23,6 +24,14 @@ trait UseDateTime extends ToIdOps {
 
   implicit class LocalDateTimeExt(dt: LocalDateTime) {
     def format(): String = dt.format(DefaultFormatter)
+    def untilHMS(til: LocalDateTime): String = {
+      val secondsLeft = dt.until(til, ChronoUnit.SECONDS)
+      def format00(n: Long): String = ("0" + n.toString).takeRight(2)
+      val hours = format00(secondsLeft / 60 / 60)
+      val minutes = format00(secondsLeft / 60 % 60)
+      val seconds = format00(secondsLeft % 60)
+      s"$hours:$minutes:$seconds"
+    }
   }
 
   implicit class TryExtDateTime[T <: LocalDateTime](t: Try[T]) {

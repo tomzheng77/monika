@@ -3,7 +3,7 @@ package monika.server
 import java.io.{File, StringWriter}
 
 import monika.Primitives.TryExt
-import monika.server.Constants.Locations
+import monika.Constants.Locations
 import monika.server.Structs._
 import org.apache.commons.io.FileUtils
 

@@ -6,7 +6,7 @@ import monika.orbit.OrbitEncryption
 import org.apache.commons.exec.CommandLine
 import org.apache.log4j._
 import org.json4s.JsonDSL._
-import org.json4s.native.JsonMethods._
+import org.json4s.jackson.JsonMethods._
 
 import scala.io.StdIn
 
@@ -127,7 +127,7 @@ object SignalClient extends OrbitEncryption {
     if (signals.nonEmpty) {
       val response: String = {
         Unirest
-          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/batch")
+          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/")
           .body(pretty(render(signals)))
           .asString().getBody
       }

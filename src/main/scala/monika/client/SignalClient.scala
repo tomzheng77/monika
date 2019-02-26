@@ -54,7 +54,7 @@ object SignalClient extends OrbitEncryption {
   private var aliases: Map[String, List[String]] = Map.empty
   private var signals: Vector[List[String]] = Vector.empty
 
-  def exportVariable(name: String, value: String): Unit = {
+  private def exportVariable(name: String, value: String): Unit = {
     if (!name.matches(VariableNameRegex)) {
       println(s"variable name must match $VariableNameRegex")
     } else {
@@ -64,7 +64,7 @@ object SignalClient extends OrbitEncryption {
     }
   }
 
-  def expandVariables(text: String): String = {
+  private def expandVariables(text: String): String = {
     val regex = VariableReferenceRegex.r
     val buffer = new StringBuilder()
     val a = regex.split(text).iterator
@@ -84,19 +84,19 @@ object SignalClient extends OrbitEncryption {
     buffer.toString()
   }
 
-  def createAlias(name: String, value: List[String]): Unit = {
+  private def createAlias(name: String, value: List[String]): Unit = {
     aliases = aliases.updated(name, value.flatMap(expandAlias))
     println(s"$name: $value")
   }
 
-  def expandAlias(token: String): List[String] = {
+  private def expandAlias(token: String): List[String] = {
     aliases.get(token) match {
       case None ⇒ List(token)
       case Some(expand) ⇒ expand.flatMap(expandAlias)
     }
   }
 
-  def handleBuiltin: PartialFunction[List[String], Unit] = {
+  private def handleBuiltin: PartialFunction[List[String], Unit] = {
     case "exit" :: Nil => System.exit(0)
     case "export" :: Nil =>
       println(variables map {
@@ -112,7 +112,7 @@ object SignalClient extends OrbitEncryption {
     case "echo" :: list => println(list.flatMap(expandAlias).map(expandVariables).mkString(" "))
   }
 
-  def handleOrbit: PartialFunction[List[String], Unit] = {
+  private def handleOrbit: PartialFunction[List[String], Unit] = {
     case "orbit" :: args ⇒ {
       val response: String = Unirest
         .post(s"http://${Constants.OrbitAddress}:${Constants.OrbitPort}/")
@@ -123,17 +123,21 @@ object SignalClient extends OrbitEncryption {
     }
   }
 
-  def sendSignals(): Unit = {
-    if (signals.nonEmpty) {
-      val response: String = {
-        Unirest
-          .post(s"http://127.0.0.1:${Constants.InterpreterPort}/")
-          .body(pretty(render(signals)))
-          .asString().getBody
-      }
-      println(response.trim)
-      signals = Vector.empty
-    }
+  def flush(): Unit = {
+    val request = pretty(render(signals))
+    val response = Unirest
+      .post(s"http://127.0.0.1:${Constants.InterpreterPort}/")
+      .body(request)
+      .asString().getBody
+
+    println(response)
+    signals = Vector.empty
+  }
+
+  def call(cmd: List[String]): Unit = {
+    if (handleBuiltin.isDefinedAt(cmd)) handleBuiltin(cmd)
+    else if (handleOrbit.isDefinedAt(cmd)) handleOrbit(cmd)
+    else signals = signals :+ cmd
   }
 
   def main(args: Array[String]): Unit = {
@@ -149,15 +153,11 @@ object SignalClient extends OrbitEncryption {
       optCommand match {
         case None => endReached = true
         case Some(Nil) =>
-        case Some(cmd) => {
-          if (handleBuiltin.isDefinedAt(cmd)) handleBuiltin(cmd)
-          else if (handleOrbit.isDefinedAt(cmd)) handleOrbit(cmd)
-          else signals = signals :+ cmd
-        }
+        case Some(cmd) => call(cmd)
       }
-      if (System.console() != null) sendSignals()
+      if (System.console() != null) flush()
     }
-    sendSignals()
+    flush()
   }
 
 }

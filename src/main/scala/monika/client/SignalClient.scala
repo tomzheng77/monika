@@ -132,6 +132,7 @@ object SignalClient extends OrbitEncryption {
           .asString().getBody
       }
       println(response.trim)
+      signals = Vector.empty
     }
   }
 

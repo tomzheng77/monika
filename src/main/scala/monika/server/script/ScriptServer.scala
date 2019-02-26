@@ -41,7 +41,7 @@ object ScriptServer extends UseLogger with UseJSON with UseScalaz with UseDateTi
         }
         if (cmds.isEmpty) "please provide commands in JSON format"
         else cmds.filter(_.nonEmpty).map(args ⇒ {
-          runScriptFromRequest(args.head, args.tail.toVector)
+          runScriptFromRequest(args.head, args.tail.toVector).trim
         }).mkString("\n").trim
       })
     }

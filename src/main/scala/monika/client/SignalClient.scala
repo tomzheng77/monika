@@ -131,7 +131,7 @@ object SignalClient extends OrbitEncryption {
           .body(pretty(render(signals)))
           .asString().getBody
       }
-      println(response)
+      println(response.trim)
     }
   }
 

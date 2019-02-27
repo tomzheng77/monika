@@ -19,7 +19,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
 
   private val timer = new Timer()
   private var hasPollStarted = false
-  private var notifiedAction: Set[LocalDateTime] = Set.empty
+  private var notifiedAction: Set[FutureAction] = Set.empty
 
   def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {
@@ -49,8 +49,8 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       def shouldRun(act: FutureAction): Boolean = !act.at.isAfter(nowTime)
       def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
       for (act ← state.queue.takeWhile(shouldNotify)) {
-        if (!notifiedAction(act.at)) {
-          notifiedAction += act.at
+        if (!notifiedAction(act)) {
+          notifiedAction += act
           Subprocess.sendNotify(act.script.name, "will run in 1 minute")
         }
       }

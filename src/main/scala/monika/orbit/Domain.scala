@@ -135,7 +135,7 @@ object Domain extends UseDateTime with UseJSON {
     time   ← require(args(2).trim |> parseTime |> (_.get))(pass)("confirm-time is invalid")
     window ← require(args(3).toInt)(pass)("window is invalid")
     dateAndTime = LocalDateTime.of(date, time)
-    _      ← check(dateAndTime.isAfter(nowTime.plusMinutes(1)))("confirm must be at least one minute after now")
+    _      ← check(dateAndTime.isAfter(nowTime.plusMinutes(window)))(s"confirm must be at least $window minutes after now")
     keyNameOption = optionalValue(args(4).trim)(notEmpty).map(KeyName)
   } yield {
     keyNameOption match {

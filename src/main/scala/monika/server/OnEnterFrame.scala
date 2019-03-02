@@ -26,7 +26,10 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       if (!hasPollStarted) {
         hasPollStarted = true
         timer.schedule(new TimerTask {
-          override def run(): Unit = pollQueue()
+          override def run(): Unit = {
+            new Thread(() ⇒ pollAndNotify()).start()
+            new Thread(() ⇒ pollAndRunScripts()).start()
+          }
         }, 0, interval)
       }
     }
@@ -41,27 +44,32 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
     }
   }
 
-  private def pollQueue(): Unit = {
+  private def pollAndRunScripts(): Unit = {
     LOGGER.trace("poll queue")
     // pop items from the head of the queue, save the updated state
     val maybeRun: Vector[FutureAction] = Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()
       def shouldRun(act: FutureAction): Boolean = !act.at.isAfter(nowTime)
-      def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
-      for (act ← state.queue.takeWhile(shouldNotify)) {
-        if (!notifiedAction(act)) {
-          notifiedAction += act
-          Subprocess.sendNotify(act.script.name, "will run in 1 minute")
-        }
-      }
-      pollAndNotifyOrbit(nowTime) match {
-        case Success(_) ⇒
-        case Failure(ex) ⇒ LOGGER.error(s"failed to poll orbit: ${ex.getClass.getSimpleName} ${ex.getMessage}")
-      }
       (state.copy(queue = state.queue.dropWhile(shouldRun)), state.queue.takeWhile(shouldRun))
     })
     // run each item that was popped
     for (FutureAction(_, script, args) <- maybeRun) runScriptFromPoll(script, args)
+  }
+
+  private def pollAndNotify(): Unit = {
+    val state = Hibernate.readStateOrDefault()
+    val nowTime = LocalDateTime.now()
+    def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
+    for (act ← state.queue.takeWhile(shouldNotify)) {
+      if (!notifiedAction(act)) {
+        notifiedAction += act
+        Subprocess.sendNotify(act.script.name, "will run in 1 minute")
+      }
+    }
+    pollAndNotifyOrbit(nowTime) match {
+      case Success(_) ⇒
+      case Failure(ex) ⇒ LOGGER.error(s"failed to poll orbit: ${ex.getClass.getSimpleName} ${ex.getMessage}")
+    }
   }
 
   private def pollAndNotifyOrbit(nowTime: LocalDateTime): Try[Unit] = Try {

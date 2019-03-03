@@ -1,6 +1,7 @@
 package monika.server.script
 
 import monika.server.UseScalaz
+import monika.server.script.internal._
 import monika.server.script.library._
 import monika.server.script.property.Property
 import org.reflections.Reflections

@@ -5,7 +5,7 @@ import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script
 import monika.server.script.property.{Internal, Requestable}
 
-object LockProfile extends Script(Internal, Requestable) {
+object LockProfile extends QScript(Internal, Requestable) {
 
   override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 3) {

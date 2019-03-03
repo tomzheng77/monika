@@ -15,6 +15,7 @@ object Structs {
     * @param root whether the user can run privileged scripts
     * @param queue actions to perform in the future
     * @param filter settings which the proxy was last set to
+    * @param lastAction the last action that was performed
     */
   case class MonikaState(
     root: Boolean = true,

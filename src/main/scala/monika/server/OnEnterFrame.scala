@@ -6,7 +6,7 @@ import java.util.{Timer, TimerTask}
 import com.mashape.unirest.http.Unirest
 import monika.Constants
 import monika.orbit.OrbitEncryption
-import monika.server.Structs.FutureAction
+import monika.server.Structs.Action
 import monika.server.script.ScriptServer.runScriptFromPoll
 import monika.server.subprocess.Subprocess
 import org.json4s.JsonDSL._
@@ -19,7 +19,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
 
   private val timer = new Timer()
   private var hasPollStarted = false
-  private var notifiedAction: Set[FutureAction] = Set.empty
+  private var notifiedAction: Set[Action] = Set.empty
 
   def startPoll(interval: Int = 1000): Unit = {
     this.synchronized {
@@ -47,19 +47,19 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
   private def pollAndRunScripts(): Unit = {
     LOGGER.trace("poll queue")
     // pop items from the head of the queue, save the updated state
-    val maybeRun: Vector[FutureAction] = Hibernate.transaction(state => {
+    val maybeRun: Vector[Action] = Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()
-      def shouldRun(act: FutureAction): Boolean = !act.at.isAfter(nowTime)
+      def shouldRun(act: Action): Boolean = !act.at.isAfter(nowTime)
       (state.copy(queue = state.queue.dropWhile(shouldRun)), state.queue.takeWhile(shouldRun))
     })
     // run each item that was popped
-    for (FutureAction(_, script, args) <- maybeRun) runScriptFromPoll(script, args)
+    for (Action(_, script, args) <- maybeRun) runScriptFromPoll(script, args)
   }
 
   private def pollAndNotify(): Unit = {
     val state = Hibernate.readStateOrDefault()
     val nowTime = LocalDateTime.now()
-    def shouldNotify(act: FutureAction): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
+    def shouldNotify(act: Action): Boolean = !act.at.isAfter(nowTime.plusMinutes(1))
     for (act ← state.queue.takeWhile(shouldNotify)) {
       if (!notifiedAction(act)) {
         notifiedAction += act

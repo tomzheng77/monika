@@ -6,7 +6,7 @@ import java.util.{Timer, TimerTask}
 
 import monika.Constants
 import monika.Primitives.{CanonicalPath, Filename}
-import monika.server.Structs.{FutureAction, MonikaState}
+import monika.server.Structs.{Action, MonikaState}
 import monika.server._
 import monika.server.proxy.{Filter, ProxyServer}
 import monika.server.script.property.{Internal, RootOnly}

@@ -1,6 +1,6 @@
 package monika.server.script
 
-import monika.server.Structs.FutureAction
+import monika.server.Structs.Action
 import monika.server.{UseDateTime, UseScalaz}
 
 object Status extends Script with UseScalaz with UseDateTime {
@@ -21,7 +21,7 @@ object Status extends Script with UseScalaz with UseDateTime {
     api.printLine("")
     api.printLine("========== [Queue] ==========")
     val state = api.getState()
-    for (FutureAction(at, script, args) <- state.queue) {
+    for (Action(at, script, args) <- state.queue) {
       api.printLine(s"- ${at.format()}: ${script.name} ${args.mkString(" ")}")
     }
 

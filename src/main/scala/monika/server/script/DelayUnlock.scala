@@ -1,6 +1,6 @@
 package monika.server.script
 
-import monika.server.Structs.{FutureAction, MonikaState}
+import monika.server.Structs.{Action, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 
@@ -27,7 +27,7 @@ object DelayUnlock extends Script with UseDateTime {
 
   private def delayUnlockAtIndexForMinutes(state: MonikaState, index: Int, minutes: Int): IOS[Unit] = {
     val oldAction = state.queue(index)
-    val newAction = FutureAction(oldAction.at.plusMinutes(minutes), Unlock)
+    val newAction = Action(oldAction.at.plusMinutes(minutes), Unlock)
     val newQueue = state.queue |> removeAt(index) |> addItems(newAction)
     steps(
       printLine(s"unlock moved to ${newAction.at.format()}"),

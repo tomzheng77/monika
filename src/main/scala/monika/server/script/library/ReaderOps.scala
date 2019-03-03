@@ -1,7 +1,7 @@
 package monika.server.script.library
 
 import monika.Primitives._
-import monika.server.Structs.{FutureAction, MonikaState}
+import monika.server.Structs.{Action, MonikaState}
 import monika.server.proxy.Filter
 import monika.server.script.Script
 import monika.server.subprocess.Commands.Command
@@ -44,7 +44,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
     })
   }
 
-  def findScriptInQueue[A <: Script](script: A): IOS[Option[(FutureAction, Int)]] = {
+  def findScriptInQueue[A <: Script](script: A): IOS[Option[(Action, Int)]] = {
     IOS(api ⇒ {
       val state = api.getState()
       state.queue.indexWhere(_.script == script) match {
@@ -57,7 +57,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   def addActionToQueue(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty): IOS[Unit] = {
     IOS(api => {
       val state = api.getState()
-      val action = FutureAction(at, script, args)
+      val action = Action(at, script, args)
       api.setState(state.copy(queue = (state.queue :+ action).sortBy(_.at)))
     })
   }

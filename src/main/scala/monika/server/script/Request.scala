@@ -1,6 +1,6 @@
 package monika.server.script
 
-import monika.server.Structs.FutureAction
+import monika.server.Structs.Action
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 import monika.server.script.property.Requestable
@@ -31,7 +31,7 @@ object Request extends Script with UseDateTime {
         addActionToQueueNow(script, args),
         addActionToQueueAfter(minutes)(Unlock)
       )
-      case Some((FutureAction(at, _, _), index)) => steps(
+      case Some((Action(at, _, _), index)) => steps(
         printLine(s"script '${script.name}' will run at ${at.format()}"),
         printLine(s"unlock moved to ${at.plusMinutes(minutes).format()}"),
         removeActionFromQueue(index),

@@ -1,11 +1,14 @@
 package monika.server
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.server.proxy.{Filter, TransparentFilter}
 import monika.server.script.Script
+import monika.server.script.internal.Unlock
 
 object Structs {
+
+  private val Epoch = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
 
   /**
     * Things Monika must remember across multiple sessions
@@ -15,10 +18,11 @@ object Structs {
     */
   case class MonikaState(
     root: Boolean = true,
-    queue: Vector[FutureAction] = Vector.empty,
-    filter: Filter = TransparentFilter
+    queue: Vector[Action] = Vector.empty,
+    filter: Filter = TransparentFilter,
+    lastAction: Action = Action(Epoch, Unlock)
   )
 
-  case class FutureAction(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
+  case class Action(at: LocalDateTime, script: Script, args: Vector[String] = Vector.empty)
 
 }

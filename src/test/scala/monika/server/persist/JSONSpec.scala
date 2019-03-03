@@ -22,7 +22,7 @@ object JSONSpec extends Properties("JSON") with UseJSON {
 
   implicit val LocalDateArb: Arbitrary[LocalDate] = Arbitrary(arbitrary[LocalDateTime].map(_.toLocalDate))
   implicit val ScriptArb: Arbitrary[Script] = Arbitrary(Gen.oneOf(Script.allScripts))
-  implicit val FutureActionArb: Arbitrary[FutureAction] = Arbitrary(Gen.resultOf(FutureAction))
+  implicit val FutureActionArb: Arbitrary[Action] = Arbitrary(Gen.resultOf(Action))
   implicit def VectorGenArb[A: Arbitrary]: Arbitrary[Vector[A]] = Arbitrary(Gen.listOf(arbitrary[A]).map(l => l.toVector))
   implicit def MapGenArb[K: Arbitrary, V: Arbitrary]: Arbitrary[Map[K, V]] = Arbitrary(
     Gen.mapOf(for {
@@ -53,10 +53,10 @@ object JSONSpec extends Properties("JSON") with UseJSON {
   }
 
   property("serialize future action") = {
-    forAll(arbitrary[FutureAction])(a => {
+    forAll(arbitrary[Action])(a => {
       val writer = new StringWriter()
       writeItemAsJSON(a, writer)
-      readJSONToItem[FutureAction](writer.toString) == a
+      readJSONToItem[Action](writer.toString) == a
     })
   }
 

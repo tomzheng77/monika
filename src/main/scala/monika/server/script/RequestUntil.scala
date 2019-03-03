@@ -2,7 +2,7 @@ package monika.server.script
 
 import java.time.LocalDateTime
 
-import monika.server.Structs.FutureAction
+import monika.server.Structs.Action
 import monika.server.UseDateTime
 import monika.server.script.internal.Unlock
 import monika.server.script.property.Requestable
@@ -40,7 +40,7 @@ object RequestUntil extends Script with UseDateTime {
           ),
           printLine("until must be after now")
         )
-      case Some((FutureAction(at, _, _), index)) => {
+      case Some((Action(at, _, _), index)) => {
         if (untilTime.isAfter(at)) steps(
           printLine(s"script '${script.name}' will run at ${at.format()}"),
           printLine(s"unlock moved to ${untilTime.format()}"),

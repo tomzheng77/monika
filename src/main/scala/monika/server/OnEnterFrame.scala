@@ -8,6 +8,7 @@ import monika.Constants
 import monika.orbit.OrbitEncryption
 import monika.server.Structs.Action
 import monika.server.script.ScriptServer.runScriptFromPoll
+import monika.server.script.property.Mainline
 import monika.server.subprocess.Subprocess
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{parse, pretty}
@@ -50,7 +51,9 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
     val maybeRun: Vector[Action] = Hibernate.transaction(state => {
       val nowTime = LocalDateTime.now()
       def shouldRun(act: Action): Boolean = !act.at.isAfter(nowTime)
-      (state.copy(queue = state.queue.dropWhile(shouldRun)), state.queue.takeWhile(shouldRun))
+      val runList = state.queue.takeWhile(shouldRun)
+      val lastMainline = runList.filter(_.script.hasProperty(Mainline)).lastOption
+      (state.copy(queue = state.queue.dropWhile(shouldRun), previous = lastMainline), runList)
     })
     // run each item that was popped
     for (Action(_, script, args) <- maybeRun) runScriptFromPoll(script, args)

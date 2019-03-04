@@ -4,7 +4,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 import monika.server.Structs.{Action, MonikaState}
 import monika.server.UseDateTime
-import monika.server.script.internal.{Brick, Freedom, LockProfile, Unlock}
+import monika.server.script.internal.{Freedom, Unlock}
 import monika.server.script.property.{Mainline, Requestable}
 
 import scala.language.implicitConversions

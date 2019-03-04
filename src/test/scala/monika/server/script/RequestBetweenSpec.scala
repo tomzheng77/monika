@@ -93,6 +93,39 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     ))
   }
 
+  it should "reject if last action is non-free" in {
+    val state = MonikaState(
+      queue = Vector(
+        Action(parseDateTime("2019-03-04 20:00:00").get, LockProfile, Vector("", "", "idea")),
+        Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+      ))
+    val newState = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-04 20:30:00").get,
+      parseDateTime("2019-03-04 21:20:00").get
+    )(LockProfile, Vector("", "", "google-chrome"))(state)
+
+    newState.queue should be(Vector(
+      Action(parseDateTime("2019-03-04 20:00:00").get, LockProfile, Vector("", "", "idea")),
+      Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+  }
+
+  it should "reject if previous action is non-free" in {
+    val state = MonikaState(
+      previous = Some(Action(parseDateTime("2019-03-04 20:00:00").get, LockProfile, Vector("", "", "idea"))),
+      queue = Vector(
+        Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+      ))
+    val newState = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-04 20:30:00").get,
+      parseDateTime("2019-03-04 21:20:00").get
+    )(LockProfile, Vector("", "", "google-chrome"))(state)
+
+    newState.queue should be(Vector(
+      Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+  }
+
   it should "handle overlaps with end" in {
     val state = MonikaState(queue = Vector(
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),

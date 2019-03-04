@@ -6,7 +6,9 @@ import monika.server.Structs.{Action, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.{Freedom, Unlock}
 import monika.server.script.property.{Mainline, Requestable}
+import org.apache.commons.math3.exception.NumberIsTooLargeException
 
+import scala.annotation.tailrec
 import scala.language.implicitConversions
 
 object RequestBetween extends Script with UseDateTime {
@@ -38,7 +40,7 @@ object RequestBetween extends Script with UseDateTime {
 
     val previous: Action = state.previous.filter(a ⇒ a.script.hasProperty(Mainline)).getOrElse(Action(Epoch, Unlock))
     val mainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
-    val notMainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
+    val notMainline: List[Action] = state.queue.filterNot(a ⇒ a.script.hasProperty(Mainline)).toList
 
     val atOrBeforeStart: List[Action] = mainline.takeWhile(!_.at.isAfter(start))
     val atOrAfterEnd: List[Action] = mainline.dropWhile(_.at.isBefore(end))
@@ -55,7 +57,21 @@ object RequestBetween extends Script with UseDateTime {
       else List(Action(end, Freedom, args))
     } ++ atOrAfterEnd
 
-    state.copy(queue = (newMainline ++ notMainline).sortBy(_.at).toVector)
+    state.copy(queue = (removeDuplicate(newMainline) ++ notMainline).sortBy(_.at).toVector)
+  }
+
+  // removes any action if the one before has the same script and args
+  def removeDuplicate(list: List[Action]): List[Action] = {
+    @tailrec
+    def loop(at: List[Action], out: List[Action]): List[Action] = at match {
+      case Nil ⇒ out
+      case one :: Nil ⇒ one :: out
+      case one :: two :: remain ⇒ {
+        if (one.script == two.script && one.at == two.at) loop(one :: remain, out)
+        else loop(two :: remain, one :: out)
+      }
+    }
+    loop(list, Nil).reverse
   }
 
 }

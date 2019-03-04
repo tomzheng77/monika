@@ -24,15 +24,15 @@ object RequestBetween extends Script with UseDateTime {
     Script.allScriptsByName.get(scriptName) match {
       case None => printLine(s"script '$scriptName' does not exist")
       case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-      case Some(sc) => transformState(trn(start, end)(sc, remainingArgs))
+      case Some(sc) => transformState(requestBetweenInternal(start, end)(sc, remainingArgs))
     }
   }
 
   private val Epoch = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC)
 
-  private def trn(start: LocalDateTime, end: LocalDateTime)
-    (script: Script, args: Vector[String])
-    (state: MonikaState): MonikaState = {
+  def requestBetweenInternal(start: LocalDateTime, end: LocalDateTime)
+                            (script: Script, args: Vector[String])
+                            (state: MonikaState): MonikaState = {
 
     if (!end.isAfter(start)) return state
 

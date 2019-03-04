@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
 
-  "RequestBetween" should "pass case 1" in {
+  "RequestBetween" should "handle being contained in freedom" in {
     val state = MonikaState(queue = Vector(
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
@@ -25,7 +25,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     ))
   }
 
-  it should "pass case 2" in {
+  it should "handle overlaps with freedom" in {
     val state = MonikaState(queue = Vector(
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
@@ -73,6 +73,23 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+  }
+
+  it should "handle being after unlock" in {
+    val state = MonikaState(queue = Vector(
+      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+    val newState = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-04 22:30:00").get,
+      parseDateTime("2019-03-04 23:20:00").get
+    )(LockProfile, Vector("", "", "google-chrome"))(state)
+
+    newState.queue should be(Vector(
+      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 22:30:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 23:20:00").get, Unlock)
     ))
   }
 

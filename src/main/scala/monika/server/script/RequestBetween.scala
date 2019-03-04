@@ -41,7 +41,10 @@ object RequestBetween extends Script with UseDateTime {
     val mainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
     val notMainline: List[Action] = state.queue.filterNot(a ⇒ a.script.hasProperty(Mainline)).toList
 
-    val atOrBeforeStart: List[Action] = mainline.takeWhile(!_.at.isAfter(start))
+    val atOrBeforeStart: List[Action] = mainline
+      .takeWhile(!_.at.isAfter(start))
+      .map(a ⇒ if (a.script == Unlock) a.copy(script = Freedom) else a)
+
     val atOrAfterEnd: List[Action] = mainline.dropWhile(_.at.isBefore(end))
     val inBetween: List[Action] = mainline.slice(atOrBeforeStart.length, mainline.length - atOrAfterEnd.length)
 
@@ -51,9 +54,9 @@ object RequestBetween extends Script with UseDateTime {
     if (isBlocked) return state
 
     val newMainline = atOrBeforeStart ++ List(Action(start, script, args)) ++ {
-      if (atOrAfterEnd.isEmpty) List(Action(end, Unlock, args))
+      if (atOrAfterEnd.isEmpty) List(Action(end, Unlock))
       else if (atOrAfterEnd.head.at.isEqual(end)) Nil
-      else List(Action(end, Freedom, args))
+      else List(Action(end, Freedom))
     } ++ atOrAfterEnd
 
     state.copy(queue = (removeDuplicate(newMainline) ++ notMainline).sortBy(_.at).toVector)

@@ -31,9 +31,7 @@ object Constants {
   val InterpreterPort = 9001
   val OrbitAddress = "103.29.84.69"
   val OrbitPort = 9002
-  val MaxQueueSize = 3
   val MonikaUser = "tomzheng"
-  val UnlockerUser = "unlocker"
   val ProcessesFolder = "/proc"
 
   object Restricted {
@@ -64,10 +62,6 @@ object Constants {
 
     val PrimaryLog: String = MonikaHome + "/monika.log"
     val StateJsonFile: String = MonikaHome + "/monika.json"
-
-    val ProfileRoot: String = MonikaHome + "/profiles"
-    val ProjectRoot: String = MonikaHome + "/projects"
-    val ChromeBookmark: String = "/home/profile/.config/google-chrome/Default/Bookmarks"
 
     // Google Chrome -> Manage Certificates -> Authorities -> Import (certificate.cer), Trust *
     // create a CA Root Certificate using default settings

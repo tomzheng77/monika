@@ -25,7 +25,13 @@ object RequestBetween extends Script with UseDateTime {
     Script.allScriptsByName.get(scriptName) match {
       case None => printLine(s"script '$scriptName' does not exist")
       case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-      case Some(sc) => transformState(requestBetweenInternal(start, end)(sc, remainingArgs))
+      case Some(sc) => getState().map(requestBetweenInternal(start, end)(sc, args)).flatMap[Unit] {
+        case Left(errorMessage) ⇒ printLine(errorMessage)
+        case Right(newState) ⇒ steps(
+          setState(newState),
+          printLine(s"script '$scriptName' added from ${start.format()} to ${end.format()}")
+        )
+      }
     }
   }
 
@@ -33,9 +39,9 @@ object RequestBetween extends Script with UseDateTime {
 
   def requestBetweenInternal(start: LocalDateTime, end: LocalDateTime)
                             (script: Script, args: Vector[String])
-                            (state: MonikaState): MonikaState = {
+                            (state: MonikaState): Either[String, MonikaState] = {
 
-    if (!end.isAfter(start)) return state
+    if (!end.isAfter(start)) return Left("end must be after start")
 
     val previous: Action = state.previous.filter(a ⇒ a.script.hasProperty(Mainline)).getOrElse(Action(Epoch, Unlock))
     val mainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
@@ -51,7 +57,7 @@ object RequestBetween extends Script with UseDateTime {
     // check if the script intersects with a non-freedom action
     val typeAtStart = atOrBeforeStart.lastOption.getOrElse(previous)
     val isBlocked = (typeAtStart :: inBetween).exists(a ⇒ a.script != Unlock && a.script != Freedom)
-    if (isBlocked) return state
+    if (isBlocked) return Left("must not overlap with non-free sessions")
 
     val newMainline = atOrBeforeStart ++ List(Action(start, script, args)) ++ {
       if (atOrAfterEnd.isEmpty) List(Action(end, Unlock))
@@ -59,7 +65,7 @@ object RequestBetween extends Script with UseDateTime {
       else List(Action(end, Freedom))
     } ++ atOrAfterEnd
 
-    state.copy(queue = (removeDuplicate(newMainline) ++ notMainline).sortBy(_.at).toVector)
+    Right(state.copy(queue = (removeDuplicate(newMainline) ++ notMainline).sortBy(_.at).toVector))
   }
 
   // removes any action if the one before has the same script and args

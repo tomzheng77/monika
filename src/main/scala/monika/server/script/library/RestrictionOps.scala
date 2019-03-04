@@ -15,7 +15,7 @@ trait RestrictionOps extends UseScalaz with ReaderOps { self: Script =>
   // the environment of this user will be affected
   private val User = Constants.MonikaUser
 
-  def restrictLogin(): IOS[Unit] = IOS(api => {
+  def disableLogin(): IOS[Unit] = IOS(api => {
     api.call(passwd, "-l", User)
   })
 

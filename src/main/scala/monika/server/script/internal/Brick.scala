@@ -7,7 +7,7 @@ object Brick extends Script(Internal, Requestable, Mainline) {
 
   override def run(args: Vector[String]): IOS[Unit] = steps(
     clearAllRestrictions(),
-    restrictLogin(),
+    disableLogin(),
     forceLogout()
   )
 

@@ -2,7 +2,7 @@ package monika.server.script
 
 import monika.server.Structs.{Action, MonikaState}
 import monika.server.UseDateTime
-import monika.server.script.internal.{Brick, Freedom, Unlock}
+import monika.server.script.internal.{Brick, Freedom, LockProfile, Unlock}
 import org.scalatest.{FlatSpec, Matchers}
 
 class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
@@ -55,7 +55,6 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     newState.queue should be(Vector(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, Freedom),
-      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
   }
@@ -73,7 +72,6 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     newState.queue should be(Vector(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, Freedom),
-      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
   }
@@ -89,6 +87,26 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     out should be(List(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+  }
+
+  it should "remove the third script or more" in {
+    val out = RequestBetween.removeDuplicate(List(
+      Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
+      Action(parseDateTime("2019-03-04 19:20:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 19:30:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 19:40:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 19:50:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 20:30:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
+    ))
+
+    out should be(List(
+      Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
+      Action(parseDateTime("2019-03-04 19:20:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
   }

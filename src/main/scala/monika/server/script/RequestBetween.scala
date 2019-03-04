@@ -6,7 +6,6 @@ import monika.server.Structs.{Action, MonikaState}
 import monika.server.UseDateTime
 import monika.server.script.internal.{Freedom, Unlock}
 import monika.server.script.property.{Mainline, Requestable}
-import org.apache.commons.math3.exception.NumberIsTooLargeException
 
 import scala.annotation.tailrec
 import scala.language.implicitConversions
@@ -67,7 +66,7 @@ object RequestBetween extends Script with UseDateTime {
       case Nil ⇒ out
       case one :: Nil ⇒ one :: out
       case one :: two :: remain ⇒ {
-        if (one.script == two.script && one.at == two.at) loop(one :: remain, out)
+        if (one.script == two.script && one.args == two.args) loop(one :: remain, out)
         else loop(two :: remain, one :: out)
       }
     }

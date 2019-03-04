@@ -71,7 +71,7 @@ object RequestBetween extends Script with UseDateTime {
         else loop(two :: remain, one :: out)
       }
     }
-    loop(list, Nil).reverse
+    loop(list.sortBy(_.at), Nil).reverse
   }
 
 }

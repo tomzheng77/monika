@@ -177,6 +177,30 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     ))
   }
 
+  it should "handle this iterative construction" in {
+    var state = MonikaState()
+    state = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-05 22:00:00").get,
+      parseDateTime("2019-03-05 23:30:00").get
+    )(Brick, Vector())(state).getOrElse(state)
+    state = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-05 10:00:00").get,
+      parseDateTime("2019-03-05 11:30:00").get
+    )(LockProfile, Vector("A", "B", "C"))(state).getOrElse(state)
+    state = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-05 11:30:00").get,
+      parseDateTime("2019-03-05 12:00:00").get
+    )(Brick, Vector())(state).getOrElse(state)
+
+    state.queue should be(Vector(
+      Action(parseDateTime("2019-03-05 10:00:00").get, LockProfile, Vector("A", "B", "C")),
+      Action(parseDateTime("2019-03-05 11:30:00").get, Brick),
+      Action(parseDateTime("2019-03-05 12:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-05 22:00:00").get, Brick),
+      Action(parseDateTime("2019-03-05 23:30:00").get, Unlock)
+    ))
+  }
+
   "removeDuplicate" should "remove the second script if the one before is the same" in {
     val out = RequestBetween.removeDuplicate(List(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),

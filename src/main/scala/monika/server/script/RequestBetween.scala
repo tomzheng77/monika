@@ -40,16 +40,16 @@ object RequestBetween extends Script with UseDateTime {
     val mainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
     val notMainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
 
-    val beforeStart = mainline.takeWhile(_.at.isBefore(start))
-    val atOrAfterEnd = mainline.dropWhile(_.at.isBefore(end))
-    val inBetween = mainline.slice(beforeStart.length, mainline.length - atOrAfterEnd.length)
+    val atOrBeforeStart: List[Action] = mainline.takeWhile(!_.at.isAfter(start))
+    val atOrAfterEnd: List[Action] = mainline.dropWhile(_.at.isBefore(end))
+    val inBetween: List[Action] = mainline.slice(atOrBeforeStart.length, mainline.length - atOrAfterEnd.length)
 
     // check if the script intersects with a non-freedom action
-    val typeAtStart = beforeStart.lastOption.getOrElse(previous)
+    val typeAtStart = atOrBeforeStart.lastOption.getOrElse(previous)
     val isBlocked = (typeAtStart :: inBetween).exists(a ⇒ a.script != Unlock && a.script != Freedom)
     if (isBlocked) return state
 
-    val newMainline = beforeStart ++ List(Action(start, script, args)) ++ {
+    val newMainline = atOrBeforeStart ++ List(Action(start, script, args)) ++ {
       if (atOrAfterEnd.isEmpty) List(Action(end, Unlock, args))
       else if (atOrAfterEnd.head.at.isEqual(end)) Nil
       else List(Action(end, Freedom, args))

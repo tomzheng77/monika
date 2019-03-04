@@ -143,6 +143,40 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     ))
   }
 
+  it should "handle this complex case" in {
+    var state = MonikaState(queue = Vector(
+      Action(parseDateTime("2019-03-04 01:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 02:00:00").get, LockProfile, Vector("", "", "idea")),
+      Action(parseDateTime("2019-03-04 03:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 04:00:00").get, LockProfile, Vector("", "", "idea,monika")),
+      Action(parseDateTime("2019-03-04 05:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 06:00:00").get, Brick),
+      Action(parseDateTime("2019-03-04 07:00:00").get, Unlock)
+    ))
+
+    state = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-04 01:30:00").get,
+      parseDateTime("2019-03-04 04:30:00").get
+    )(LockProfile, Vector("", "", "google-chrome"))(state)
+
+    state = RequestBetween.requestBetweenInternal(
+      parseDateTime("2019-03-04 03:20:00").get,
+      parseDateTime("2019-03-04 03:40:00").get
+    )(LockProfile, Vector("", "", "google-chrome"))(state)
+
+    state.queue should be(Vector(
+      Action(parseDateTime("2019-03-04 01:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 02:00:00").get, LockProfile, Vector("", "", "idea")),
+      Action(parseDateTime("2019-03-04 03:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 03:20:00").get, LockProfile, Vector("", "", "google-chrome")),
+      Action(parseDateTime("2019-03-04 03:40:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 04:00:00").get, LockProfile, Vector("", "", "idea,monika")),
+      Action(parseDateTime("2019-03-04 05:00:00").get, Freedom),
+      Action(parseDateTime("2019-03-04 06:00:00").get, Brick),
+      Action(parseDateTime("2019-03-04 07:00:00").get, Unlock)
+    ))
+  }
+
   "removeDuplicate" should "remove the second script if the one before is the same" in {
     val out = RequestBetween.removeDuplicate(List(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),

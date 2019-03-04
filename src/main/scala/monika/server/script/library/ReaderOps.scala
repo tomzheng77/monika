@@ -11,6 +11,7 @@ import scalaz.@@
 
 import scala.collection.{GenIterable, mutable}
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 trait ReaderOps extends UseScalaz with UseDateTime {
 
@@ -19,6 +20,7 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   type IOS[A] = Reader[ScriptAPI, A]
   protected implicit def IOS[A](fn: ScriptAPI => A): IOS[A] = Reader(fn)
 
+  def unit[A](a: A): IOS[A] = IOS(_ ⇒ a)
   def nowTime(): IOS[LocalDateTime] = IOS(api => api.nowTime())
   def printLine(text: String): IOS[Unit] = IOS(api => api.printLine(text))
   def call(command: Command, args: String*): IOS[CommandOutput] = IOS(api => api.call(command, args: _*))
@@ -94,5 +96,27 @@ trait ReaderOps extends UseScalaz with UseDateTime {
   def branch[A](condition: IOS[Boolean], ifTrue: IOS[A], ifFalse: IOS[A]): IOS[A] = {
     condition.flatMap(b ⇒ if (b) ifTrue else ifFalse)
   }
+
+  protected def require[A, B](t: ⇒ A)(fil: A ⇒ Boolean)(b: String): Either[IOS[Unit], A] = {
+    Try(t).filter(fil) match {
+      case Success(a) ⇒ Right(a)
+      case Failure(_) ⇒ Left(printLine(b))
+    }
+  }
+
+  protected def optionalValue[A, B](t: ⇒ A)(fil: A ⇒ Boolean): Option[A] = {
+    Try(t).filter(fil).toOption
+  }
+
+  protected def check[B](e: Boolean)(b: B): Either[IOS[B], Unit] = {
+    if (e) Right(()) else Left(unit(b))
+  }
+
+  protected implicit def eitherToST[A, B](either: Either[IOS[A], IOS[A]]): IOS[A] = {
+    either.fold(identity, identity)
+  }
+
+  protected def pass[A](a: A): Boolean = true
+  protected def notEmpty(a: String): Boolean = a.nonEmpty
 
 }

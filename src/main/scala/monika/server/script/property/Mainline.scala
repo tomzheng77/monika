@@ -1,3 +1,3 @@
 package monika.server.script.property
 
-case object Linear extends Property
+case object Mainline extends Property

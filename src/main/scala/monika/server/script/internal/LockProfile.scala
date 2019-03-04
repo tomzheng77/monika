@@ -3,9 +3,9 @@ package monika.server.script.internal
 import monika.Primitives.Filename
 import monika.server.proxy.{TransparentFilter, URLFilter}
 import monika.server.script.Script
-import monika.server.script.property.{Internal, Linear, Requestable}
+import monika.server.script.property.{Internal, Mainline, Requestable}
 
-object LockProfile extends Script(Internal, Requestable, Linear) {
+object LockProfile extends Script(Internal, Requestable, Mainline) {
 
   override def run(args: Vector[String]): IOS[Unit] = {
     if (args.size != 3) {

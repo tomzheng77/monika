@@ -25,7 +25,7 @@ object RequestBetween extends Script with UseDateTime {
     Script.allScriptsByName.get(scriptName) match {
       case None => printLine(s"script '$scriptName' does not exist")
       case Some(sc) if !sc.hasProperty(Requestable) => printLine(s"script '$scriptName' cannot be requested")
-      case Some(sc) => getState().map(requestBetweenInternal(start, end)(sc, args)).flatMap[Unit] {
+      case Some(sc) => getState().map(requestBetweenInternal(start, end)(sc, remainingArgs)).flatMap[Unit] {
         case Left(errorMessage) ⇒ printLine(errorMessage)
         case Right(newState) ⇒ steps(
           setState(newState),

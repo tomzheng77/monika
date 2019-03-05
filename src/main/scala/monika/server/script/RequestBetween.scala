@@ -47,6 +47,8 @@ object RequestBetween extends Script with UseDateTime {
     val mainline: List[Action] = state.queue.filter(a ⇒ a.script.hasProperty(Mainline)).toList
     val notMainline: List[Action] = state.queue.filterNot(a ⇒ a.script.hasProperty(Mainline)).toList
 
+    if (start.isBefore(previous.at)) return Left(s"start must be after previous action at ${previous.at.format()}")
+
     val atOrBeforeStart: List[Action] = mainline
       .takeWhile(!_.at.isAfter(start))
       .map(a ⇒ if (a.script == Unlock) a.copy(script = Freedom) else a)

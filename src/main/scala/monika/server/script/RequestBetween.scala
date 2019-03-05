@@ -67,7 +67,9 @@ object RequestBetween extends Script with UseDateTime {
       else List(Action(end, Freedom))
     } ++ atOrAfterEnd
 
-    Right(state.copy(queue = (removeDuplicate(removeStacking(newMainline)) ++ notMainline).sortBy(_.at).toVector))
+    Right(state.copy(queue = (removeDuplicate(removeStacking(newMainline)).dropWhile(a ⇒ {
+      a.script == previous.script && a.args == previous.args
+    }) ++ notMainline).sortBy(_.at).toVector))
   }
 
   def nonFree(a: Action): Boolean = a.script != Unlock && a.script != Freedom

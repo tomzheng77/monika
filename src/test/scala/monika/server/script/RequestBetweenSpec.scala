@@ -203,7 +203,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
 
   it should "remove from start if same as previous" in {
     var state = MonikaState(
-      previous = Some(Action(parseDateTime("2019-03-05 08:00:00").get, LockProfile, Vector("D", "E", "F"))),
+      previous = Some(Action(parseDateTime("2019-03-05 08:00:00").get, Freedom, Vector("D", "E", "F"))),
       queue = Vector(
         Action(parseDateTime("2019-03-05 12:00:00").get, Unlock)
       )
@@ -211,7 +211,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
     state = RequestBetween.requestBetweenInternal(
       parseDateTime("2019-03-05 10:00:00").get,
       parseDateTime("2019-03-05 14:00:00").get
-    )(LockProfile, Vector("D", "E", "F"))(state).getOrElse(state)
+    )(Freedom, Vector("D", "E", "F"))(state).getOrElse(state)
 
     state.queue should be(Vector(
       Action(parseDateTime("2019-03-05 14:00:00").get, Unlock)

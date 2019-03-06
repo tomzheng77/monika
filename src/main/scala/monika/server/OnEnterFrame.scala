@@ -52,7 +52,7 @@ object OnEnterFrame extends UseLogger with OrbitEncryption with UseScalaz with U
       val nowTime = LocalDateTime.now()
       def shouldRun(act: Action): Boolean = !act.at.isAfter(nowTime)
       val runList = state.queue.takeWhile(shouldRun)
-      val newPrevious = state.previous.orElse(runList.filter(_.script.hasProperty(Mainline)).lastOption)
+      val newPrevious = runList.filter(_.script.hasProperty(Mainline)).lastOption.orElse(state.previous)
       (state.copy(queue = state.queue.dropWhile(shouldRun), previous = newPrevious), runList)
     })
     // run each item that was popped

@@ -32,9 +32,12 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
         } else MonikaState()
       }
       val (newState, returnValue) = fn(state)
-      val writer = new StringWriter()
-      writeItemAsJSON(newState, writer)
-      FileUtils.writeStringToFile(stateDBFile, writer.toString, "UTF-8"); returnValue
+      if (newState != state) {
+        val writer = new StringWriter()
+        writeItemAsJSON(newState, writer)
+        FileUtils.writeStringToFile(stateDBFile, writer.toString, "UTF-8")
+      }
+      returnValue
     }
   }
 

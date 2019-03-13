@@ -26,7 +26,6 @@ object LockProfile extends Script(Internal, Requestable, Mainline) {
     clearAllRestrictions(),
     if (urlAllow("<all>") && urlReject.isEmpty) setFilter(TransparentFilter)
     else setFilter(URLFilter(urlAllow, urlReject)),
-    setAsNonRoot(),
     closeAllBrowsers(),
     restrictProjectsExcept(projects.map(Filename).toVector)
   )

@@ -81,9 +81,6 @@ trait ReaderOps extends UseScalaz with UseDateTime {
 
   implicit def anyAsUnit[A](sc: IOS[A]): IOS[Unit] = sc.map(_ => Unit)
 
-  def setAsNonRoot(): IOS[Unit] = transformState(state => state.copy(root = false))
-  def setAsRoot(): IOS[Unit] = transformState(state => state.copy(root = true))
-
   def steps[A](scs: IOS[A]*): IOS[Vector[A]] = sequence(scs)
   def sequence[A](scs: GenIterable[IOS[A]]): IOS[Vector[A]] = IOS(api => {
     var buffer = mutable.Buffer[A]()

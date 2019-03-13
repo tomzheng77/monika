@@ -8,7 +8,6 @@ object Unlock extends Script(Internal, Mainline) {
 
   override def run(args: Vector[String]): IOS[Unit] = steps(
     setFilter(TransparentFilter),
-    setAsRoot(),
     clearAllRestrictions(),
     printLine("unlock success")
   )

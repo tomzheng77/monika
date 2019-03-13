@@ -42,14 +42,14 @@ object Hibernate extends UseLogger with UseJSON with UseScalaz {
   }
 
   def readStateOrDefault(): MonikaState = {
-    this.synchronized {
+    this.synchronized(Try {
       val stateDBFile = new File(Locations.StateJsonFile)
       ensureFileWritable(stateDBFile)
       if (stateDBFile.exists()) {
         val input = FileUtils.readFileToString(stateDBFile, "UTF-8")
         readStateFromInput(input)
       } else MonikaState()
-    }
+    }).getOrElse(MonikaState())
   }
 
   private def ensureFileWritable(file: File): Unit = {

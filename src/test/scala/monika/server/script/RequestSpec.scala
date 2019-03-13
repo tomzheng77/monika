@@ -5,14 +5,14 @@ import monika.server.UseDateTime
 import monika.server.script.internal.{Brick, Freedom, LockProfile, Unlock}
 import org.scalatest.{FlatSpec, Matchers}
 
-class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
+class RequestSpec extends FlatSpec with Matchers with UseDateTime {
 
   "RequestBetween" should "handle being contained in freedom" in {
     val state = MonikaState(queue = Vector(
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 20:10:00").get,
       parseDateTime("2019-03-04 20:20:00").get
     )(Brick, Vector())(state).getOrElse(state)
@@ -30,7 +30,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 20:30:00").get,
       parseDateTime("2019-03-04 21:20:00").get
     )(Brick, Vector())(state).getOrElse(state)
@@ -47,7 +47,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 18:30:00").get,
       parseDateTime("2019-03-04 19:20:00").get
     )(Brick, Vector())(state).getOrElse(state)
@@ -64,7 +64,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 18:30:00").get,
       parseDateTime("2019-03-04 19:20:00").get
     )(Brick, Vector())(state).getOrElse(state)
@@ -81,7 +81,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 22:30:00").get,
       parseDateTime("2019-03-04 23:20:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
@@ -99,7 +99,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
         Action(parseDateTime("2019-03-04 20:00:00").get, LockProfile, Vector("", "", "idea")),
         Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
       ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 20:30:00").get,
       parseDateTime("2019-03-04 21:20:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
@@ -116,7 +116,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       queue = Vector(
         Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
       ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 20:30:00").get,
       parseDateTime("2019-03-04 21:20:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
@@ -131,7 +131,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
       Action(parseDateTime("2019-03-04 21:00:00").get, Unlock)
     ))
-    val newState = RequestBetween.requestBetweenInternal(
+    val newState = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 21:00:00").get,
       parseDateTime("2019-03-04 23:20:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
@@ -154,12 +154,12 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
       Action(parseDateTime("2019-03-04 07:00:00").get, Unlock)
     ))
 
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 01:30:00").get,
       parseDateTime("2019-03-04 04:30:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
 
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-04 03:20:00").get,
       parseDateTime("2019-03-04 03:40:00").get
     )(LockProfile, Vector("", "", "google-chrome"))(state).getOrElse(state)
@@ -179,15 +179,15 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
 
   it should "handle this iterative construction" in {
     var state = MonikaState()
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-05 22:00:00").get,
       parseDateTime("2019-03-05 23:30:00").get
     )(Brick, Vector())(state).getOrElse(state)
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-05 10:00:00").get,
       parseDateTime("2019-03-05 11:30:00").get
     )(LockProfile, Vector("A", "B", "C"))(state).getOrElse(state)
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-05 11:30:00").get,
       parseDateTime("2019-03-05 12:00:00").get
     )(Brick, Vector())(state).getOrElse(state)
@@ -208,7 +208,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
         Action(parseDateTime("2019-03-05 12:00:00").get, Unlock)
       )
     )
-    state = RequestBetween.requestBetweenInternal(
+    state = Request.requestBetweenInternal(
       parseDateTime("2019-03-05 10:00:00").get,
       parseDateTime("2019-03-05 14:00:00").get
     )(Freedom, Vector("D", "E", "F"))(state).getOrElse(state)
@@ -219,7 +219,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
   }
 
   "removeDuplicate" should "remove the second script if the one before is the same" in {
-    val out = RequestBetween.removeDuplicate(List(
+    val out = Request.removeDuplicate(List(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, Freedom),
       Action(parseDateTime("2019-03-04 20:00:00").get, Freedom),
@@ -234,7 +234,7 @@ class RequestBetweenSpec extends FlatSpec with Matchers with UseDateTime {
   }
 
   it should "remove the third script or more" in {
-    val out = RequestBetween.removeDuplicate(List(
+    val out = Request.removeDuplicate(List(
       Action(parseDateTime("2019-03-04 18:30:00").get, Brick),
       Action(parseDateTime("2019-03-04 19:20:00").get, LockProfile, Vector("", "", "google-chrome")),
       Action(parseDateTime("2019-03-04 19:30:00").get, LockProfile, Vector("", "", "google-chrome")),
